@@ -1,0 +1,48 @@
+.categories {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin: 3rem 0;
+    flex-wrap: wrap;
+}
+
+.category {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.category:hover {
+    transform: translateY(-5px);
+}
+
+.iconContainer {
+    width: 80px;
+    height: 80px;
+    background-color: var(--white);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.category:hover .iconContainer {
+    border-color: var(--primary-green);
+    box-shadow: var(--shadow-md);
+}
+
+.label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-gray);
+}
+
+.category:hover .label {
+    color: var(--primary-green);
+}

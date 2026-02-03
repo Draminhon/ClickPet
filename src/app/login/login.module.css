@@ -1,0 +1,197 @@
+.loginContainer {
+    display: flex;
+    min-height: 100vh;
+    background-color: rgba(254, 254, 254, 1);
+    font-family: 'Sora', sans-serif;
+    padding: 32px;
+}
+
+.carouselColumn {
+    width: 679px;
+    height: 960px;
+    position: relative;
+    border-radius: 24px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.carouselSlide {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.formColumn {
+    flex: 1;
+    height: 960px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(254, 254, 254, 1);
+}
+
+.topSection,
+.bottomSection {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    width: 388px;
+}
+
+.bottomSection {
+    justify-content: flex-start;
+    padding-top: 24px;
+}
+
+.topSection {
+    justify-content: flex-end;
+    padding-bottom: 24px;
+}
+
+.title {
+    font-weight: 600;
+    font-size: 36px;
+    color: rgba(37, 61, 78, 1);
+    margin-bottom: 24px;
+    text-align: left;
+    width: 100%;
+}
+
+.subtitle {
+    font-weight: 400;
+    font-size: 16px;
+    color: rgba(37, 61, 78, 0.7);
+    margin-bottom: 32px;
+    text-align: left;
+    width: 100%;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.inputGroup {
+    display: flex;
+    flex-direction: column;
+}
+
+.inputLabel {
+    font-weight: 400;
+    font-size: 16px;
+    color: rgba(37, 61, 78, 1);
+    margin-bottom: 8px;
+}
+
+.input {
+    width: 388px;
+    height: 48px;
+    background-color: rgba(247, 251, 255, 1);
+    border: 1px solid rgba(212, 215, 227, 1);
+    border-radius: 12px;
+    padding: 10px 16px;
+    font-size: 16px;
+    font-weight: 400;
+    color: rgba(37, 61, 78, 1);
+    outline: none;
+}
+
+.input::placeholder {
+    color: rgba(136, 151, 173, 1);
+}
+
+.continueButton {
+    width: 388px;
+    height: 52px;
+    background-color: rgba(59, 183, 126, 1);
+    border-radius: 12px;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: none;
+    margin-top: 8px;
+}
+
+.continueText {
+    font-weight: 400;
+    font-size: 20px;
+    color: rgba(254, 254, 254, 1);
+    text-transform: uppercase;
+}
+
+.dividerContainer {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 24px 0;
+    width: 388px;
+}
+
+.divider {
+    flex: 1;
+    height: 1px;
+    background-color: rgba(207, 223, 226, 1);
+}
+
+.dividerText {
+    margin: 0 10px;
+    font-weight: 400;
+    font-size: 16px;
+    color: rgba(37, 61, 78, 1);
+}
+
+.socialContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 388px;
+}
+
+.socialButton {
+    width: 388px;
+    height: 52px;
+    border-radius: 12px;
+    background: rgba(243, 249, 250, 1);
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 12px 0px 12px 94px;
+    gap: 16px;
+    cursor: pointer;
+}
+
+.socialIcon {
+    border-radius: 12px;
+}
+
+.socialText {
+    font-weight: 400;
+    font-size: 16px;
+    color: rgba(37, 61, 78, 1);
+}
+
+@media (max-width: 1100px) {
+    .loginContainer {
+        flex-direction: column;
+        align-items: center;
+        padding: 16px;
+        gap: 32px;
+    }
+
+    .carouselColumn {
+        width: 100%;
+        height: 300px;
+        max-width: 388px;
+    }
+
+    .formColumn {
+        width: 100%;
+        max-width: 388px;
+    }
+}

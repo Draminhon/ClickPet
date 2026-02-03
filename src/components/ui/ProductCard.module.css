@@ -1,0 +1,128 @@
+.card {
+    background-color: var(--white);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    position: relative;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+}
+
+.imageContainer {
+    width: 100%;
+    height: 150px;
+    background-color: #f0f0f0;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.5rem;
+}
+
+.image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.tag {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: var(--secondary-yellow);
+    color: var(--text-dark);
+    font-size: 0.7rem;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    line-height: 1.2;
+}
+
+.shopName {
+    font-size: 0.75rem;
+    color: var(--text-gray);
+}
+
+.priceRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: auto;
+}
+
+.price {
+    font-size: 1.1rem;
+    font-weight: 700;
+    /* slightly less bold to avoid font rounding bugs */
+    color: var(--text-dark);
+    font-family: inherit, 'Inter', -apple-system, sans-serif;
+    font-variant-numeric: tabular-nums;
+}
+
+.oldPrice {
+    font-size: 0.8rem;
+    text-decoration: line-through;
+    color: var(--text-gray);
+    margin-left: 0.5rem;
+}
+
+.addButton {
+    background-color: var(--primary-green);
+    color: var(--white);
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.addButton:hover {
+    background-color: var(--primary-green-dark);
+}
+
+.discountTag {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: var(--secondary-yellow);
+    color: var(--white);
+    padding: 0.3rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    z-index: 1;
+}
+
+.favoriteContainer {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 1;
+}
+
+.ratingContainer {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-bottom: 0.5rem;
+}
+
+.reviewCount {
+    font-size: 0.75rem;
+    color: var(--text-gray);
+}

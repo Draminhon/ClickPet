@@ -1,0 +1,131 @@
+.heroSection {
+    background: linear-gradient(135deg, #6CC551 0%, #5AB03F 100%);
+    color: white;
+    padding: 4rem 0;
+    margin-bottom: 3rem;
+}
+
+.heroTitle {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.heroSubtitle {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+    opacity: 0.9;
+}
+
+.heroButtons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.heroBtnPrimary {
+    background: white;
+    color: #6CC551;
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+}
+
+.heroBtnSecondary {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    border: 2px solid white;
+}
+
+.categoriesSection {
+    margin-bottom: 3rem;
+}
+
+.categoriesGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+}
+
+.categoryCard {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    text-align: center;
+    text-decoration: none;
+    color: #333;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s;
+    border: 3px solid transparent;
+}
+
+.categoryCard:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+.categoryIcon {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+}
+
+.categoryName {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.featuredSection {
+    margin-bottom: 3rem;
+}
+
+.featuredHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.viewAllLink {
+    color: #6CC551;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.productsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1.5rem;
+}
+
+.featuresSection {
+    background: #f9f9f9;
+    padding: 3rem 0;
+    margin-top: 3rem;
+}
+
+.featuresGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+}
+
+.featureItem {
+    text-align: center;
+    padding: 1.5rem;
+}
+
+.featureIcon {
+    margin-bottom: 1rem;
+}
+
+.featureTitle {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.featureDesc {
+    color: #666;
+}

@@ -1,4 +1,5 @@
 import HeroBanner from '@/components/home/HeroBanner';
+import AnimalSpecies from '@/components/home/AnimalSpecies';
 import ProductCard from '@/components/ui/ProductCard';
 import { ShoppingBag, Scissors, Calendar, Star } from 'lucide-react';
 import styles from './Home.module.css';
@@ -33,6 +34,9 @@ export default async function HomePage() {
         <div>
             {/* Hero Section */}
             <HeroBanner />
+
+            {/* Species Section */}
+            <AnimalSpecies />
 
             {/* Categories */}
             <section className={`container ${styles.categoriesSection}`}>

@@ -1,5 +1,6 @@
 import HeroBanner from '@/components/home/HeroBanner';
 import AnimalSpecies from '@/components/home/AnimalSpecies';
+import OffersCarousel from '@/components/home/OffersCarousel';
 import ProductCard from '@/components/ui/ProductCard';
 import { ShoppingBag, Scissors, Calendar, Star } from 'lucide-react';
 import styles from './Home.module.css';
@@ -9,14 +10,30 @@ import Link from 'next/link';
 
 async function getProducts() {
     await dbConnect();
-    // Fetch only 8 products, sorted by creation date (newest first)
     const products = await Product.find({})
         .sort({ createdAt: -1 })
         .limit(8)
         .populate('partnerId', 'name')
         .lean();
 
-    // Convert _id and partnerId._id to string to avoid serialization issues
+    return products.map((product: any) => ({
+        ...product,
+        _id: product._id.toString(),
+        partnerId: product.partnerId ? {
+            ...product.partnerId,
+            _id: product.partnerId._id.toString()
+        } : null
+    }));
+}
+
+async function getOfferProducts() {
+    await dbConnect();
+    const products = await Product.find({ discount: { $gt: 0 } })
+        .sort({ discount: -1 })
+        .limit(10)
+        .populate('partnerId', 'name')
+        .lean();
+
     return products.map((product: any) => ({
         ...product,
         _id: product._id.toString(),
@@ -29,6 +46,7 @@ async function getProducts() {
 
 export default async function HomePage() {
     const products = await getProducts();
+    const offerProducts = await getOfferProducts();
 
     return (
         <div>
@@ -37,6 +55,9 @@ export default async function HomePage() {
 
             {/* Species Section */}
             <AnimalSpecies />
+
+            {/* Offers Section */}
+            <OffersCarousel products={offerProducts} />
 
             {/* Categories */}
             <section className={`container ${styles.categoriesSection}`}>

@@ -1,0 +1,51 @@
+.section {
+    width: 1300px;
+    margin: 80px auto;
+}
+
+.title {
+    font-size: 38px;
+    font-weight: 600;
+    color: #253D4E;
+    text-align: left;
+    margin-bottom: 40px;
+}
+
+.carouselContainer {
+    width: 100%;
+    overflow-x: auto;
+    display: flex;
+    gap: 50px;
+    padding-bottom: 20px;
+    scrollbar-width: thin;
+    scrollbar-color: #3BB77E #f0f0f0;
+}
+
+.carouselContainer::-webkit-scrollbar {
+    height: 8px;
+}
+
+.carouselContainer::-webkit-scrollbar-track {
+    background: #f0f0f0;
+    border-radius: 10px;
+}
+
+.carouselContainer::-webkit-scrollbar-thumb {
+    background: #3BB77E;
+    border-radius: 10px;
+}
+
+.noOffers {
+    text-align: center;
+    padding: 40px;
+    color: #8F90A6;
+    font-size: 18px;
+    width: 100%;
+}
+
+@media (max-width: 1350px) {
+    .section {
+        width: 100%;
+        padding: 0 20px;
+    }
+}

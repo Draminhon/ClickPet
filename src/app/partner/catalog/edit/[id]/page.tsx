@@ -18,6 +18,8 @@ export default function EditProduct() {
         category: 'food',
         image: '',
         discount: '0',
+        productType: 'Produto',
+        subCategory: 'Geral',
     });
 
     useEffect(() => {
@@ -32,6 +34,8 @@ export default function EditProduct() {
                         category: data.category,
                         image: data.image || '',
                         discount: data.discount?.toString() || '0',
+                        productType: data.productType || 'Produto',
+                        subCategory: data.subCategory || 'Geral',
                     });
                 });
         }
@@ -135,6 +139,29 @@ export default function EditProduct() {
                         )}
                         <input type="file" accept="image/*" onChange={handleImageChange} style={{ display: 'none' }} />
                     </label>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                    <div>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Tipo (ex: Ração)</label>
+                        <input
+                            type="text"
+                            required
+                            style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
+                            value={formData.productType}
+                            onChange={e => setFormData({ ...formData, productType: e.target.value })}
+                        />
+                    </div>
+                    <div>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Porte/Categoria (ex: Grande)</label>
+                        <input
+                            type="text"
+                            required
+                            style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
+                            value={formData.subCategory}
+                            onChange={e => setFormData({ ...formData, subCategory: e.target.value })}
+                        />
+                    </div>
                 </div>
 
                 <div style={{ marginBottom: '1rem' }}>

@@ -35,6 +35,22 @@ const ProductSchema = new mongoose.Schema({
         default: 0,
         min: 0,
         max: 100,
+    },
+    productType: {
+        type: String, // e.g., "Ração"
+        default: 'Produto',
+    },
+    subCategory: {
+        type: String, // e.g., "Médio/Grande"
+        default: 'Geral',
+    },
+    rating: {
+        type: Number,
+        default: 5.0,
+    },
+    salesCount: {
+        type: Number,
+        default: 0,
     }
 }, { timestamps: true });
 

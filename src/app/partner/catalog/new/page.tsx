@@ -15,6 +15,9 @@ export default function NewProduct() {
         price: '',
         category: 'food',
         image: '',
+        productType: 'Produto',
+        subCategory: 'Geral',
+        discount: '0',
     });
     const [loading, setLoading] = useState(false);
 
@@ -120,6 +123,29 @@ export default function NewProduct() {
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                     <div>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Tipo (ex: Ração)</label>
+                        <input
+                            type="text"
+                            required
+                            style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
+                            value={formData.productType}
+                            onChange={e => setFormData({ ...formData, productType: e.target.value })}
+                        />
+                    </div>
+                    <div>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Porte/Categoria (ex: Grande)</label>
+                        <input
+                            type="text"
+                            required
+                            style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
+                            value={formData.subCategory}
+                            onChange={e => setFormData({ ...formData, subCategory: e.target.value })}
+                        />
+                    </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                    <div>
                         <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Preço (R$)</label>
                         <input
                             type="number"
@@ -131,21 +157,33 @@ export default function NewProduct() {
                         />
                     </div>
                     <div>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Categoria</label>
-                        <select
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Desconto (%)</label>
+                        <input
+                            type="number"
+                            min="0"
+                            max="100"
                             style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
-                            value={formData.category}
-                            onChange={e => setFormData({ ...formData, category: e.target.value })}
-                        >
-                            <option value="food">Rações</option>
-                            <option value="toys">Brinquedos</option>
-                            <option value="pharma">Farmácia</option>
-                            <option value="bath">Banho & Tosa</option>
-                            <option value="vet">Veterinário</option>
-                            <option value="pets">Pets</option>
-                            <option value="aquarismo">Aquarismo</option>
-                        </select>
+                            value={formData.discount}
+                            onChange={e => setFormData({ ...formData, discount: e.target.value })}
+                        />
                     </div>
+                </div>
+
+                <div style={{ marginBottom: '1rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Categoria Global</label>
+                    <select
+                        style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
+                        value={formData.category}
+                        onChange={e => setFormData({ ...formData, category: e.target.value })}
+                    >
+                        <option value="food">Rações</option>
+                        <option value="toys">Brinquedos</option>
+                        <option value="pharma">Farmácia</option>
+                        <option value="bath">Banho & Tosa</option>
+                        <option value="vet">Veterinário</option>
+                        <option value="pets">Pets</option>
+                        <option value="aquarismo">Aquarismo</option>
+                    </select>
                 </div>
 
                 <button

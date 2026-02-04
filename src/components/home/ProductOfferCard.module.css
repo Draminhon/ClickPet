@@ -1,0 +1,169 @@
+.card {
+    width: 287.29px;
+    height: 485.38px;
+    background: white;
+    border: 1px solid #ECECEC;
+    border-radius: 15px;
+    position: relative;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+
+
+.discountBadge {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 62.32px;
+    /* User said 62x32? I'll use exactly that or close */
+    height: 32.32px;
+    background-color: #D18C3E;
+    border-top-left-radius: 15px;
+    border-bottom-right-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+}
+
+.discountText {
+    color: #FFFFFF;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.imageContainer {
+    width: 100%;
+    height: 240px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.productImage {
+    object-fit: contain;
+}
+
+.infoContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex-grow: 1;
+}
+
+.productType {
+    font-size: 12px;
+    font-weight: 400;
+    color: #ADADAD;
+}
+
+.productTitle {
+    font-size: 16px;
+    font-weight: bold;
+    color: #253D4E;
+    line-height: 1.2;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    height: 38.4px;
+    /* ~2 lines */
+}
+
+.subCategoryBadge {
+    width: 123px;
+    height: 26px;
+    background-color: #DEF9EC;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 400;
+    color: #333333;
+}
+
+.ratingRow {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.stars {
+    display: flex;
+    align-items: center;
+    color: #E3A653;
+}
+
+.ratingValue {
+    font-size: 16px;
+    font-weight: 400;
+    color: #253D4E;
+}
+
+.divider {
+    width: 1px;
+    height: 12px;
+    background-color: #B6B6B6;
+    margin: 0 5px;
+}
+
+.salesCount {
+    font-size: 16px;
+    font-weight: 400;
+    color: #253D4E;
+}
+
+.priceRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: auto;
+}
+
+.prices {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+}
+
+.currentPrice {
+    font-size: 18px;
+    font-weight: bold;
+    color: #3BB77E;
+    text-decoration: underline;
+}
+
+.originalPrice {
+    font-size: 14px;
+    font-weight: 600;
+    color: #ADADAD;
+    text-decoration: line-through;
+}
+
+.addBtn {
+    width: 36px;
+    height: 36px;
+    background-color: #DEF9EC;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.addBtn:hover {
+    background-color: #29A56C33;
+}
+
+.cartIcon {
+    color: #29A56C;
+}

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { useToast } from '@/context/ToastContext';
 import styles from './login.module.css';
 
 const carouselImages = [
@@ -16,6 +17,9 @@ const carouselImages = [
 export default function Login() {
     const router = useRouter();
     const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+    const { showToast } = useToast();
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
     useEffect(() => {
@@ -27,8 +31,26 @@ export default function Login() {
 
     const handleContinue = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Here you would typically proceed to password or next step
-        console.log('Continuing with email:', email);
+        setLoading(true);
+
+        try {
+            const result = await signIn('credentials', {
+                email,
+                password,
+                redirect: false
+            });
+
+            if (result?.error) {
+                showToast(result.error, 'error');
+            } else {
+                showToast('Login realizado com sucesso!');
+                router.push('/');
+            }
+        } catch (error) {
+            showToast('Erro ao realizar login', 'error');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -76,8 +98,22 @@ export default function Login() {
                             />
                         </div>
 
-                        <button type="submit" className={styles.continueButton}>
-                            <span className={styles.continueText}>CONTINUAR</span>
+                        <div className={styles.inputGroup}>
+                            <div className={styles.inputLabel}>Senha</div>
+                            <input
+                                type="password"
+                                placeholder="Sua senha"
+                                className={styles.input}
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                            />
+                        </div>
+
+                        <button type="submit" className={styles.continueButton} disabled={loading}>
+                            <span className={styles.continueText}>
+                                {loading ? 'Carregando...' : 'CONTINUAR'}
+                            </span>
                         </button>
                     </form>
                 </div>

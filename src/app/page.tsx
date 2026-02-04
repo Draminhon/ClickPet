@@ -1,3 +1,4 @@
+import HeroBanner from '@/components/home/HeroBanner';
 import ProductCard from '@/components/ui/ProductCard';
 import { ShoppingBag, Scissors, Calendar, Star } from 'lucide-react';
 import styles from './Home.module.css';
@@ -31,24 +32,7 @@ export default async function HomePage() {
     return (
         <div>
             {/* Hero Section */}
-            <section className={styles.heroSection}>
-                <div className="container" style={{ textAlign: 'center' }}>
-                    <h1 className={styles.heroTitle}>
-                        Tudo para seu Pet em um só lugar! 🐾
-                    </h1>
-                    <p className={styles.heroSubtitle}>
-                        Produtos, serviços e muito mais com entrega rápida
-                    </p>
-                    <div className={styles.heroButtons}>
-                        <Link href="/search" className={`btn ${styles.heroBtnPrimary}`}>
-                            Ver Produtos
-                        </Link>
-                        <Link href="/services" className={`btn ${styles.heroBtnSecondary}`}>
-                            Agendar Serviço
-                        </Link>
-                    </div>
-                </div>
-            </section>
+            <HeroBanner />
 
             {/* Categories */}
             <section className={`container ${styles.categoriesSection}`}>

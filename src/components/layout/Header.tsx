@@ -18,7 +18,6 @@ export default function Header() {
     const router = useRouter();
     const pathname = usePathname();
     const [searchQuery, setSearchQuery] = useState('');
-    const [unreadNotifications, setUnreadNotifications] = useState(0);
     const [showAddressModal, setShowAddressModal] = useState(false);
     const [showAuthDropdown, setShowAuthDropdown] = useState(false);
     const [userAddress, setUserAddress] = useState<any>(null);
@@ -46,19 +45,9 @@ export default function Header() {
 
     useEffect(() => {
         if (session) {
-            fetchUnreadCount();
             fetchUserAddress();
-            const interval = setInterval(fetchUnreadCount, 10000); // Poll every 10s
-            return () => clearInterval(interval);
         }
     }, [session]);
-
-    const fetchUnreadCount = () => {
-        fetch('/api/notifications')
-            .then(res => res.json())
-            .then(data => setUnreadNotifications(data.unreadCount || 0))
-            .catch(() => { });
-    };
 
     const fetchUserAddress = () => {
         fetch('/api/profile')
@@ -185,12 +174,12 @@ export default function Header() {
                         </form>
                     </div>
 
-                    <div className={styles.notificationWrapper}>
-                        <Bell className={styles.notificationIcon} size={24} />
-                        {unreadNotifications > 0 && (
-                            <span className={styles.badge}>{unreadNotifications}</span>
+                    <Link href="/cart" className={styles.cartWrapper}>
+                        <ShoppingCart className={styles.cartIcon} size={24} />
+                        {count > 0 && (
+                            <span className={styles.badge}>{count}</span>
                         )}
-                    </div>
+                    </Link>
 
                     <div
                         className={styles.profileCircle}

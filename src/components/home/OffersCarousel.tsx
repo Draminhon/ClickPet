@@ -2,6 +2,7 @@
 
 import ProductOfferCard from './ProductOfferCard';
 import styles from './OffersCarousel.module.css';
+import Link from 'next/link';
 
 interface Product {
     _id: string;
@@ -17,15 +18,28 @@ interface Product {
 
 interface OffersCarouselProps {
     products: Product[];
+    title?: string;
+    hideViewAll?: boolean;
 }
 
-export default function OffersCarousel({ products }: OffersCarouselProps) {
+export default function OffersCarousel({
+    products,
+    title = 'Últimas ofertas',
+    hideViewAll = false
+}: OffersCarouselProps) {
     if (!products || products.length === 0) {
         return (
             <section className={styles.section}>
-                <h2 className={styles.title}>Últimas ofertas</h2>
+                <div className={styles.header}>
+                    <h2 className={styles.title}>{title}</h2>
+                    {!hideViewAll && (
+                        <Link href="/offers" className={styles.viewAll}>
+                            Ver tudo
+                        </Link>
+                    )}
+                </div>
                 <div className={styles.noOffers}>
-                    Nenhuma oferta disponível no momento.
+                    Nenhum produto disponível no momento.
                 </div>
             </section>
         );
@@ -33,7 +47,14 @@ export default function OffersCarousel({ products }: OffersCarouselProps) {
 
     return (
         <section className={styles.section}>
-            <h2 className={styles.title}>Últimas ofertas</h2>
+            <div className={styles.header}>
+                <h2 className={styles.title}>{title}</h2>
+                {!hideViewAll && (
+                    <Link href="/offers" className={styles.viewAll}>
+                        Ver tudo
+                    </Link>
+                )}
+            </div>
             <div className={styles.carouselContainer}>
                 {products.map((product) => (
                     <ProductOfferCard

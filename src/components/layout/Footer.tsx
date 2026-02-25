@@ -4,10 +4,14 @@ import Link from 'next/link';
 import { Youtube, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
 import styles from './Footer.module.css';
 
-export default function Footer() {
+interface FooterProps {
+    isProductPage?: boolean;
+}
+
+export default function Footer({ isProductPage = false }: FooterProps) {
     return (
         <footer className={styles.footer}>
-            <div className={styles.topRow}>
+            <div className={`${styles.topRow} ${isProductPage ? styles.productPageTopRow : ''}`}>
                 {/* Left side: Nav links in 243x48 box */}
                 <div className={styles.navLinksBox}>
                     <Link href="/" className={styles.navLink}>Início</Link>

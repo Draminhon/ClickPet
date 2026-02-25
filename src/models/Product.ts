@@ -51,7 +51,18 @@ const ProductSchema = new mongoose.Schema({
     salesCount: {
         type: Number,
         default: 0,
+    },
+    images: {
+        type: [String],
+        default: [],
+    },
+    weights: {
+        type: [String],
+        default: [],
     }
 }, { timestamps: true });
 
-export default mongoose.models.Product || mongoose.model('Product', ProductSchema);
+if (mongoose.models.Product) {
+    delete mongoose.models.Product;
+}
+export default mongoose.model('Product', ProductSchema);

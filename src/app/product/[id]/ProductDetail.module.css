@@ -1,0 +1,306 @@
+.container {
+    max-width: 1300px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.productRow {
+    display: flex;
+    gap: 40px;
+}
+
+.leftColumn {
+    flex: 0 0 659px;
+}
+
+.mainImageContainer {
+    width: 659px;
+    height: 449px;
+    border: 1px solid #D4D7E3;
+    border-radius: 18px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    background: #fff;
+}
+
+.mainImage {
+    object-fit: contain;
+}
+
+.thumbnailsRow {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.thumbnailContainer {
+    width: 100px;
+    height: 100px;
+    border: 1px solid #D4D7E3;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    transition: border-color 0.2s;
+}
+
+.thumbnailContainer.active {
+    border-color: #3BB77E;
+    border-width: 2px;
+}
+
+.thumbnailImage {
+    object-fit: contain;
+}
+
+.rightColumn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.title {
+    font-size: 32px;
+    font-weight: 700;
+    color: #253D4E;
+    text-align: left;
+    margin-bottom: 15px;
+}
+
+.ratingRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.stars {
+    display: flex;
+    gap: 2px;
+}
+
+.ratingValue {
+    font-size: 16px;
+    color: #253D4E;
+}
+
+.bullet {
+    font-size: 17px;
+    color: #253D4E;
+}
+
+.reviewsCount {
+    font-size: 16px;
+    font-weight: 600;
+    color: #253D4E;
+}
+
+.price {
+    font-size: 32px;
+    font-weight: 700;
+    color: #3BB77E;
+    margin-bottom: 20px;
+}
+
+.divider {
+    height: 1px;
+    width: 100%;
+    background-color: #CFDFE2;
+    margin: 20px 0;
+}
+
+.description {
+    font-size: 16px;
+    color: #253D4E;
+    line-height: 1.6;
+}
+
+.weightsRow {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.weightLabel {
+    font-size: 16px;
+    color: #253D4E;
+}
+
+.weightItem {
+    font-size: 16px;
+    color: #253D4E;
+    cursor: pointer;
+}
+
+.weightItemActive {
+    width: 62px;
+    height: 44px;
+    background-color: #3BB77E;
+    color: #FEFEFE;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.actionsContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.quantityAndPriceRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.totalPrice {
+    font-size: 32px;
+    font-weight: 700;
+    color: #3BB77E;
+}
+
+.quantitySelector {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100px;
+    height: 44px;
+    border: 2px solid #3BB77E;
+    border-radius: 5px;
+    padding: 0 10px;
+}
+
+.quantityValue {
+    font-size: 16px;
+    color: black;
+}
+
+.quantityControls {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.quantityBtn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #3BB77E;
+    display: flex;
+    align-items: center;
+    padding: 0;
+}
+
+.addToCartBtn {
+    width: 261px;
+    height: 36px;
+    background-color: #3BB77E;
+    border: 1px solid #D4D7E3;
+    border-radius: 8px;
+    color: #FEFEFE;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    margin-top: 20px;
+}
+
+.addToCartBtn:hover {
+    opacity: 0.9;
+}
+
+.tabsRow {
+    width: 1300px;
+    height: 44px;
+    display: flex;
+    margin: 60px auto 0;
+    gap: 0;
+}
+
+.tab {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    background-color: transparent;
+    border: 1px solid #D4D7E3;
+    color: #253D4E;
+    font-size: 16px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.tabActive {
+    background-color: #3BB77E;
+    color: #FEFEFE;
+    border-color: #3BB77E;
+}
+
+.tabIcon {
+    width: 20px;
+    height: 20px;
+}
+
+.tabContent {
+    width: 1300px;
+    height: 293px;
+    margin: 0 auto;
+    background-color: transparent;
+    border: 1px solid #D4D7E3;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    /* Connecting better with tabs if they were stacked, but spec says 8 rounded border for the box */
+}
+
+/* Redefining based on user image/desc might need some adjustments */
+.tabContentBox {
+    width: 1300px;
+    min-height: 293px;
+    margin: 20px auto 60px;
+    padding: 30px;
+    border: 1px solid #D4D7E3;
+    border-radius: 8px;
+    color: #253D4E;
+    line-height: 1.6;
+}
+
+.relatedSection {
+    margin-top: 80px;
+    padding-bottom: 40px;
+}
+
+.relatedProductsTitle {
+    font-size: 32px;
+    font-weight: 700;
+    color: #253D4E;
+    margin-bottom: 30px;
+}
+
+@media (max-width: 1100px) {
+    .productRow {
+        flex-direction: column;
+    }
+
+    .leftColumn {
+        flex: 0 0 auto;
+        width: 100%;
+    }
+
+    .mainImageContainer {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 659 / 449;
+    }
+}

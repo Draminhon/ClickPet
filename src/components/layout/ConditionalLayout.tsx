@@ -8,12 +8,13 @@ import Footer from "./Footer";
 export default function ConditionalLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const isAuthPage = pathname === "/login" || pathname === "/register";
+    const isProductPage = pathname?.startsWith("/product/");
 
     return (
         <>
             {!isAuthPage && <Header />}
             {children}
-            {!isAuthPage && <Footer />}
+            {!isAuthPage && <Footer isProductPage={isProductPage} />}
             {!isAuthPage && <MobileNav />}
         </>
     );

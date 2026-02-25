@@ -18,6 +18,7 @@ export default function NewProduct() {
         productType: 'Produto',
         subCategory: 'Geral',
         discount: '0',
+        weights: '', // Temporary string for input
     });
     const [loading, setLoading] = useState(false);
 
@@ -41,11 +42,21 @@ export default function NewProduct() {
         e.preventDefault();
         setLoading(true);
 
+        // Convert weights string to array if category is food
+        const weightsArray = formData.weights
+            ? formData.weights.split(',').map(s => s.trim()).filter(s => s !== '')
+            : [];
+
+        const submitData = {
+            ...formData,
+            weights: formData.category === 'food' ? weightsArray : []
+        };
+
         try {
             const res = await fetch('/api/products', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData),
+                body: JSON.stringify(submitData),
             });
 
             if (res.ok) {
@@ -185,6 +196,24 @@ export default function NewProduct() {
                         <option value="aquarismo">Aquarismo</option>
                     </select>
                 </div>
+
+                {formData.category === 'food' && (
+                    <div style={{ marginBottom: '1rem' }}>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                            Pesos Disponíveis (kg)
+                            <span style={{ fontWeight: 400, fontSize: '0.8rem', color: '#666', marginLeft: '0.5rem' }}>
+                                (Separe por vírgula, ex: 1kg, 5kg, 10kg)
+                            </span>
+                        </label>
+                        <input
+                            type="text"
+                            placeholder="ex: 1kg, 5kg, 10.1kg"
+                            style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
+                            value={formData.weights}
+                            onChange={e => setFormData({ ...formData, weights: e.target.value })}
+                        />
+                    </div>
+                )}
 
                 <button
                     type="submit"

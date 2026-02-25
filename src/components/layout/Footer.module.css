@@ -18,6 +18,10 @@
     margin-bottom: 24px;
 }
 
+.productPageTopRow {
+    margin-top: 40px !important;
+}
+
 .navLinksBox {
     width: 243px;
     height: 48px;

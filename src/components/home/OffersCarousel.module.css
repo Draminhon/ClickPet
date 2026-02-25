@@ -3,12 +3,30 @@
     margin: 80px auto;
 }
 
-.title {
-    font-size: 38px;
-    font-weight: 600;
-    color: #253D4E;
-    text-align: left;
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 40px;
+}
+
+.title {
+    font-size: 32px;
+    font-weight: 700;
+    color: #253D4E;
+    margin: 0;
+}
+
+.viewAll {
+    font-size: 24px;
+    color: rgb(29, 174, 255);
+    text-decoration: none;
+    cursor: pointer;
+    font-weight: 400;
+}
+
+.viewAll:hover {
+    text-decoration: underline;
 }
 
 .carouselContainer {

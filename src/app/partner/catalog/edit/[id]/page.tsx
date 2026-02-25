@@ -20,6 +20,7 @@ export default function EditProduct() {
         discount: '0',
         productType: 'Produto',
         subCategory: 'Geral',
+        weights: '',
     });
 
     useEffect(() => {
@@ -36,6 +37,7 @@ export default function EditProduct() {
                         discount: data.discount?.toString() || '0',
                         productType: data.productType || 'Produto',
                         subCategory: data.subCategory || 'Geral',
+                        weights: data.weights ? data.weights.join(', ') : '',
                     });
                 });
         }
@@ -61,11 +63,21 @@ export default function EditProduct() {
         e.preventDefault();
         setLoading(true);
 
+        // Convert weights string to array if category is food
+        const weightsArray = formData.weights
+            ? formData.weights.split(',').map(s => s.trim()).filter(s => s !== '')
+            : [];
+
+        const submitData = {
+            ...formData,
+            weights: formData.category === 'food' ? weightsArray : []
+        };
+
         try {
             const res = await fetch(`/api/products/${params.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData),
+                body: JSON.stringify(submitData),
             });
 
             if (res.ok) {
@@ -238,6 +250,24 @@ export default function EditProduct() {
                         <option value="aquarismo">Aquarismo</option>
                     </select>
                 </div>
+
+                {formData.category === 'food' && (
+                    <div style={{ marginBottom: '1rem' }}>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                            Pesos Disponíveis (kg)
+                            <span style={{ fontWeight: 400, fontSize: '0.8rem', color: '#666', marginLeft: '0.5rem' }}>
+                                (Separe por vírgula, ex: 1kg, 5kg, 10kg)
+                            </span>
+                        </label>
+                        <input
+                            type="text"
+                            placeholder="ex: 1kg, 5kg, 10.1kg"
+                            style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
+                            value={formData.weights}
+                            onChange={e => setFormData({ ...formData, weights: e.target.value })}
+                        />
+                    </div>
+                )}
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '1rem' }}>
                     <button

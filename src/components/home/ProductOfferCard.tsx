@@ -5,6 +5,7 @@ import { Star, ShoppingCart } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/context/ToastContext';
 import styles from './ProductOfferCard.module.css';
+import Link from 'next/link';
 
 interface ProductOfferCardProps {
     id: string;
@@ -52,7 +53,7 @@ export default function ProductOfferCard({
     };
 
     return (
-        <div className={styles.card}>
+        <Link href={`/product/${id}`} className={styles.card}>
             {discount > 0 && (
                 <div className={styles.discountBadge}>
                     <span className={styles.discountText}>{discount}%</span>
@@ -91,9 +92,11 @@ export default function ProductOfferCard({
                         <span className={styles.currentPrice}>
                             R$ {currentPrice.toFixed(2).replace('.', ',')}
                         </span>
-                        <span className={styles.originalPrice}>
-                            R$ {price.toFixed(2).replace('.', ',')}
-                        </span>
+                        {discount > 0 && (
+                            <span className={styles.originalPrice}>
+                                R$ {price.toFixed(2).replace('.', ',')}
+                            </span>
+                        )}
                     </div>
 
                     <button className={styles.addBtn} onClick={handleAdd} title="Adicionar ao carrinho">
@@ -101,6 +104,6 @@ export default function ProductOfferCard({
                     </button>
                 </div>
             </div>
-        </div>
+        </Link>
     );
 }

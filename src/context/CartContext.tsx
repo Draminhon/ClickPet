@@ -13,7 +13,7 @@ export interface CartItem {
 
 interface CartContextType {
     items: CartItem[];
-    addToCart: (item: Omit<CartItem, 'quantity'>) => void;
+    addToCart: (item: Omit<CartItem, 'quantity'>, quantity?: number) => void;
     removeFromCart: (id: string) => void;
     clearCart: () => void;
     total: number;
@@ -42,17 +42,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
         localStorage.setItem('cart', JSON.stringify(items));
     }, [items]);
 
-    const addToCart = (newItem: Omit<CartItem, 'quantity'>) => {
+    const addToCart = (newItem: Omit<CartItem, 'quantity'>, quantity: number = 1) => {
         setItems(current => {
             const existing = current.find(item => item.id === newItem.id);
             if (existing) {
                 return current.map(item =>
                     item.id === newItem.id
-                        ? { ...item, quantity: item.quantity + 1 }
+                        ? { ...item, quantity: item.quantity + quantity }
                         : item
                 );
             }
-            return [...current, { ...newItem, quantity: 1 }];
+            return [...current, { ...newItem, quantity }];
         });
     };
 

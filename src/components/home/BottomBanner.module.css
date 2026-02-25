@@ -1,0 +1,79 @@
+.bannerSection {
+    width: 1300px;
+    height: 482px;
+    margin: 80px auto;
+    position: relative;
+    border-radius: 50px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    background-image: url('/assets/bottom-header-main/fish_botton_header.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.contentColumn {
+    padding-left: 80px;
+    max-width: 600px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.title {
+    font-weight: 700;
+    font-size: 54px;
+    line-height: 1.1;
+    color: #253D4E;
+    margin: 0;
+}
+
+.subtitle {
+    font-weight: 400;
+    font-size: 22px;
+    line-height: 1.4;
+    color: #253D4E;
+    margin: 16px 0 32px 0;
+}
+
+.contactButton {
+    width: 213px;
+    height: 50px;
+    background-color: #3BB77E;
+    color: #FFFFFF;
+    font-weight: 700;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+}
+
+.contactButton:hover {
+    background-color: #29A56C;
+}
+
+@media (max-width: 1350px) {
+    .bannerSection {
+        width: 100%;
+        margin: 40px 0;
+        border-radius: 0;
+    }
+
+    .contentColumn {
+        padding-left: 40px;
+        max-width: 80%;
+    }
+
+    .title {
+        font-size: 36px;
+    }
+
+    .subtitle {
+        font-size: 18px;
+    }
+}

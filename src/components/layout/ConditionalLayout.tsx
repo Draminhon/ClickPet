@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import Header from "./Header";
 import MobileNav from "./MobileNav";
+import Footer from "./Footer";
 
 export default function ConditionalLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
@@ -12,6 +13,7 @@ export default function ConditionalLayout({ children }: { children: React.ReactN
         <>
             {!isAuthPage && <Header />}
             {children}
+            {!isAuthPage && <Footer />}
             {!isAuthPage && <MobileNav />}
         </>
     );

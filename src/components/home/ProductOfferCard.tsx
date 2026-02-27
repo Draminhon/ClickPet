@@ -18,6 +18,7 @@ interface ProductOfferCardProps {
     subCategory?: string;
     rating?: number;
     salesCount?: number;
+    noBorder?: boolean;
 }
 
 export default function ProductOfferCard({
@@ -30,7 +31,8 @@ export default function ProductOfferCard({
     productType = 'Produto',
     subCategory = 'Geral',
     rating = 5.0,
-    salesCount = 0
+    salesCount = 0,
+    noBorder = false
 }: ProductOfferCardProps) {
     const { addToCart } = useCart();
     const { showToast } = useToast();
@@ -47,13 +49,16 @@ export default function ProductOfferCard({
             id,
             title,
             price: currentPrice,
-            shopName
+            shopName,
+            image,
+            productType,
+            subCategory,
         });
         showToast('Produto adicionado ao carrinho!');
     };
 
     return (
-        <Link href={`/product/${id}`} className={styles.card}>
+        <Link href={`/product/${id}`} className={`${styles.card} ${noBorder ? styles.noBorder : ''}`}>
             {discount > 0 && (
                 <div className={styles.discountBadge}>
                     <span className={styles.discountText}>{discount}%</span>
@@ -72,7 +77,7 @@ export default function ProductOfferCard({
 
             <div className={styles.infoContainer}>
                 <span className={styles.productType}>{productType}</span>
-                <h3 className={styles.productTitle}>{title}</h3>
+                <h3 className={`${styles.productTitle} ${noBorder ? styles.titleBold : ''}`}>{title}</h3>
 
                 <div className={styles.subCategoryBadge}>
                     {subCategory}
@@ -89,7 +94,7 @@ export default function ProductOfferCard({
 
                 <div className={styles.priceRow}>
                     <div className={styles.prices}>
-                        <span className={styles.currentPrice}>
+                        <span className={`${styles.currentPrice} ${noBorder ? `${styles.priceSemiBold} ${styles.priceNoUnderline}` : ''}`}>
                             R$ {currentPrice.toFixed(2).replace('.', ',')}
                         </span>
                         {discount > 0 && (
@@ -99,9 +104,11 @@ export default function ProductOfferCard({
                         )}
                     </div>
 
-                    <button className={styles.addBtn} onClick={handleAdd} title="Adicionar ao carrinho">
-                        <ShoppingCart size={15} className={styles.cartIcon} />
-                    </button>
+                    {!noBorder && (
+                        <button className={styles.addBtn} onClick={handleAdd} title="Adicionar ao carrinho">
+                            <ShoppingCart size={15} className={styles.cartIcon} />
+                        </button>
+                    )}
                 </div>
             </div>
         </Link>

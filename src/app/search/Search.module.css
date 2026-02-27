@@ -1,0 +1,253 @@
+.container {
+    padding: 40px 0;
+    display: flex;
+    gap: 40px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.sidebar {
+    width: 293px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.filterIcon {
+    color: #253D4E;
+    margin-bottom: 10px;
+}
+
+.sectionTitle {
+    font-size: 20px;
+    color: #253D4E;
+    font-weight: 400;
+    margin-bottom: 15px;
+}
+
+.filterGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 25px;
+}
+
+/* Custom Radio Buttons */
+.radioLabel {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    font-size: 16px;
+    color: #253D4E;
+    user-select: none;
+}
+
+.radioInput {
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border: 1px solid #D4D7E3;
+    border-radius: 50%;
+    background-color: #F7FBFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.radioInput:checked {
+    border-color: #3BB77E;
+}
+
+.radioInput:checked::after {
+    content: '';
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #3BB77E;
+}
+
+.divider {
+    width: 293px;
+    height: 1px;
+    background-color: #CFDFE2;
+    margin: 20px 0;
+}
+
+/* Price Range */
+.priceRangeRow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.priceInputContainer {
+    width: 115px;
+    height: 48px;
+    background-color: #F7FBFF;
+    border: 1px solid #D4D7E3;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+}
+
+.priceInput {
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-size: 16px;
+    color: #253D4E;
+}
+
+.priceInput::placeholder {
+    color: #8897AD;
+}
+
+.priceSeparator {
+    font-size: 38px;
+    color: #253D4E;
+    line-height: 1;
+}
+
+/* Checkbox */
+.checkboxLabel {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    font-size: 20px;
+    color: #253D4E;
+    font-weight: 400;
+    margin: 20px 0;
+}
+
+.checkboxInput {
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    background-color: #F7FBFF;
+    border: 1px solid #D4D7E3;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.checkboxInput:checked {
+    background-color: #3BB77E;
+    border-color: #3BB77E;
+}
+
+.checkboxInput:checked::after {
+    content: '✓';
+    color: white;
+    font-size: 16px;
+}
+
+/* Selectors */
+.selectorsGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.customSelect {
+    width: 293px;
+    height: 52px;
+    background-color: #F7FBFF;
+    border: 1px solid #D4D7E3;
+    border-radius: 8px;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    position: relative;
+}
+
+.selectText {
+    font-size: 16px;
+    color: #253D4E;
+}
+
+.selectIcon {
+    width: 20px;
+    height: 20px;
+    color: #000000;
+}
+
+.nativeSelect {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+/* Results Content */
+.mainContent {
+    flex: 1;
+}
+
+.resultsHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.resultsHeader h1 {
+    font-size: 32px;
+    color: #253D4E;
+    font-weight: 400;
+}
+
+.resultsCount {
+    color: #7E7E7E;
+    font-size: 16px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+.noResults {
+    background: white;
+    padding: 60px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.noResults p {
+    color: #7E7E7E;
+    margin-bottom: 20px;
+    font-size: 18px;
+}
+
+@media (max-width: 1024px) {
+    .container {
+        flex-direction: column;
+        padding: 20px;
+    }
+
+    .sidebar {
+        width: 100%;
+    }
+
+    .divider {
+        width: 100%;
+    }
+}

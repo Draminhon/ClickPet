@@ -37,12 +37,19 @@ export async function PUT(req: Request) {
         if (body.deliveryRadius !== undefined) updateData.deliveryRadius = body.deliveryRadius;
         if (body.deliveryFeePerKm !== undefined) updateData.deliveryFeePerKm = body.deliveryFeePerKm;
         if (body.freeDeliveryMinimum !== undefined) updateData.freeDeliveryMinimum = body.freeDeliveryMinimum;
+        if (body.image !== undefined) updateData.image = body.image;
 
         const user = await User.findByIdAndUpdate(
             session.user.id,
             updateData,
             { new: true }
         ).select('-password');
+
+        // Debug logging
+        if (body.image) {
+            console.log(`[DEBUG] Received image length: ${body.image.length}`);
+            console.log(`[DEBUG] Saved user image field present: ${!!user?.image}`);
+        }
 
         return NextResponse.json(user);
     } catch (error: any) {

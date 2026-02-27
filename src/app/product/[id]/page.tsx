@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
-import { Star, ChevronUp, ChevronDown, Info, Truck } from 'lucide-react';
+import { Star, ChevronUp, ChevronDown, Info, Truck, User } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/context/ToastContext';
 import OffersCarousel from '@/components/home/OffersCarousel';
@@ -20,9 +20,22 @@ interface Product {
     images: string[];
     productType: string;
     subCategory: string;
+    category?: string;
     rating: number;
     salesCount: number;
     weights: string[];
+}
+
+interface Review {
+    _id: string;
+    userId: {
+        _id: string;
+        name: string;
+        image?: string;
+    };
+    rating: number;
+    comment: string;
+    createdAt: string;
 }
 
 export default function ProductDetailPage() {
@@ -34,9 +47,30 @@ export default function ProductDetailPage() {
     const [quantity, setQuantity] = useState(1);
     const [activeTab, setActiveTab] = useState('info');
     const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+    const [showReviewForm, setShowReviewForm] = useState(false);
+    const [newReview, setNewReview] = useState({ rating: 5, comment: '' });
+
+    const [reviews, setReviews] = useState<Review[]>([]);
+    const [stats, setStats] = useState({ avgRating: 0, totalReviews: 0 });
 
     const { addToCart } = useCart();
     const { showToast } = useToast();
+
+    const fetchReviews = async () => {
+        try {
+            const res = await fetch(`/api/reviews?productId=${id}`);
+            const data = await res.json();
+            if (data.reviews) {
+                setReviews(data.reviews);
+                setStats({
+                    avgRating: data.avgRating,
+                    totalReviews: data.totalReviews
+                });
+            }
+        } catch (error) {
+            console.error('Error fetching reviews:', error);
+        }
+    };
 
     useEffect(() => {
         const fetchProduct = async () => {
@@ -50,9 +84,13 @@ export default function ProductDetailPage() {
                 }
 
                 // Fetch related products
-                const relatedRes = await fetch(`/api/products?category=${data.category}`);
+                const categoryParam = data.category ? `?category=${data.category}` : '';
+                const relatedRes = await fetch(`/api/products${categoryParam}`);
                 const relatedData = await relatedRes.json();
                 setRelatedProducts(relatedData.filter((p: Product) => p._id !== data._id).slice(0, 10));
+
+                // Fetch real reviews
+                fetchReviews();
             } catch (error) {
                 console.error('Error fetching product:', error);
             } finally {
@@ -65,6 +103,34 @@ export default function ProductDetailPage() {
         }
     }, [id]);
 
+    const handleApplyReview = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            const res = await fetch('/api/reviews', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    productId: id,
+                    rating: newReview.rating,
+                    comment: newReview.comment
+                })
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                showToast('Avaliação enviada com sucesso!');
+                setShowReviewForm(false);
+                setNewReview({ rating: 5, comment: '' });
+                fetchReviews(); // Refresh review list
+            } else {
+                showToast(data.message || 'Erro ao enviar avaliação');
+            }
+        } catch (error) {
+            showToast('Erro de conexão ao enviar avaliação');
+        }
+    };
+
     if (loading) return <div className={styles.container}>Carregando...</div>;
     if (!product) return <div className={styles.container}>Produto não encontrado.</div>;
 
@@ -72,11 +138,16 @@ export default function ProductDetailPage() {
     const allImages = [product.image, ...(product.images || [])].filter(img => img);
 
     const handleAddToCart = () => {
+        if (!product) return;
         addToCart({
             id: product._id,
             title: product.title,
             price: currentPrice,
             shopName: 'Petshop', // Normally this would come from the product
+            image: product.image,
+            productType: product.productType || 'Produto',
+            subCategory: product.subCategory || 'Geral',
+            selectedWeight: selectedWeight,
         }, quantity);
         showToast('Produto adicionado ao carrinho!');
     };
@@ -236,27 +307,129 @@ export default function ProductDetailPage() {
                     </div>
                 )}
                 {activeTab === 'reviews' && (
-                    <div>
-                        <h3 style={{ marginBottom: '15px', fontSize: '20px' }}>Avaliações dos Clientes</h3>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
-                            <div style={{ fontSize: '32px', fontWeight: 700 }}>{product.rating.toFixed(1)}</div>
+                    <div className={styles.reviewsSection}>
+                        <div className={styles.reviewHeader}>
                             <div>
-                                <div style={{ display: 'flex' }}>
-                                    {[...Array(5)].map((_, i) => (
-                                        <Star key={i} size={18} fill={i < Math.floor(product.rating) ? "#E3A653" : "none"} stroke="#E3A653" />
-                                    ))}
+                                <h3 style={{ marginBottom: '5px', fontSize: '24px', fontWeight: 700 }}>Comentários Recentes</h3>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <div style={{ fontSize: '32px', fontWeight: 700 }}>{product.rating.toFixed(1)}</div>
+                                    <div>
+                                        <div style={{ display: 'flex' }}>
+                                            {[...Array(5)].map((_, i) => (
+                                                <Star key={i} size={18} fill={i < Math.floor(product.rating) ? "#E3A653" : "none"} stroke="#E3A653" />
+                                            ))}
+                                        </div>
+                                        <div style={{ fontSize: '14px', color: '#666' }}>Baseado em {product.salesCount} avaliações</div>
+                                    </div>
                                 </div>
-                                <div style={{ fontSize: '14px', color: '#666' }}>Baseado em {product.salesCount} avaliações</div>
                             </div>
+                            <button className={styles.evaluateBtn} onClick={() => setShowReviewForm(!showReviewForm)}>
+                                {showReviewForm ? 'Fechar Avaliação' : 'Avaliar Produto'}
+                            </button>
                         </div>
-                        <p>Ainda não há avaliações detalhadas para este produto.</p>
+
+                        {showReviewForm && (
+                            <div className={styles.reviewForm}>
+                                <h4 className={styles.formTitle}>Deixe sua avaliação</h4>
+                                <form onSubmit={handleApplyReview}>
+                                    <div className={styles.formGroup}>
+                                        <label>Sua nota:</label>
+                                        <div className={styles.ratingInput}>
+                                            {[...Array(5)].map((_, i) => (
+                                                <button
+                                                    key={i}
+                                                    type="button"
+                                                    className={styles.starBtn}
+                                                    onClick={() => setNewReview({ ...newReview, rating: i + 1 })}
+                                                >
+                                                    <Star
+                                                        size={24}
+                                                        fill={i < newReview.rating ? "#E3A653" : "none"}
+                                                        stroke="#E3A653"
+                                                    />
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div className={styles.formGroup}>
+                                        <label>Seu comentário:</label>
+                                        <textarea
+                                            className={styles.formTextarea}
+                                            placeholder="Conte-nos o que achou do produto..."
+                                            value={newReview.comment}
+                                            onChange={(e) => setNewReview({ ...newReview, comment: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                    <button type="submit" className={styles.submitReviewBtn}>
+                                        Enviar Avaliação
+                                    </button>
+                                </form>
+                            </div>
+                        )}
+
+                        <div className={styles.reviewsList} style={{ marginTop: '20px' }}>
+                            {reviews.map((review, index) => (
+                                <div key={review._id}>
+                                    <div className={styles.reviewItem}>
+                                        <div className={styles.avatarWrapper}>
+                                            {review.userId?.image ? (
+                                                <Image
+                                                    src={review.userId.image}
+                                                    alt={review.userId.name || 'Usuário'}
+                                                    width={100}
+                                                    height={100}
+                                                    className={styles.reviewerAvatar}
+                                                />
+                                            ) : (
+                                                <div className={styles.avatarIconFallback}>
+                                                    <User size={50} color="#3BB77E" />
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className={styles.reviewContent}>
+                                            <div className={styles.reviewNameRow}>
+                                                <span className={styles.reviewerName}>{review.userId?.name || 'Anônimo'}</span>
+                                                <div style={{ display: 'flex', gap: '2px' }}>
+                                                    {[...Array(5)].map((_, i) => (
+                                                        <Star
+                                                            key={i}
+                                                            size={16}
+                                                            fill={i < review.rating ? "#E3A653" : "none"}
+                                                            stroke="#E3A653"
+                                                        />
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            <span className={styles.reviewDate}>
+                                                {new Date(review.createdAt).toLocaleDateString('pt-BR', {
+                                                    day: 'numeric',
+                                                    month: 'long',
+                                                    year: 'numeric'
+                                                })}
+                                            </span>
+                                            <p className={styles.reviewText}>{review.comment}</p>
+                                        </div>
+                                    </div>
+                                    {index < reviews.length - 1 && <div className={styles.reviewDivider} />}
+                                </div>
+                            ))}
+                            {reviews.length === 0 && (
+                                <p style={{ textAlign: 'center', color: '#7E7E7E', padding: '20px' }}>
+                                    Nenhuma avaliação encontrada para este produto.
+                                </p>
+                            )}
+                        </div>
                     </div>
                 )}
             </div>
 
-            <div className={styles.relatedSection}>
+            <div className={relatedSectionClass}>
                 <OffersCarousel products={relatedProducts} title="Produtos Relacionados" hideViewAll />
             </div>
+            <Footer />
         </div>
     );
 }
+
+const relatedSectionClass = styles.relatedSection;

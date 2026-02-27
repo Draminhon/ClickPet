@@ -21,6 +21,7 @@ export default function Header() {
     const [showAddressModal, setShowAddressModal] = useState(false);
     const [showAuthDropdown, setShowAuthDropdown] = useState(false);
     const [userAddress, setUserAddress] = useState<any>(null);
+    const [userImage, setUserImage] = useState<string | null>(null);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -54,6 +55,7 @@ export default function Header() {
             .then(res => res.json())
             .then(data => {
                 setUserAddress(data.address);
+                setUserImage(data.image || null);
                 if (data.address) {
                     setAddressForm({
                         street: data.address.street || '',
@@ -192,7 +194,17 @@ export default function Header() {
                         }}
                         style={{ cursor: 'pointer' }}
                     >
-                        <User className={styles.profileIcon} size={24} />
+                        {session && userImage ? (
+                            <Image
+                                src={userImage}
+                                alt="Profile"
+                                width={48}
+                                height={48}
+                                className={styles.headerAvatar}
+                            />
+                        ) : (
+                            <User className={styles.profileIcon} size={24} />
+                        )}
 
                         {!session && showAuthDropdown && (
                             <div className={styles.authDropdown} onClick={(e) => e.stopPropagation()}>

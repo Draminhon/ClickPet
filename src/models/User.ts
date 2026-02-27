@@ -6,6 +6,9 @@ const UserSchema = new mongoose.Schema({
         required: [true, 'Please provide a name'],
         maxlength: [60, 'Name cannot be more than 60 characters'],
     },
+    image: {
+        type: String,
+    },
     email: {
         type: String,
         required: [true, 'Please provide an email'],
@@ -69,5 +72,9 @@ const UserSchema = new mongoose.Schema({
         default: 0, // R$ 0 = no free delivery
     },
 }, { timestamps: true });
+
+if (mongoose.models.User) {
+    delete mongoose.models.User;
+}
 
 export default mongoose.models.User || mongoose.model('User', UserSchema);

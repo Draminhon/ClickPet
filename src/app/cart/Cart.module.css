@@ -1,0 +1,356 @@
+.container {
+    padding: 2rem 0;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.cartGrid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+}
+
+.cartItemsContainer {
+    width: 878px;
+    height: fit-content;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border: 1px solid #D4D7E3;
+    border-radius: 8px;
+    background-color: var(--bg-light);
+    overflow: hidden;
+}
+
+.cartItem {
+    width: 100%;
+    height: 147px;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+.removeBtn {
+    width: 16px;
+    height: 16px;
+    color: #253D4E;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin-right: 20px;
+}
+
+.productImage {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+    margin-right: 20px;
+    border-radius: 4px;
+}
+
+.infoColumn {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    /* Allow elipses */
+    margin-right: 38px;
+}
+
+.productTitle {
+    font-size: 20px;
+    font-weight: 400;
+    color: #253D4E;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.metaRow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 4px 0 8px 0;
+    color: #253D4E;
+    font-size: 16px;
+}
+
+.metaDivider {
+    width: 1px;
+    height: 20px;
+    background-color: #B6B6B6;
+}
+
+.sizeBadge {
+    width: 123px;
+    height: 26px;
+    background-color: #DEF9EC;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 400;
+    color: #253D4E;
+}
+
+.priceColumn {
+    display: flex;
+    align-items: center;
+    gap: 40px;
+}
+
+.unitPrice {
+    font-size: 20px;
+    font-weight: 400;
+    color: #3BB77E;
+    min-width: 80px;
+}
+
+.quantitySelector {
+    display: flex;
+    align-items: center;
+    background-color: #F7FBFF;
+    border: 1px solid #D4D7E3;
+    border-radius: 4px;
+    width: 119px;
+    height: 36px;
+    overflow: hidden;
+    padding: 0;
+}
+
+.qtyBtn {
+    background: none;
+    border: none;
+    color: #253D4E;
+    cursor: pointer;
+    width: 36px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.qtyBtnMinus {
+    border-right: 1px solid #D4D7E3;
+}
+
+.qtyBtnPlus {
+    border-left: 1px solid #D4D7E3;
+}
+
+.qtyValue {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 400;
+    color: #253D4E;
+    height: 100%;
+}
+
+.totalPrice {
+    font-size: 20px;
+    font-weight: 400;
+    color: #3BB77E;
+    min-width: 100px;
+    text-align: right;
+}
+
+.itemDivider {
+    width: 838px;
+    height: 1px;
+    background-color: #CFDFE2;
+    margin: 0 auto;
+}
+
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.summary {
+    background: white;
+    border: 1px solid #D4D7E3;
+    border-radius: 12px;
+    padding: 1.5rem;
+    height: fit-content;
+}
+
+.summaryTitle {
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+    color: #253D4E;
+}
+
+.summaryRow {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+}
+
+.summaryTotal {
+    border-top: 1px solid #eee;
+    padding-top: 1rem;
+    margin-top: 1rem;
+    display: flex;
+    justify-content: space-between;
+    font-weight: 400;
+    font-size: 1.2rem;
+    color: #253D4E;
+}
+
+.checkoutBtn {
+    width: 100%;
+    margin-top: 1.5rem;
+    padding: 12px;
+    background-color: #3bb77e;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-weight: 400;
+    cursor: pointer;
+    text-align: center;
+    display: block;
+    text-decoration: none;
+}
+
+.emptyState {
+    padding: 4rem 0;
+    text-align: center;
+}
+
+.couponSection {
+    width: 371px;
+    height: 136px;
+    border: 1px solid #D4D7E3;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-sizing: border-box;
+    background-color: #fff;
+}
+
+.couponTitle {
+    font-size: 20px;
+    font-weight: 400;
+    color: #253D4E;
+    margin: 0;
+}
+
+.couponInputArea {
+    width: 330.53px;
+    height: 48px;
+    display: flex;
+    gap: 0;
+}
+
+.couponInputContainer {
+    width: 194px;
+    height: 48px;
+    background-color: #EDFBFF;
+    border: 1px solid #D4D7E3;
+    border-right: none;
+    border-radius: 8px 0 0 8px;
+    display: flex;
+    align-items: center;
+    padding: 0 15px;
+    box-sizing: border-box;
+}
+
+.couponInput {
+    border: none;
+    background: transparent;
+    width: 100%;
+    height: 100%;
+    outline: none;
+    font-size: 16px;
+    color: #253D4E;
+}
+
+.couponInput::placeholder {
+    color: #8897AD;
+}
+
+.couponApplyBtn {
+    width: 136px;
+    height: 48px;
+    background-color: #3BB77E;
+    border: none;
+    border-radius: 0 8px 8px 0;
+    color: #FEFEFE;
+    font-size: 16px;
+    font-weight: 400;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.couponApplyBtn:hover {
+    opacity: 0.9;
+}
+
+.couponMessage {
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+.success {
+    color: #3BB77E;
+}
+
+.error {
+    color: #FF4D4D;
+}
+
+@media (max-width: 1200px) {
+    .cartGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .cartItemsContainer {
+        width: 100%;
+    }
+
+    .cartItem {
+        width: 100%;
+        height: auto;
+        padding: 20px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .priceColumn {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .itemDivider {
+        width: 100%;
+    }
+
+    .couponSection {
+        width: 100%;
+        height: auto;
+    }
+
+    .couponInputArea {
+        width: 100%;
+    }
+
+    .couponInputContainer {
+        flex: 1;
+    }
+}

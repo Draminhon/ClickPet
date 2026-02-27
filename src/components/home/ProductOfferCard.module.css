@@ -13,6 +13,25 @@
     flex-shrink: 0;
 }
 
+.noBorder {
+    border: none !important;
+    width: 250px !important;
+    height: 440px !important;
+    padding: 15px !important;
+}
+
+.priceSemiBold {
+    font-weight: 600 !important;
+}
+
+.priceNoUnderline {
+    text-decoration: none !important;
+}
+
+.titleBold {
+    font-weight: 700 !important;
+}
+
 
 .discountBadge {
     position: absolute;
@@ -33,7 +52,7 @@
 .discountText {
     color: #FFFFFF;
     font-size: 12px;
-    font-weight: bold;
+    font-weight: 400;
 }
 
 .imageContainer {
@@ -64,11 +83,12 @@
 
 .productTitle {
     font-size: 16px;
-    font-weight: bold;
+    font-weight: 400;
     color: #253D4E;
     line-height: 1.2;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -135,14 +155,14 @@
 
 .currentPrice {
     font-size: 18px;
-    font-weight: bold;
+    font-weight: 400;
     color: #3BB77E;
     text-decoration: underline;
 }
 
 .originalPrice {
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 400;
     color: #ADADAD;
     text-decoration: line-through;
 }

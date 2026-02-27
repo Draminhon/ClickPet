@@ -2,8 +2,9 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import ProductCard from '@/components/ui/ProductCard';
-import { Filter, SlidersHorizontal } from 'lucide-react';
+import ProductOfferCard from '@/components/home/ProductOfferCard';
+import { Filter, ChevronDown } from 'lucide-react';
+import styles from './Search.module.css';
 
 function SearchContent() {
     const searchParams = useSearchParams();
@@ -18,9 +19,11 @@ function SearchContent() {
     // Advanced filters
     const [minPrice, setMinPrice] = useState('');
     const [maxPrice, setMaxPrice] = useState('');
-    const [minRating, setMinRating] = useState(0);
     const [onlyDiscount, setOnlyDiscount] = useState(false);
     const [sortBy, setSortBy] = useState('');
+    const [age, setAge] = useState('');
+    const [foodType, setFoodType] = useState('');
+    const [breedType, setBreedType] = useState('');
 
     useEffect(() => {
         let url = '/api/products?';
@@ -54,6 +57,21 @@ function SearchContent() {
             filtered = filtered.filter(p => p.discount && p.discount > 0);
         }
 
+        // Age filter (mocking logic based on subCategory/tags if needed)
+        if (age) {
+            filtered = filtered.filter(p => p.subCategory?.toLowerCase().includes(age.toLowerCase()));
+        }
+
+        // Food Type filter
+        if (foodType) {
+            filtered = filtered.filter(p => p.productType?.toLowerCase().includes(foodType.toLowerCase()));
+        }
+
+        // Breed filter
+        if (breedType) {
+            filtered = filtered.filter(p => p.subCategory?.toLowerCase().includes(breedType.toLowerCase()));
+        }
+
         // Sort
         if (sortBy === 'price_asc') {
             filtered.sort((a, b) => {
@@ -72,138 +90,208 @@ function SearchContent() {
         }
 
         setFilteredProducts(filtered);
-    }, [products, minPrice, maxPrice, minRating, onlyDiscount, sortBy]);
+    }, [products, minPrice, maxPrice, onlyDiscount, sortBy, age, foodType, breedType]);
 
     const clearFilters = () => {
         setMinPrice('');
         setMaxPrice('');
-        setMinRating(0);
         setOnlyDiscount(false);
         setSortBy('');
+        setAge('');
+        setFoodType('');
+        setBreedType('');
+        setCategory('');
     };
 
     return (
-        <div className="container" style={{ padding: '2rem 0', display: 'flex', gap: '2rem' }}>
+        <div className={styles.container}>
             {/* Sidebar Filters */}
-            <aside style={{ width: '280px', flexShrink: 0 }}>
-                <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', position: 'sticky', top: '2rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <Filter size={20} />
-                            <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Filtros</h3>
-                        </div>
-                        <button
-                            onClick={clearFilters}
-                            style={{ fontSize: '0.85rem', color: '#6CC551', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
-                        >
-                            Limpar
-                        </button>
-                    </div>
+            <aside className={styles.sidebar}>
+                <Filter className={styles.filterIcon} size={32} />
 
-                    {/* Category Filter */}
-                    <div style={{ marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid #eee' }}>
-                        <h4 style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: '0.8rem' }}>Categoria</h4>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                            {[
-                                { value: '', label: 'Todos' },
-                                { value: 'food', label: '🍖 Rações' },
-                                { value: 'toys', label: '🎾 Brinquedos' },
-                                { value: 'pharma', label: '💊 Farmácia' },
-                                { value: 'bath', label: '🛁 Banho & Tosa' },
-                            ].map(cat => (
-                                <label key={cat.value} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.9rem' }}>
-                                    <input
-                                        type="radio"
-                                        name="category"
-                                        checked={category === cat.value}
-                                        onChange={() => setCategory(cat.value)}
-                                    />
-                                    {cat.label}
-                                </label>
-                            ))}
-                        </div>
+                {/* Categorias */}
+                <div>
+                    <h3 className={styles.sectionTitle}>Categorias</h3>
+                    <div className={styles.filterGroup}>
+                        {[
+                            { value: '', label: 'Todos' },
+                            { value: 'food', label: 'Rações' },
+                            { value: 'toys', label: 'Brinquedos' },
+                            { value: 'pharma', label: 'Farmácia' },
+                            { value: 'bath', label: 'Banho & Tosa' },
+                        ].map(cat => (
+                            <label key={cat.value} className={styles.radioLabel}>
+                                <input
+                                    type="radio"
+                                    name="category"
+                                    className={styles.radioInput}
+                                    checked={category === cat.value}
+                                    onChange={() => setCategory(cat.value)}
+                                />
+                                {cat.label}
+                            </label>
+                        ))}
                     </div>
+                </div>
 
-                    {/* Price Filter */}
-                    <div style={{ marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid #eee' }}>
-                        <h4 style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: '0.8rem' }}>Faixa de Preço</h4>
-                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                {/* Idade */}
+                <div>
+                    <h3 className={styles.sectionTitle}>Idade</h3>
+                    <div className={styles.filterGroup}>
+                        {[
+                            { value: '', label: 'Todas' },
+                            { value: 'filhote', label: 'Filhote' },
+                            { value: 'adulto', label: 'Adulto' },
+                            { value: 'senior', label: 'Sênior' },
+                        ].map(item => (
+                            <label key={item.value} className={styles.radioLabel}>
+                                <input
+                                    type="radio"
+                                    name="age"
+                                    className={styles.radioInput}
+                                    checked={age === item.value}
+                                    onChange={() => setAge(item.value)}
+                                />
+                                {item.label}
+                            </label>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Tipo de ração */}
+                <div>
+                    <h3 className={styles.sectionTitle}>Tipo de ração</h3>
+                    <div className={styles.filterGroup}>
+                        {[
+                            { value: '', label: 'Todos' },
+                            { value: 'seca', label: 'Seca' },
+                            { value: 'umida', label: 'Úmida' },
+                            { value: 'medicinal', label: 'Medicinal' },
+                        ].map(item => (
+                            <label key={item.value} className={styles.radioLabel}>
+                                <input
+                                    type="radio"
+                                    name="foodType"
+                                    className={styles.radioInput}
+                                    checked={foodType === item.value}
+                                    onChange={() => setFoodType(item.value)}
+                                />
+                                {item.label}
+                            </label>
+                        ))}
+                    </div>
+                </div>
+
+                <div className={styles.divider}></div>
+
+                {/* Faixa de Preço */}
+                <div>
+                    <h3 className={styles.sectionTitle}>Faixa de Preço</h3>
+                    <div className={styles.priceRangeRow}>
+                        <div className={styles.priceInputContainer}>
                             <input
                                 type="number"
                                 placeholder="Min"
+                                className={styles.priceInput}
                                 value={minPrice}
                                 onChange={e => setMinPrice(e.target.value)}
-                                style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #ddd', fontSize: '0.9rem' }}
                             />
-                            <span>-</span>
+                        </div>
+                        <span className={styles.priceSeparator}>-</span>
+                        <div className={styles.priceInputContainer}>
                             <input
                                 type="number"
                                 placeholder="Max"
+                                className={styles.priceInput}
                                 value={maxPrice}
                                 onChange={e => setMaxPrice(e.target.value)}
-                                style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #ddd', fontSize: '0.9rem' }}
                             />
                         </div>
                     </div>
+                </div>
 
-                    {/* Discount Filter */}
-                    <div style={{ marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid #eee' }}>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.9rem' }}>
-                            <input
-                                type="checkbox"
-                                checked={onlyDiscount}
-                                onChange={e => setOnlyDiscount(e.target.checked)}
-                            />
-                            Somente com desconto
-                        </label>
-                    </div>
+                {/* Somente com descontos */}
+                <label className={styles.checkboxLabel}>
+                    <input
+                        type="checkbox"
+                        className={styles.checkboxInput}
+                        checked={onlyDiscount}
+                        onChange={e => setOnlyDiscount(e.target.checked)}
+                    />
+                    Somente com descontos
+                </label>
 
-                    {/* Sort */}
-                    <div>
-                        <h4 style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: '0.8rem' }}>Ordenar por</h4>
-                        <select
-                            value={sortBy}
-                            onChange={e => setSortBy(e.target.value)}
-                            style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #ddd', fontSize: '0.9rem' }}
-                        >
-                            <option value="">Relevância</option>
-                            <option value="price_asc">Menor preço</option>
-                            <option value="price_desc">Maior preço</option>
-                            <option value="discount">Maior desconto</option>
-                        </select>
+                <div className={styles.divider}></div>
+
+                {/* Ordenar por */}
+                <div>
+                    <h3 className={styles.sectionTitle}>Ordenar por</h3>
+                    <div className={styles.selectorsGroup}>
+                        <div className={styles.customSelect}>
+                            <span className={styles.selectText}>
+                                {sortBy === '' ? 'Relevância' :
+                                    sortBy === 'price_asc' ? 'Menor preço' :
+                                        sortBy === 'price_desc' ? 'Maior preço' : 'Maior desconto'}
+                            </span>
+                            <ChevronDown className={styles.selectIcon} size={12} />
+                            <select
+                                className={styles.nativeSelect}
+                                value={sortBy}
+                                onChange={e => setSortBy(e.target.value)}
+                            >
+                                <option value="">Relevância</option>
+                                <option value="price_asc">Menor preço</option>
+                                <option value="price_desc">Maior preço</option>
+                                <option value="discount">Maior desconto</option>
+                            </select>
+                        </div>
+
+                        <div className={styles.customSelect}>
+                            <span className={styles.selectText}>
+                                {breedType === '' ? 'Raça etc.' : breedType}
+                            </span>
+                            <ChevronDown className={styles.selectIcon} size={12} />
+                            <select
+                                className={styles.nativeSelect}
+                                value={breedType}
+                                onChange={e => setBreedType(e.target.value)}
+                            >
+                                <option value="">Todos</option>
+                                <option value="Shih Tzu">Shih Tzu</option>
+                                <option value="Poodle">Poodle</option>
+                                <option value="Golden Retriever">Golden Retriever</option>
+                                <option value="Bulldog">Bulldog</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
             </aside>
 
             {/* Results Grid */}
-            <main style={{ flex: 1 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                    <h1 className="section-title" style={{ margin: 0 }}>
-                        {search ? `Resultados para "${search}"` : 'Produtos'}
-                    </h1>
-                    <span style={{ color: '#666', fontSize: '0.9rem' }}>
-                        {filteredProducts.length} {filteredProducts.length === 1 ? 'produto' : 'produtos'}
-                    </span>
-                </div>
-
+            <main className={styles.mainContent}>
                 {filteredProducts.length === 0 ? (
-                    <div style={{ background: 'white', padding: '3rem', borderRadius: '12px', textAlign: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-                        <p style={{ color: '#666', marginBottom: '1rem' }}>Nenhum produto encontrado com os filtros selecionados.</p>
+                    <div className={styles.noResults}>
+                        <p>Nenhum produto encontrado com os filtros selecionados.</p>
                         <button onClick={clearFilters} className="btn btn-primary">
                             Limpar Filtros
                         </button>
                     </div>
                 ) : (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1.5rem' }}>
+                    <div className={styles.grid}>
                         {filteredProducts.map(product => (
-                            <ProductCard
+                            <ProductOfferCard
                                 key={product._id}
                                 id={product._id}
                                 title={product.title}
-                                shopName={product.partnerId?.name || 'Parceiro'}
                                 price={product.price}
                                 image={product.image}
                                 discount={product.discount}
+                                shopName={product.partnerId?.name || 'Petshop'}
+                                productType={product.productType}
+                                subCategory={product.subCategory}
+                                rating={product.rating}
+                                salesCount={product.salesCount}
+                                noBorder
                             />
                         ))}
                     </div>

@@ -49,7 +49,7 @@ export async function GET(req: Request) {
         if (partnerId) query.partnerId = partnerId;
 
         const reviews = await Review.find(query)
-            .populate('userId', 'name')
+            .populate('userId', 'name image')
             .sort({ createdAt: -1 });
 
         // Calculate average rating

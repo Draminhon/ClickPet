@@ -1,0 +1,345 @@
+.container {
+    padding: 40px 20px;
+    max-width: 900px;
+    margin: 0 auto;
+    font-family: 'Inter', sans-serif;
+}
+
+.title {
+    font-size: 32px;
+    font-weight: 400;
+    color: #253D4E;
+    margin-bottom: 30px;
+}
+
+.card {
+    background: #FFFFFF;
+    border-radius: 12px;
+    padding: 30px;
+    margin-bottom: 30px;
+    border: 1px solid #D4D7E3;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+}
+
+.headerCard {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(135deg, #FFFFFF 0%, #F7FBFF 100%);
+}
+
+.userInfo {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+}
+
+.avatarWrapper {
+    position: relative;
+    width: 100px;
+    height: 100px;
+}
+
+.avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 3px solid #3BB77E;
+    object-fit: cover;
+    background: #EDFBFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.avatarOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.avatarWrapper:hover .avatarOverlay {
+    opacity: 1;
+}
+
+.userDetails h2 {
+    font-size: 24px;
+    font-weight: 400;
+    color: #253D4E;
+    margin-bottom: 5px;
+}
+
+.userDetails p {
+    font-size: 16px;
+    color: #7E7E7E;
+}
+
+.logoutBtn {
+    background: #ffeeee;
+    color: #FF4D4D;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-weight: 400;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.logoutBtn:hover {
+    background: #ffd6d6;
+}
+
+.sectionTitle {
+    font-size: 20px;
+    font-weight: 400;
+    color: #253D4E;
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.formGroup {
+    margin-bottom: 20px;
+}
+
+.formGroup label {
+    display: block;
+    font-size: 14px;
+    font-weight: 400;
+    color: #253D4E;
+    margin-bottom: 8px;
+}
+
+.formInput {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid #D4D7E3;
+    border-radius: 10px;
+    font-size: 16px;
+    color: #253D4E;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+    background: #F7FBFF;
+}
+
+.formInput:focus {
+    border-color: #3BB77E;
+    background: #FFFFFF;
+}
+
+.grid2Col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.grid3Col {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 20px;
+}
+
+.submitBtn {
+    width: 100%;
+    background: #3BB77E;
+    color: #FFFFFF;
+    border: none;
+    padding: 16px;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 400;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s;
+    margin-top: 10px;
+}
+
+.submitBtn:hover {
+    background: #2D9E68;
+    transform: translateY(-2px);
+}
+
+.submitBtn:disabled {
+    background: #BCE3C9;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Pets Styles */
+.petHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.addPetBtn {
+    background: #EDFBFF;
+    color: #3BB77E;
+    border: 1px solid #BCE3C9;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-weight: 400;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.addPetBtn:hover {
+    background: #3BB77E;
+    color: #FFFFFF;
+}
+
+.petGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 20px;
+}
+
+.petCard {
+    background: #F7FBFF;
+    border: 1px solid #D4D7E3;
+    border-radius: 15px;
+    padding: 20px;
+    text-align: center;
+    position: relative;
+    transition: transform 0.2s;
+}
+
+.petCard:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+}
+
+.petActions {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    gap: 5px;
+}
+
+.actionBtn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.editBtn {
+    background: #3BB77E;
+    color: white;
+}
+
+.deleteBtn {
+    background: #FF4D4D;
+    color: white;
+}
+
+.petImageFrame {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    margin: 0 auto 15px;
+    border: 3px solid #FFFFFF;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background: #EDFBFF;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.petImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.petName {
+    font-size: 18px;
+    font-weight: 400;
+    color: #253D4E;
+    margin-bottom: 5px;
+}
+
+.petInfo {
+    font-size: 14px;
+    color: #7E7E7E;
+}
+
+.petForm {
+    background: #F7FBFF;
+    border-radius: 15px;
+    padding: 25px;
+    border: 1px solid #D4D7E3;
+    margin-bottom: 30px;
+}
+
+.emptyPets {
+    text-align: center;
+    padding: 40px;
+    color: #7E7E7E;
+    font-style: italic;
+}
+
+.spinner {
+    width: 30px;
+    height: 30px;
+    border: 3px solid #EDFBFF;
+    border-top: 3px solid #3BB77E;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@media (max-width: 768px) {
+    .headerCard {
+        flex-direction: column;
+        gap: 20px;
+        text-align: center;
+    }
+
+    .userInfo {
+        flex-direction: column;
+    }
+
+    .grid2Col,
+    .grid3Col {
+        grid-template-columns: 1fr;
+    }
+}

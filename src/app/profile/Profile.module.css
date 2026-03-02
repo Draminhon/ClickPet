@@ -29,7 +29,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: linear-gradient(135deg, #FFFFFF 0%, #F7FBFF 100%);
+    background: transparent !important;
 }
 
 .userInfo {
@@ -192,7 +192,7 @@
 }
 
 .addPetBtn {
-    background: #EDFBFF;
+    background: transparent !important;
     color: #3BB77E;
     border: 1px solid #BCE3C9;
     padding: 10px 18px;
@@ -217,7 +217,7 @@
 }
 
 .petCard {
-    background: #F7FBFF;
+    background: transparent !important;
     border: 1px solid #D4D7E3;
     border-radius: 15px;
     padding: 20px;
@@ -294,7 +294,7 @@
 }
 
 .petForm {
-    background: #F7FBFF;
+    background: transparent !important;
     border-radius: 15px;
     padding: 25px;
     border: 1px solid #D4D7E3;

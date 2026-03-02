@@ -44,7 +44,16 @@ export default function Login() {
                 showToast(result.error, 'error');
             } else {
                 showToast('Login realizado com sucesso!');
-                router.push('/');
+
+                // Fetch session to determine role
+                const sessionRes = await fetch('/api/auth/session');
+                const session = await sessionRes.json();
+
+                if (session?.user?.role === 'partner') {
+                    router.push('/partner/dashboard');
+                } else {
+                    router.push('/');
+                }
             }
         } catch (error) {
             showToast('Erro ao realizar login', 'error');

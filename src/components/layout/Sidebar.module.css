@@ -1,57 +1,217 @@
 .sidebar {
     width: 250px;
-    background-color: var(--white);
     height: 100vh;
+    background-color: #FFFFFF;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
     position: fixed;
     left: 0;
     top: 0;
-    border-right: 1px solid var(--border-color);
-    padding: 2rem 1rem;
+    transition: width 0.3s ease;
+    z-index: 1000;
+}
+
+.collapsed {
+    width: 80px;
+}
+
+.container {
+    height: 100%;
     display: flex;
     flex-direction: column;
+    position: relative;
+    overflow-x: hidden;
 }
 
-.logo {
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: var(--text-dark);
-    margin-bottom: 3rem;
-    padding-left: 1rem;
+.header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    overflow: hidden;
+    width: 100%;
 }
 
-.logo span {
-    color: var(--primary-green);
+.shopLogoWrapper {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    background-color: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(246, 246, 246, 1);
+}
+
+.shopLogo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.shopLogoPlaceholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.shopInfo {
+    display: flex;
+    flex-direction: column;
+    white-space: nowrap;
+}
+
+.petshopLabel {
+    font-size: 10px;
+    color: rgba(117, 117, 117, 1);
+    font-weight: 400;
+    text-transform: uppercase;
+}
+
+.shopName {
+    font-size: 14px;
+    color: rgba(0, 0, 0, 1);
+    font-weight: 400;
+}
+
+.divider {
+    width: 100%;
+    max-width: 208px;
+    height: 1px;
+    background-color: rgba(246, 246, 246, 1);
+    margin: 16px 0;
+}
+
+.sectionLabel {
+    font-size: 10px;
+    color: rgba(117, 117, 117, 1);
+    text-transform: uppercase;
+    margin: 8px 0 16px 0;
+    text-align: left;
 }
 
 .nav {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 4px;
 }
 
 .navItem {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    padding: 1rem;
-    border-radius: var(--radius-md);
-    color: var(--text-gray);
-    font-weight: 600;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    color: rgba(117, 117, 117, 1);
+    text-decoration: none;
     transition: all 0.2s;
+    font-size: 14px;
+    white-space: nowrap;
 }
 
-.navItem:hover,
+.navItem:hover {
+    background-color: rgba(246, 246, 246, 1);
+}
+
 .navItem.active {
-    background-color: rgba(108, 197, 81, 0.1);
-    color: var(--primary-green);
+    background-color: rgba(59, 183, 126, 0.1);
+    color: #3BB77E;
 }
 
-.logout {
+.navIcon {
+    width: 16.67px;
+    height: 16.67px;
+    flex-shrink: 0;
+    color: rgba(117, 117, 117, 1);
+}
+
+.active .navIcon {
+    color: #3BB77E;
+}
+
+.configSection {
+    margin-top: 8px;
+}
+
+.configSelector {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    color: rgba(117, 117, 117, 1);
+    cursor: pointer;
+    font-size: 14px;
+    border-radius: 8px;
+}
+
+.configSelector:hover {
+    background-color: rgba(246, 246, 246, 1);
+}
+
+.configLeft {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logoutContainer {
     margin-top: auto;
-    color: #dc3545;
+    padding-top: 24px;
 }
 
-.logout:hover {
-    background-color: rgba(220, 53, 69, 0.1);
-    color: #dc3545;
+.logoutBtn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: rgba(213, 95, 90, 1);
+    background: none;
+    border: none;
+    padding: 12px;
+    cursor: pointer;
+    font-size: 14px;
+    width: 100%;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.logoutBtn:hover {
+    background-color: rgba(213, 95, 90, 0.05);
+}
+
+.logoutBtn .navIcon {
+    color: rgba(213, 95, 90, 1);
+}
+
+.toggleBtn {
+    position: absolute;
+    right: -14px;
+    top: 20px;
+    width: 28px;
+    height: 28px;
+    background-color: #FFFFFF;
+    border: 1px solid rgba(246, 246, 246, 1);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    z-index: 1001;
+}
+
+.collapsed .shopInfo,
+.collapsed .petshopLabel,
+.collapsed .sectionLabel,
+.collapsed .navItem span,
+.collapsed .configSelector span,
+.collapsed .logoutBtn span,
+.collapsed .chevron {
+    display: none;
 }

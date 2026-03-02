@@ -38,6 +38,7 @@ export async function PUT(req: Request) {
         if (body.deliveryFeePerKm !== undefined) updateData.deliveryFeePerKm = body.deliveryFeePerKm;
         if (body.freeDeliveryMinimum !== undefined) updateData.freeDeliveryMinimum = body.freeDeliveryMinimum;
         if (body.image !== undefined) updateData.image = body.image;
+        if (body.shopLogo !== undefined) updateData.shopLogo = body.shopLogo;
 
         const user = await User.findByIdAndUpdate(
             session.user.id,

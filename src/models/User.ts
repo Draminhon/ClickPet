@@ -9,6 +9,9 @@ const UserSchema = new mongoose.Schema({
     image: {
         type: String,
     },
+    shopLogo: {
+        type: String,
+    },
     email: {
         type: String,
         required: [true, 'Please provide an email'],

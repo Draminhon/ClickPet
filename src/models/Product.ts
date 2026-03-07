@@ -19,7 +19,7 @@ const ProductSchema = new mongoose.Schema({
     category: {
         type: String,
         required: [true, 'Please provide a category'],
-        enum: ['food', 'toys', 'pharma', 'bath', 'vet', 'pets', 'aquarismo'],
+        enum: ['food', 'toys', 'pharma', 'bath', 'vet', 'pets', 'aquarismo', 'accessories'],
     },
     image: {
         type: String,
@@ -46,7 +46,11 @@ const ProductSchema = new mongoose.Schema({
     },
     rating: {
         type: Number,
-        default: 5.0,
+        default: 0,
+    },
+    reviewCount: {
+        type: Number,
+        default: 0,
     },
     salesCount: {
         type: Number,
@@ -59,8 +63,36 @@ const ProductSchema = new mongoose.Schema({
     weights: {
         type: [String],
         default: [],
-    }
+    },
+    // NEW FIELDS
+    stock: {
+        type: Number,
+        default: 0,
+        min: 0,
+    },
+    isActive: {
+        type: Boolean,
+        default: true,
+    },
+    brand: {
+        type: String,
+        default: '',
+    },
+    sku: {
+        type: String,
+        default: '',
+    },
+    unit: {
+        type: String,
+        enum: ['un', 'kg', 'l', 'pct', 'cx'],
+        default: 'un',
+    },
 }, { timestamps: true });
+
+// Indexes for fast queries
+ProductSchema.index({ partnerId: 1 });
+ProductSchema.index({ category: 1 });
+ProductSchema.index({ isActive: 1 });
 
 if (mongoose.models.Product) {
     delete mongoose.models.Product;

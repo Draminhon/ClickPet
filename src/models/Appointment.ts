@@ -30,12 +30,27 @@ const AppointmentSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['pending', 'confirmed', 'completed', 'cancelled'],
+        enum: ['pending', 'confirmed', 'completed', 'cancelled', 'no_show'],
         default: 'pending',
     },
     notes: {
         type: String,
         maxlength: 500,
+    },
+    // NEW FIELDS
+    price: {
+        type: Number,
+        default: 0,
+    },
+    petSize: {
+        type: String,
+        enum: ['mini', 'small', 'medium', 'large', 'giant'],
+    },
+    duration: {
+        type: Number, // in minutes
+    },
+    cancelReason: {
+        type: String,
     },
     confirmedAt: {
         type: Date,
@@ -51,5 +66,6 @@ const AppointmentSchema = new mongoose.Schema({
 AppointmentSchema.index({ userId: 1 });
 AppointmentSchema.index({ partnerId: 1 });
 AppointmentSchema.index({ date: 1 });
+AppointmentSchema.index({ status: 1 });
 
 export default mongoose.models.Appointment || mongoose.model('Appointment', AppointmentSchema);

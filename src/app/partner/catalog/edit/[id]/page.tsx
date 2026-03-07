@@ -21,6 +21,11 @@ export default function EditProduct() {
         productType: 'Produto',
         subCategory: 'Geral',
         weights: '',
+        stock: '0',
+        brand: '',
+        sku: '',
+        unit: 'un',
+        isActive: true,
     });
 
     useEffect(() => {
@@ -38,6 +43,11 @@ export default function EditProduct() {
                         productType: data.productType || 'Produto',
                         subCategory: data.subCategory || 'Geral',
                         weights: data.weights ? data.weights.join(', ') : '',
+                        stock: data.stock?.toString() || '0',
+                        brand: data.brand || '',
+                        sku: data.sku || '',
+                        unit: data.unit || 'un',
+                        isActive: data.isActive !== false,
                     });
                 });
         }
@@ -268,6 +278,70 @@ export default function EditProduct() {
                         />
                     </div>
                 )}
+
+                {/* Stock, Brand, SKU, Unit */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                    <div>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Estoque</label>
+                        <input
+                            type="number"
+                            min="0"
+                            style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
+                            value={formData.stock}
+                            onChange={e => setFormData({ ...formData, stock: e.target.value })}
+                        />
+                    </div>
+                    <div>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Unidade</label>
+                        <select
+                            style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
+                            value={formData.unit}
+                            onChange={e => setFormData({ ...formData, unit: e.target.value })}
+                        >
+                            <option value="un">Unidade (un)</option>
+                            <option value="kg">Quilograma (kg)</option>
+                            <option value="l">Litro (l)</option>
+                            <option value="pct">Pacote (pct)</option>
+                            <option value="cx">Caixa (cx)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                    <div>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Marca</label>
+                        <input
+                            type="text"
+                            placeholder="ex: Royal Canin, Pedigree"
+                            style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
+                            value={formData.brand}
+                            onChange={e => setFormData({ ...formData, brand: e.target.value })}
+                        />
+                    </div>
+                    <div>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>SKU / Código</label>
+                        <input
+                            type="text"
+                            placeholder="ex: RC-001"
+                            style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
+                            value={formData.sku}
+                            onChange={e => setFormData({ ...formData, sku: e.target.value })}
+                        />
+                    </div>
+                </div>
+
+                <div style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                    <label style={{ fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <input
+                            type="checkbox"
+                            checked={formData.isActive}
+                            onChange={e => setFormData({ ...formData, isActive: e.target.checked })}
+                            style={{ width: '18px', height: '18px', accentColor: '#6CC551' }}
+                        />
+                        Produto Ativo
+                    </label>
+                    <span style={{ fontSize: '0.8rem', color: '#999' }}>(Desative para ocultar da loja)</span>
+                </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '1rem' }}>
                     <button

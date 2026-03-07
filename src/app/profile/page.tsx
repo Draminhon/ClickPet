@@ -23,7 +23,9 @@ export default function ProfilePage() {
             street: '',
             number: '',
             complement: '',
+            neighborhood: '',
             city: '',
+            state: '',
             zip: '',
         }
     });
@@ -49,7 +51,7 @@ export default function ProfilePage() {
             setFormData({
                 phone: profileData.phone || '',
                 image: profileData.image || '',
-                address: profileData.address || { street: '', number: '', complement: '', city: '', zip: '' }
+                address: profileData.address || { street: '', number: '', complement: '', neighborhood: '', city: '', state: '', zip: '' }
             });
 
             const petsRes = await fetch('/api/pets');
@@ -63,6 +65,15 @@ export default function ProfilePage() {
     useEffect(() => {
         fetchInitialData();
     }, []);
+
+    const handleLogout = async () => {
+        try {
+            await fetch('/api/auth/logout', { method: 'POST' });
+        } catch (error) {
+            console.error("Failed to invalidate session remotely", error);
+        }
+        signOut({ callbackUrl: '/login' });
+    };
 
     const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({ ...formData, phone: maskPhone(e.target.value) });
@@ -259,7 +270,7 @@ export default function ProfilePage() {
                     </div>
                 </div>
                 <button
-                    onClick={() => signOut({ callbackUrl: '/login' })}
+                    onClick={handleLogout}
                     className={styles.logoutBtn}
                 >
                     <LogOut size={18} />
@@ -283,7 +294,7 @@ export default function ProfilePage() {
                                 placeholder="(00) 00000-0000"
                                 className={styles.formInput}
                                 style={{ paddingLeft: '45px' }}
-                                value={formData.phone}
+                                value={formData.phone || ''}
                                 onChange={handlePhoneChange}
                                 maxLength={15}
                             />
@@ -301,7 +312,7 @@ export default function ProfilePage() {
                                 type="text"
                                 required
                                 className={styles.formInput}
-                                value={formData.address.street}
+                                value={formData.address.street || ''}
                                 onChange={e => setFormData({ ...formData, address: { ...formData.address, street: e.target.value } })}
                             />
                         </div>
@@ -311,7 +322,7 @@ export default function ProfilePage() {
                                 type="text"
                                 required
                                 className={styles.formInput}
-                                value={formData.address.number}
+                                value={formData.address.number || ''}
                                 onChange={e => setFormData({ ...formData, address: { ...formData.address, number: e.target.value } })}
                             />
                         </div>
@@ -327,24 +338,48 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
-                    <div className={styles.grid2Col}>
+                    <div className={styles.grid3Col}>
+                        <div className={styles.formGroup}>
+                            <label>Bairro</label>
+                            <input
+                                type="text"
+                                className={styles.formInput}
+                                value={formData.address.neighborhood || ''}
+                                onChange={e => setFormData({ ...formData, address: { ...formData.address, neighborhood: e.target.value } })}
+                            />
+                        </div>
                         <div className={styles.formGroup}>
                             <label>Cidade</label>
                             <input
                                 type="text"
                                 required
                                 className={styles.formInput}
-                                value={formData.address.city}
+                                value={formData.address.city || ''}
                                 onChange={e => setFormData({ ...formData, address: { ...formData.address, city: e.target.value } })}
                             />
                         </div>
+                        <div className={styles.formGroup}>
+                            <label>Estado (UF)</label>
+                            <input
+                                type="text"
+                                className={styles.formInput}
+                                maxLength={2}
+                                placeholder="CE"
+                                style={{ textTransform: 'uppercase' }}
+                                value={formData.address.state || ''}
+                                onChange={e => setFormData({ ...formData, address: { ...formData.address, state: e.target.value.toUpperCase() } })}
+                            />
+                        </div>
+                    </div>
+
+                    <div className={styles.grid2Col}>
                         <div className={styles.formGroup}>
                             <label>CEP</label>
                             <input
                                 type="text"
                                 required
                                 className={styles.formInput}
-                                value={formData.address.zip}
+                                value={formData.address.zip || ''}
                                 onChange={handleZipChange}
                                 maxLength={9}
                             />
@@ -414,7 +449,7 @@ export default function ProfilePage() {
                                         type="text"
                                         required
                                         className={styles.formInput}
-                                        value={petForm.name}
+                                        value={petForm.name || ''}
                                         onChange={e => setPetForm({ ...petForm, name: e.target.value })}
                                     />
                                 </div>
@@ -422,12 +457,16 @@ export default function ProfilePage() {
                                     <label>Espécie</label>
                                     <select
                                         className={styles.formInput}
-                                        value={petForm.species}
+                                        value={petForm.species || 'dog'}
                                         onChange={e => setPetForm({ ...petForm, species: e.target.value })}
                                     >
                                         <option value="dog">Cachorro</option>
                                         <option value="cat">Gato</option>
                                         <option value="bird">Pássaro</option>
+                                        <option value="fish">Peixe</option>
+                                        <option value="reptile">Réptil</option>
+                                        <option value="hamster">Hamster</option>
+                                        <option value="rabbit">Coelho</option>
                                         <option value="other">Outro</option>
                                     </select>
                                 </div>
@@ -439,7 +478,7 @@ export default function ProfilePage() {
                                     <input
                                         type="text"
                                         className={styles.formInput}
-                                        value={petForm.breed}
+                                        value={petForm.breed || ''}
                                         onChange={e => setPetForm({ ...petForm, breed: e.target.value })}
                                     />
                                 </div>
@@ -448,7 +487,7 @@ export default function ProfilePage() {
                                     <input
                                         type="number"
                                         className={styles.formInput}
-                                        value={petForm.age}
+                                        value={petForm.age || ''}
                                         onChange={e => setPetForm({ ...petForm, age: e.target.value })}
                                     />
                                 </div>
@@ -459,7 +498,7 @@ export default function ProfilePage() {
                                     <label>Gênero</label>
                                     <select
                                         className={styles.formInput}
-                                        value={petForm.gender}
+                                        value={petForm.gender || ''}
                                         onChange={e => setPetForm({ ...petForm, gender: e.target.value })}
                                     >
                                         <option value="">Selecione</option>
@@ -471,7 +510,7 @@ export default function ProfilePage() {
                                     <label>Porte</label>
                                     <select
                                         className={styles.formInput}
-                                        value={petForm.size}
+                                        value={petForm.size || ''}
                                         onChange={e => setPetForm({ ...petForm, size: e.target.value })}
                                     >
                                         <option value="">Selecione</option>
@@ -490,7 +529,7 @@ export default function ProfilePage() {
                                     type="text"
                                     placeholder="Ex: Dócil, Agitado, Medroso..."
                                     className={styles.formInput}
-                                    value={petForm.temperament}
+                                    value={petForm.temperament || ''}
                                     onChange={e => setPetForm({ ...petForm, temperament: e.target.value })}
                                 />
                             </div>
@@ -501,7 +540,7 @@ export default function ProfilePage() {
                                     placeholder="Ex: Alergia a tal shampoo, problemas cardíacos..."
                                     className={styles.formInput}
                                     style={{ minHeight: '100px', resize: 'vertical' }}
-                                    value={petForm.medicalNotes}
+                                    value={petForm.medicalNotes || ''}
                                     onChange={e => setPetForm({ ...petForm, medicalNotes: e.target.value })}
                                 />
                             </div>

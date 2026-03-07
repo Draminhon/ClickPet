@@ -4,6 +4,7 @@ import Order from '@/models/Order';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../auth/[...nextauth]/route";
 import notificationService from '@/lib/notification-service';
+import { logAction } from '@/lib/audit';
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
@@ -59,6 +60,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         } else if (body.status === 'cancelled') {
             updateData.cancelledAt = new Date();
             updateData.cancelReason = body.cancelReason;
+            updateData.paymentStatus = 'cancelled';
         }
 
         // Update delivery person if provided
@@ -75,6 +77,8 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         if (!order) {
             return NextResponse.json({ message: 'Order not found' }, { status: 404 });
         }
+
+        await logAction(req, 'order_status_update', { orderId: id, status: body.status });
 
         // Send notification about order status change
         if (order.userId) {

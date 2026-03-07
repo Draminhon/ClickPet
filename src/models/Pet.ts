@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { fieldEncryption } from 'mongoose-field-encryption';
 
 const PetSchema = new mongoose.Schema({
     ownerId: {
@@ -12,12 +13,16 @@ const PetSchema = new mongoose.Schema({
     },
     species: {
         type: String,
-        enum: ['dog', 'cat', 'bird', 'other'],
+        enum: ['dog', 'cat', 'bird', 'fish', 'reptile', 'hamster', 'rabbit', 'other'],
         required: true,
     },
     breed: {
         type: String,
     },
+    birthDate: {
+        type: Date,
+    },
+    // Keep age for backward compatibility, but prefer birthDate
     age: {
         type: Number,
     },
@@ -47,11 +52,23 @@ const PetSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
+    isNeutered: {
+        type: Boolean,
+        default: false,
+    },
+    microchipId: {
+        type: String,
+    },
     notes: {
         type: String,
         maxlength: 500,
     },
 }, { timestamps: true });
+
+PetSchema.plugin(fieldEncryption, {
+    fields: ['medicalNotes', 'notes', 'microchipId'],
+    secret: process.env.ENCRYPTION_KEY
+});
 
 PetSchema.index({ ownerId: 1 });
 

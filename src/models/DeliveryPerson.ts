@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { fieldEncryption } from 'mongoose-field-encryption';
 
 const DeliveryPersonSchema = new mongoose.Schema({
     partnerId: {
@@ -32,7 +33,31 @@ const DeliveryPersonSchema = new mongoose.Schema({
     isActive: {
         type: Boolean,
         default: true,
-    }
+    },
+    // NEW FIELDS
+    status: {
+        type: String,
+        enum: ['available', 'delivering', 'offline'],
+        default: 'offline',
+    },
+    rating: {
+        type: Number,
+        default: 0,
+        min: 0,
+        max: 5,
+    },
+    deliveryCount: {
+        type: Number,
+        default: 0,
+    },
 }, { timestamps: true });
+
+DeliveryPersonSchema.plugin(fieldEncryption, {
+    fields: ['phone', 'licensePlate'],
+    secret: process.env.ENCRYPTION_KEY
+});
+
+DeliveryPersonSchema.index({ partnerId: 1 });
+DeliveryPersonSchema.index({ status: 1 });
 
 export default mongoose.models.DeliveryPerson || mongoose.model('DeliveryPerson', DeliveryPersonSchema);

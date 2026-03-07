@@ -96,6 +96,24 @@ export default function DeliveryPersonsPage() {
         return icons[type] || '🚚';
     };
 
+    const getStatusLabel = (status: string) => {
+        const labels: any = {
+            available: '🟢 Disponível',
+            delivering: '🟡 Entregando',
+            offline: '🔴 Offline',
+        };
+        return labels[status] || '⚪ Desconhecido';
+    };
+
+    const getStatusColor = (status: string) => {
+        const colors: any = {
+            available: '#28a745',
+            delivering: '#ffc107',
+            offline: '#dc3545',
+        };
+        return colors[status] || '#999';
+    };
+
     return (
         <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
@@ -222,6 +240,9 @@ export default function DeliveryPersonsPage() {
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#f0f0f0', padding: '0.3rem 0.8rem', borderRadius: '20px' }}>
                                     <span style={{ fontSize: '1.2rem' }}>{getVehicleIcon(person.vehicleType)}</span>
                                     <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{getVehicleLabel(person.vehicleType)}</span>
+                                </div>
+                                <div style={{ marginTop: '0.5rem', padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600, background: `${getStatusColor(person.status || 'offline')}20`, color: getStatusColor(person.status || 'offline') }}>
+                                    {getStatusLabel(person.status || 'offline')}
                                 </div>
                             </div>
 

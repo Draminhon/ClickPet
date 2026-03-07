@@ -16,6 +16,8 @@ export default function PetsPage() {
         age: '',
         weight: '',
         notes: '',
+        birthDate: '',
+        isNeutered: false,
     });
 
     useEffect(() => {
@@ -49,7 +51,7 @@ export default function PetsPage() {
             if (res.ok) {
                 showToast('Pet cadastrado com sucesso!');
                 setShowForm(false);
-                setFormData({ name: '', species: 'dog', breed: '', age: '', weight: '', notes: '' });
+                setFormData({ name: '', species: 'dog', breed: '', age: '', weight: '', notes: '', birthDate: '', isNeutered: false });
                 fetchPets();
             } else {
                 showToast('Erro ao cadastrar pet', 'error');
@@ -83,6 +85,10 @@ export default function PetsPage() {
             dog: '🐕',
             cat: '🐈',
             bird: '🦜',
+            fish: '🐟',
+            reptile: '🦎',
+            hamster: '🐹',
+            rabbit: '🐰',
             other: '🐾',
         };
         return emojis[species] || '🐾';
@@ -131,6 +137,10 @@ export default function PetsPage() {
                                 <option value="dog">🐕 Cachorro</option>
                                 <option value="cat">🐈 Gato</option>
                                 <option value="bird">🦜 Pássaro</option>
+                                <option value="fish">🐟 Peixe</option>
+                                <option value="reptile">🦎 Réptil</option>
+                                <option value="hamster">🐹 Hamster</option>
+                                <option value="rabbit">🐰 Coelho</option>
                                 <option value="other">🐾 Outro</option>
                             </select>
                         </div>
@@ -174,6 +184,29 @@ export default function PetsPage() {
                             maxLength={500}
                             style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd', minHeight: '100px', fontFamily: 'inherit' }}
                         />
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                        <div>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Data de Nascimento</label>
+                            <input
+                                type="date"
+                                value={formData.birthDate}
+                                onChange={e => setFormData({ ...formData, birthDate: e.target.value })}
+                                style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
+                            />
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', paddingTop: '1.5rem' }}>
+                            <label style={{ fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <input
+                                    type="checkbox"
+                                    checked={formData.isNeutered}
+                                    onChange={e => setFormData({ ...formData, isNeutered: e.target.checked })}
+                                    style={{ width: '18px', height: '18px', accentColor: '#6CC551' }}
+                                />
+                                Castrado(a)
+                            </label>
+                        </div>
                     </div>
 
                     <div style={{ display: 'flex', gap: '0.5rem' }}>

@@ -5,14 +5,30 @@ export async function middleware(req: NextRequest) {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
     const { pathname } = req.nextUrl;
 
-    // If trying to access login page while logged in, redirect to appropriate dashboard
-    if (pathname === '/login' && token) {
-        if (token.role === 'admin') {
-            return NextResponse.redirect(new URL('/admin', req.url));
-        } else if (token.role === 'partner') {
-            return NextResponse.redirect(new URL('/partner/dashboard', req.url));
+    // Global API protection (except auth and public routes)
+    const publicApiRoutes = [
+        '/api/auth',
+        '/api/register',
+        '/api/products',
+        '/api/services',
+        '/api/reviews',
+        '/api/webhooks',
+    ];
+
+    const isPublicApiRoute = publicApiRoutes.some(route => pathname.startsWith(route));
+
+    if (pathname.startsWith('/api') && !isPublicApiRoute) {
+        if (!token) {
+            return NextResponse.json({ message: 'Unauthenticated' }, { status: 401 });
         }
-        return NextResponse.redirect(new URL('/', req.url));
+    }
+
+    // Protect profile route
+    if (pathname === '/profile') {
+        if (!token) {
+            return NextResponse.redirect(new URL('/login?callbackUrl=/profile', req.url));
+        }
+        return NextResponse.next();
     }
 
     // Protect admin routes
@@ -61,6 +77,7 @@ export const config = {
     matcher: [
         '/admin/:path*',
         '/partner/:path*',
-        '/login',
+        '/profile',
+        '/api/((?!auth).*)',
     ],
 };

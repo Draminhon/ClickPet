@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { fieldEncryption } from 'mongoose-field-encryption';
 
 const UserSchema = new mongoose.Schema({
     name: {
@@ -36,11 +37,16 @@ const UserSchema = new mongoose.Schema({
             return this.role === 'partner';
         }
     },
+    cpf: {
+        type: String,
+    },
     address: {
         street: String,
         number: String,
         complement: String,
+        neighborhood: String,
         city: String,
+        state: String,
         zip: String,
         coordinates: {
             type: {
@@ -74,10 +80,39 @@ const UserSchema = new mongoose.Schema({
         type: Number,
         default: 0, // R$ 0 = no free delivery
     },
+    failedLoginAttempts: {
+        type: Number,
+        default: 0,
+    },
+    lockUntil: {
+        type: Date,
+    },
+    tokenVersion: {
+        type: Number,
+        default: 0,
+    },
+    twoFactorSecret: {
+        type: String,
+    },
+    twoFactorEnabled: {
+        type: Boolean,
+        default: false,
+    },
 }, { timestamps: true });
 
-if (mongoose.models.User) {
-    delete mongoose.models.User;
+// Encrypt sensitive fields: CNPJ/CPF, phone, address components, and 2FA secret.
+// Note: address.coordinates is NOT encrypted to preserve 2dsphere indexing.
+// CRITICAL: ENCRYPTION_KEY must be EXACTLY 32 characters for AES-256-CBC (createCipheriv).
+// If the key is not 32 chars, mongoose-field-encryption falls back to the deprecated 
+// createDecipher/createCipher, which was REMOVED in Node v22+.
+const ENC_KEY = process.env.ENCRYPTION_KEY;
+if (ENC_KEY && ENC_KEY.length !== 32) {
+    console.error(`[User Model] ENCRYPTION_KEY is ${ENC_KEY.length} chars — MUST be exactly 32! Encryption/decryption WILL fail.`);
 }
+
+UserSchema.plugin(fieldEncryption, {
+    fields: ['cnpj', 'cpf', 'phone', 'address.street', 'address.number', 'address.complement', 'address.neighborhood', 'address.city', 'address.state', 'address.zip', 'twoFactorSecret'],
+    secret: ENC_KEY || ''
+});
 
 export default mongoose.models.User || mongoose.model('User', UserSchema);

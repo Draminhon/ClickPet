@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { fieldEncryption } from 'mongoose-field-encryption';
 
 const MessageSchema = new mongoose.Schema({
     orderId: {
@@ -26,6 +27,11 @@ const MessageSchema = new mongoose.Schema({
         default: false,
     },
 }, { timestamps: true });
+
+MessageSchema.plugin(fieldEncryption, {
+    fields: ['content'],
+    secret: process.env.ENCRYPTION_KEY
+});
 
 MessageSchema.index({ orderId: 1, createdAt: 1 });
 MessageSchema.index({ receiverId: 1, read: 1 });

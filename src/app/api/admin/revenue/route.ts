@@ -18,8 +18,8 @@ export async function GET() {
         // Simpler and more robust version: get all relevant orders and map them in JS
         // This handles both IDs and names to match partners reliably during transitions.
         const confirmedStatuses = ['pending', 'accepted', 'preparing', 'out_for_delivery', 'delivered'];
-        const orders = await Order.find({ status: { $in: confirmedStatuses } });
-        const partners = await User.find({ role: 'partner' });
+        const orders = await Order.find({ status: { $in: confirmedStatuses } }).lean();
+        const partners = await User.find({ role: 'partner' }).lean();
 
         const partnerMap = new Map();
         partners.forEach(p => {

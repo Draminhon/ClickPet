@@ -43,7 +43,7 @@ export default function ProductCard({ id, title, shopName, price, oldPrice, imag
     const handleAdd = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
-        addToCart({ id, title, shopName, price: finalPrice, partnerId });
+        addToCart({ id, title, shopName, price: finalPrice, partnerId, image: image || '', productType: 'unknown', subCategory: 'unknown' });
         showToast(`${title} adicionado ao carrinho!`);
     };
 

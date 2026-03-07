@@ -186,7 +186,7 @@ export default function Header() {
                     <div
                         className={styles.profileCircle}
                         onClick={() => {
-                            if (!session) {
+                            if (!session?.user?.email) {
                                 setShowAuthDropdown(!showAuthDropdown);
                             } else {
                                 router.push(getProfileLink());

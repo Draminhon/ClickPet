@@ -1,9 +1,8 @@
 import mongoose from 'mongoose';
+import { fieldEncryption } from 'mongoose-field-encryption';
 import './User'; // Ensure User model is registered
 import './DeliveryPerson';
 
-// Added log to tracks version of the model
-console.log('[Order Model] Initializing Order schema version with complement field');
 const OrderSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -42,6 +41,15 @@ const OrderSchema = new mongoose.Schema({
         enum: ['pending', 'accepted', 'preparing', 'out_for_delivery', 'delivered', 'cancelled'],
         default: 'pending',
     },
+    paymentMethod: {
+        type: String,
+        default: 'cartao',
+    },
+    paymentStatus: {
+        type: String,
+        enum: ['approved', 'rejected', 'pending', 'cancelled'],
+        default: 'approved',
+    },
     deliveryPersonId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'DeliveryPerson',
@@ -50,7 +58,9 @@ const OrderSchema = new mongoose.Schema({
         street: String,
         number: String,
         complement: String,
+        neighborhood: String,
         city: String,
+        state: String,
         zip: String,
         coordinates: {
             type: {
@@ -83,6 +93,15 @@ const OrderSchema = new mongoose.Schema({
         type: Number,
         default: 0,
     },
+    // NEW: Estimated delivery and status tracking
+    estimatedDeliveryTime: {
+        type: Date,
+    },
+    statusLog: [{
+        status: String,
+        timestamp: { type: Date, default: Date.now },
+        note: String,
+    }],
     acceptedAt: {
         type: Date,
     },
@@ -97,6 +116,16 @@ const OrderSchema = new mongoose.Schema({
     }
 }, { timestamps: true });
 
+OrderSchema.plugin(fieldEncryption, {
+    fields: ['address.street', 'address.number', 'address.complement', 'address.neighborhood', 'address.city', 'address.state', 'address.zip'],
+    secret: process.env.ENCRYPTION_KEY
+});
+
+// Indexes for fast queries
+OrderSchema.index({ userId: 1, createdAt: -1 });
+OrderSchema.index({ partnerId: 1, createdAt: -1 });
+OrderSchema.index({ status: 1 });
+
 // Force model refresh for schema changes in development
 if (process.env.NODE_ENV === 'development') {
     delete mongoose.models.Order;
@@ -104,4 +133,3 @@ if (process.env.NODE_ENV === 'development') {
 
 // Export with a fallback to the registered model
 export default mongoose.models.Order || mongoose.model('Order', OrderSchema);
-

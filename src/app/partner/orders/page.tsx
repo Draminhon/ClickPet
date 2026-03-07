@@ -2,23 +2,21 @@
 
 import { useEffect, useState } from 'react';
 import { useToast } from '@/context/ToastContext';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Search, MoreHorizontal } from 'lucide-react';
 import OrderStatusBadge from '@/components/ui/OrderStatusBadge';
-import { Package, User, MapPin, Calendar, Truck } from 'lucide-react';
 
 export default function PartnerOrders() {
     const { showToast } = useToast();
     const [orders, setOrders] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [view, setView] = useState<'active' | 'history'>('active');
-    const [filter, setFilter] = useState('all');
-    const [deliveryPersons, setDeliveryPersons] = useState<any[]>([]);
 
-    const activeStatuses = ['pending', 'accepted', 'preparing', 'out_for_delivery'];
-    const historyStatuses = ['delivered', 'cancelled'];
+    // Novas states para a tabela
+    const [activeTab, setActiveTab] = useState('TODOS');
+    const [searchId, setSearchId] = useState('');
 
     useEffect(() => {
         fetchOrders();
-        fetchDeliveryPersons();
     }, []);
 
     const fetchOrders = () => {
@@ -29,12 +27,6 @@ export default function PartnerOrders() {
                 setLoading(false);
             })
             .catch(() => setLoading(false));
-    };
-
-    const fetchDeliveryPersons = () => {
-        fetch('/api/delivery-persons')
-            .then(res => res.json())
-            .then(data => setDeliveryPersons(data));
     };
 
     const handleStatusUpdate = async (orderId: string, newStatus: string) => {
@@ -56,33 +48,57 @@ export default function PartnerOrders() {
         }
     };
 
-    const handleAssignDelivery = async (orderId: string, deliveryPersonId: string) => {
-        try {
-            const res = await fetch(`/api/orders/${orderId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ deliveryPersonId }),
-            });
+    const getMonthlyData = () => {
+        const months = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
+        const data = months.map(m => ({ name: m, PedidosReal: 0, Pedidos: 0 }));
 
-            if (res.ok) {
-                showToast('Entregador atribuído!');
-                fetchOrders();
+        orders.forEach(order => {
+            const date = new Date(order.createdAt);
+            const monthIndex = date.getMonth();
+            data[monthIndex].PedidosReal += 1;
+        });
+
+        // Transform data into a segmented scale so 0, 10, 50, 100, 1000 are equally spaced.
+        data.forEach(d => {
+            const val = d.PedidosReal;
+            if (val === 0) {
+                d.Pedidos = 0;
+            } else if (val <= 10) {
+                d.Pedidos = val / 10;                     // 0 -> 1
+            } else if (val <= 50) {
+                d.Pedidos = 1 + ((val - 10) / 40);        // 1 -> 2
+            } else if (val <= 100) {
+                d.Pedidos = 2 + ((val - 50) / 50);        // 2 -> 3
+            } else if (val <= 1000) {
+                d.Pedidos = 3 + ((val - 100) / 900);      // 3 -> 4
             } else {
-                showToast('Erro ao atribuir entregador', 'error');
+                d.Pedidos = 4;                            // Cap at max label
             }
-        } catch (error) {
-            showToast('Erro ao atribuir entregador', 'error');
-        }
+        });
+
+        return data;
     };
 
-    const filteredOrders = orders.filter(o => {
-        const isHistory = historyStatuses.includes(o.status);
-        if (view === 'active' && isHistory) return false;
-        if (view === 'history' && !isHistory) return false;
+    const filterOrders = () => {
+        let filtered = orders;
 
-        if (filter !== 'all' && o.status !== filter) return false;
-        return true;
-    });
+        if (activeTab === 'PENDENTES') {
+            filtered = filtered.filter(o => o.status === 'pending');
+        } else if (activeTab === 'CANCELADOS') {
+            filtered = filtered.filter(o => o.status === 'cancelled');
+        } else if (activeTab === 'ENVIADO') {
+            filtered = filtered.filter(o => o.status === 'out_for_delivery' || o.status === 'delivered');
+        }
+
+        if (searchId) {
+            filtered = filtered.filter(o => o._id.toLowerCase().includes(searchId.toLowerCase()));
+        }
+
+        return filtered;
+    };
+
+    const chartData = getMonthlyData();
+    const filteredOrders = filterOrders();
 
     if (loading) {
         return <div style={{ padding: '2rem', textAlign: 'center' }}>Carregando...</div>;
@@ -90,203 +106,301 @@ export default function PartnerOrders() {
 
     return (
         <div>
-            <h1 className="section-title">Pedidos</h1>
+            {/* Top Header */}
+            <h1
+                style={{
+                    fontSize: '14px',
+                    color: '#253D4E',
+                    fontWeight: 700,
+                    marginBottom: '2rem',
+                    textAlign: 'left',
+                    textTransform: 'uppercase'
+                }}
+            >
+                VISUALIZAÇÃO DE PEDIDOS
+            </h1>
 
-            {/* View Tabs */}
-            <div style={{ display: 'flex', borderBottom: '1px solid #eee', marginBottom: '1.5rem', gap: '2rem' }}>
-                <button
-                    onClick={() => { setView('active'); setFilter('all'); }}
+            {/* Chart Container - styled like main dashboard */}
+            <div
+                style={{
+                    background: '#F9FBFD',
+                    borderRadius: '12px',
+                    padding: '1.5rem',
+                    marginBottom: '1.5rem',
+                    border: '1px solid rgba(209, 217, 226, 1)'
+                }}
+            >
+                <h2
                     style={{
-                        padding: '1rem 0.5rem',
-                        background: 'none',
-                        border: 'none',
-                        borderBottom: view === 'active' ? '3px solid #6CC551' : '3px solid transparent',
-                        color: view === 'active' ? '#6CC551' : '#666',
-                        fontWeight: view === 'active' ? 700 : 500,
-                        cursor: 'pointer',
-                        fontSize: '1.1rem'
+                        fontSize: '14px',
+                        fontWeight: 500,
+                        color: '#757575',
+                        marginBottom: '1.5rem',
+                        textTransform: 'uppercase'
                     }}
                 >
-                    Pedidos Ativos ({orders.filter(o => activeStatuses.includes(o.status)).length})
-                </button>
-                <button
-                    onClick={() => { setView('history'); setFilter('all'); }}
-                    style={{
-                        padding: '1rem 0.5rem',
-                        background: 'none',
-                        border: 'none',
-                        borderBottom: view === 'history' ? '3px solid #6CC551' : '3px solid transparent',
-                        color: view === 'history' ? '#6CC551' : '#666',
-                        fontWeight: view === 'history' ? 700 : 500,
-                        cursor: 'pointer',
-                        fontSize: '1.1rem'
-                    }}
-                >
-                    Histórico ({orders.filter(o => historyStatuses.includes(o.status)).length})
-                </button>
-            </div>
+                    GRAFICO DE PEDIDOS
+                </h2>
 
-            {/* Sub-Filters */}
-            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
-                <button
-                    onClick={() => setFilter('all')}
-                    style={{
-                        padding: '0.5rem 1rem',
-                        borderRadius: '20px',
-                        border: filter === 'all' ? 'none' : '1px solid #ddd',
-                        background: filter === 'all' ? '#6CC551' : 'white',
-                        color: filter === 'all' ? 'white' : '#666',
-                        cursor: 'pointer',
-                        fontSize: '0.85rem',
-                        fontWeight: 600
-                    }}
-                >
-                    Todos
-                </button>
-                {(view === 'active' ? activeStatuses : historyStatuses).map(status => (
-                    <button
-                        key={status}
-                        onClick={() => setFilter(status)}
+                <div style={{ height: 350, width: '100%' }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                        <BarChart
+                            data={chartData}
+                            margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
+                        >
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
+                            <XAxis
+                                dataKey="name"
+                                tick={{ fontSize: 14, fill: '#757575' }}
+                                axisLine={false}
+                                tickLine={false}
+                                dy={10}
+                            />
+                            <YAxis
+                                domain={[0, 4]}
+                                ticks={[0, 1, 2, 3, 4]}
+                                tickFormatter={(val) => {
+                                    if (val === 0) return '0';
+                                    if (val === 1) return '10';
+                                    if (val === 2) return '50';
+                                    if (val === 3) return '100';
+                                    if (val === 4) return '1000';
+                                    return '';
+                                }}
+                                tick={{ fontSize: 14, fill: '#757575', fontWeight: 400 }}
+                                axisLine={false}
+                                tickLine={false}
+                                dx={-10}
+                            />
+                            <Tooltip
+                                cursor={{ fill: '#f5f5f5' }}
+                                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                                formatter={(value: any, name: any, props: any) => {
+                                    return [props.payload.PedidosReal, "Pedidos"];
+                                }}
+                            />
+                            <Bar
+                                dataKey="Pedidos"
+                                fill="#6CC551"
+                                radius={[4, 4, 0, 0]}
+                                barSize={40}
+                            />
+                        </BarChart>
+                    </ResponsiveContainer>
+                </div>
+
+                <div style={{
+                    borderTop: '1px solid rgba(209, 217, 226, 1)',
+                    marginTop: '1.5rem',
+                    paddingTop: '1.5rem',
+                    marginLeft: '-1.5rem',
+                    marginRight: '-1.5rem',
+                    paddingLeft: '1.5rem',
+                    paddingRight: '1.5rem'
+                }}>
+                    <p
                         style={{
-                            padding: '0.5rem 1rem',
-                            borderRadius: '20px',
-                            border: filter === status ? 'none' : '1px solid #ddd',
-                            background: filter === status ? '#6CC551' : 'white',
-                            color: filter === status ? 'white' : '#666',
-                            cursor: 'pointer',
-                            fontSize: '0.85rem',
-                            fontWeight: 600
+                            fontSize: '14px',
+                            color: '#757575',
+                            textAlign: 'left',
+                            fontWeight: 400, // regular
+                            textTransform: 'uppercase',
+                            margin: 0
                         }}
                     >
-                        {status === 'pending' ? 'Pendentes' :
-                            status === 'accepted' ? 'Aceitos' :
-                                status === 'preparing' ? 'Em Preparo' :
-                                    status === 'out_for_delivery' ? 'Em Entrega' :
-                                        status === 'delivered' ? 'Entregues' : 'Cancelados'}
-                    </button>
-                ))}
+                        ANALISE DE PEDIDOS MENSAIS DO SEU PETSHOP
+                    </p>
+                </div>
             </div>
 
-            {/* Orders List */}
-            {filteredOrders.length === 0 ? (
-                <div style={{ background: 'white', padding: '3rem', borderRadius: '12px', textAlign: 'center' }}>
-                    <Package size={48} color="#ccc" style={{ marginBottom: '1rem' }} />
-                    <p style={{ color: '#666' }}>Nenhum pedido encontrado</p>
-                </div>
-            ) : (
-                <div style={{ display: 'grid', gap: '1.5rem' }}>
-                    {filteredOrders.map(order => (
-                        <div key={order._id} style={{ background: 'white', borderRadius: '12px', padding: '1.5rem', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
-                                <div>
-                                    <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-                                        Pedido #{order._id.slice(-6).toUpperCase()}
-                                    </h3>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#666', fontSize: '0.9rem' }}>
-                                        <Calendar size={16} />
-                                        <span>{new Date(order.createdAt).toLocaleString('pt-BR')}</span>
-                                    </div>
-                                </div>
-                                <OrderStatusBadge status={order.status} />
-                            </div>
+            {/* Tabela de Pedidos Section */}
+            <div style={{ marginTop: '2rem' }}>
+                <h3 style={{
+                    fontSize: '14px',
+                    fontWeight: 400, // regular
+                    color: '#253D4E',
+                    marginBottom: '1.5rem',
+                    textTransform: 'uppercase'
+                }}>
+                    TABELA DE PEDIDOS
+                </h3>
 
-                            {/* Items */}
-                            <div style={{ marginBottom: '1rem', padding: '1rem', background: '#f9f9f9', borderRadius: '8px' }}>
-                                <h4 style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: '0.5rem' }}>Itens:</h4>
-                                {order.items.map((item: any, idx: number) => (
-                                    <div key={idx} style={{ fontSize: '0.9rem', color: '#666' }}>
-                                        • {item.quantity}x {item.title} - R$ {item.price.toFixed(2)}
-                                    </div>
-                                ))}
-                                {order.discount > 0 && (
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: '#6CC551', marginBottom: '0.2rem' }}>
-                                        <span>Desconto {order.coupon && `(Cupom: ${order.coupon})`}:</span>
-                                        <span>- R$ {order.discount.toFixed(2).replace('.', ',')}</span>
-                                    </div>
-                                )}
-                                <div style={{ marginTop: '0.5rem', fontWeight: 700, fontSize: '1rem', display: 'flex', justifyContent: 'space-between' }}>
-                                    <span>Total:</span>
-                                    <span>R$ {order.total.toFixed(2).replace('.', ',')}</span>
-                                </div>
-                            </div>
+                {/* Toolbar */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                    {/* Tabs Container */}
+                    <div style={{
+                        display: 'flex',
+                        width: '452px',
+                        height: '40px',
+                        borderRadius: '5px',
+                        border: '1px solid #D1D9E2',
+                        overflow: 'hidden'
+                    }}>
+                        {['TODOS', 'PENDENTES', 'CANCELADOS', 'ENVIADO'].map((tab, idx) => (
+                            <button
+                                key={tab}
+                                onClick={() => setActiveTab(tab)}
+                                style={{
+                                    flex: 1,
+                                    border: 'none',
+                                    borderRight: idx < 3 ? '1px solid #D1D9E2' : 'none',
+                                    background: activeTab === tab ? '#3BB77E' : 'transparent',
+                                    color: activeTab === tab ? '#FEFEFE' : '#757575',
+                                    fontWeight: activeTab === tab ? 'bold' : 600, // selected: bold, unselected: semibold (600)
+                                    fontSize: '12px',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s ease',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}
+                            >
+                                {tab}
+                            </button>
+                        ))}
+                    </div>
 
-                            {/* Address */}
-                            <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'start', gap: '0.5rem', fontSize: '0.9rem', color: '#666' }}>
-                                <MapPin size={16} style={{ marginTop: '0.2rem' }} />
-                                <span>{order.address.street}, {order.address.number}{order.address.complement ? ` - ${order.address.complement}` : ''} - {order.address.city}, {order.address.zip}</span>
-                            </div>
-
-                            {/* Delivery Person */}
-                            {order.deliveryPersonId && (
-                                <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.8rem', background: '#e8f5e9', borderRadius: '8px' }}>
-                                    <Truck size={18} color="#6CC551" />
-                                    <span style={{ fontWeight: 600 }}>Entregador: {order.deliveryPersonId.name}</span>
-                                </div>
-                            )}
-
-                            {/* Actions */}
-                            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                                {order.status === 'pending' && (
-                                    <>
-                                        <button
-                                            onClick={() => handleStatusUpdate(order._id, 'accepted')}
-                                            style={{ padding: '0.6rem 1rem', background: '#6CC551', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
-                                        >
-                                            Aceitar Pedido
-                                        </button>
-                                        <button
-                                            onClick={() => handleStatusUpdate(order._id, 'cancelled')}
-                                            style={{ padding: '0.6rem 1rem', background: '#dc3545', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
-                                        >
-                                            Recusar
-                                        </button>
-                                    </>
-                                )}
-
-                                {order.status === 'accepted' && (
-                                    <button
-                                        onClick={() => handleStatusUpdate(order._id, 'preparing')}
-                                        style={{ padding: '0.6rem 1rem', background: '#6CC551', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
-                                    >
-                                        Iniciar Preparo
-                                    </button>
-                                )}
-
-                                {order.status === 'preparing' && (
-                                    <>
-                                        <button
-                                            onClick={() => handleStatusUpdate(order._id, 'out_for_delivery')}
-                                            style={{ padding: '0.6rem 1rem', background: '#6CC551', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
-                                        >
-                                            Saiu para Entrega
-                                        </button>
-                                        {!order.deliveryPersonId && deliveryPersons.length > 0 && (
-                                            <select
-                                                onChange={(e) => e.target.value && handleAssignDelivery(order._id, e.target.value)}
-                                                style={{ padding: '0.6rem', borderRadius: '6px', border: '1px solid #ddd' }}
-                                            >
-                                                <option value="">Atribuir Entregador</option>
-                                                {deliveryPersons.map(dp => (
-                                                    <option key={dp._id} value={dp._id}>{dp.name}</option>
-                                                ))}
-                                            </select>
-                                        )}
-                                    </>
-                                )}
-
-                                {order.status === 'out_for_delivery' && (
-                                    <button
-                                        onClick={() => handleStatusUpdate(order._id, 'delivered')}
-                                        style={{ padding: '0.6rem 1rem', background: '#6CC551', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
-                                    >
-                                        Marcar como Entregue
-                                    </button>
-                                )}
-                            </div>
+                    {/* Search and Action Container */}
+                    <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+                        {/* Search Bar */}
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            width: '288.5px',
+                            height: '46px',
+                            borderRadius: '8px',
+                            border: '1px solid #D1D9E2',
+                            padding: '0 1rem',
+                            background: 'white'
+                        }}>
+                            <Search size={18} color="#757575" />
+                            <input
+                                type="text"
+                                placeholder="PESQUISAR ID"
+                                value={searchId}
+                                onChange={(e) => setSearchId(e.target.value)}
+                                style={{
+                                    border: 'none',
+                                    outline: 'none',
+                                    width: '100%',
+                                    marginLeft: '0.5rem',
+                                    fontSize: '14px',
+                                    color: '#757575',
+                                    fontWeight: 400, // regular
+                                    background: 'transparent'
+                                }}
+                            />
                         </div>
-                    ))}
+
+                        {/* More Button */}
+                        <button style={{
+                            width: '46px',
+                            height: '46px',
+                            borderRadius: '12px',
+                            background: 'rgba(230,233,236,1)',
+                            border: 'none',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer'
+                        }}>
+                            <MoreHorizontal size={15} color="rgba(124,139,157,1)" />
+                        </button>
+                    </div>
                 </div>
-            )}
+
+                {/* Table Container */}
+                <div style={{
+                    background: '#F9FBFD',
+                    borderRadius: '12px',
+                    padding: '1.5rem 0', // Vertical padding only
+                    border: '1px solid rgba(209, 217, 226, 1)',
+                    overflowX: 'auto'
+                }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                        <thead>
+                            <tr style={{ borderBottom: '1px solid rgba(209, 217, 226, 1)', color: '#757575', fontSize: '13px' }}>
+                                <th style={{ padding: '1rem 0', paddingLeft: '1.5rem', fontWeight: 600 }}>ID</th>
+                                <th style={{ padding: '1rem 0', fontWeight: 600 }}>DATA</th>
+                                <th style={{ padding: '1rem 0', fontWeight: 600 }}>ITENS</th>
+                                <th style={{ padding: '1rem 0', fontWeight: 600 }}>TOTAL</th>
+                                <th style={{ padding: '1rem 0', fontWeight: 600 }}>STATUS</th>
+                                <th style={{ padding: '1rem 0', fontWeight: 600 }}>ID_CLIENTE</th>
+                                <th style={{ padding: '1rem 0', fontWeight: 600 }}>PAGAMENTO</th>
+                                <th style={{ padding: '1rem 0', paddingRight: '1.5rem', fontWeight: 600 }}>AÇÕES</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filteredOrders.length === 0 ? (
+                                <tr>
+                                    <td colSpan={8} style={{ textAlign: 'center', padding: '2rem', color: '#999' }}>
+                                        Nenhum pedido encontrado.
+                                    </td>
+                                </tr>
+                            ) : (
+                                filteredOrders.map(order => {
+                                    const getRowBackground = () => {
+                                        if (order.status === 'delivered') return 'rgba(59, 183, 126, 0.2)';
+                                        if (order.status === 'cancelled') return 'rgba(255, 0, 4, 0.2)';
+                                        return 'transparent';
+                                    };
+
+                                    const getStatusLabel = (status: string) => {
+                                        const labels: any = {
+                                            'pending': 'PENDENTE',
+                                            'accepted': 'ACEITO',
+                                            'preparing': 'PREPARANDO',
+                                            'out_for_delivery': 'EM ENTREGA',
+                                            'delivered': 'ENTREGUE',
+                                            'cancelled': 'CANCELADO'
+                                        };
+                                        return labels[status] || status.toUpperCase();
+                                    };
+
+                                    return (
+                                        <tr key={order._id} style={{
+                                            fontSize: '14px',
+                                            color: '#757575',
+                                            fontWeight: 400,
+                                            background: getRowBackground()
+                                        }}>
+                                            <td style={{ padding: '1rem 0', paddingLeft: '1.5rem' }}>#{order._id.slice(-6).toUpperCase()}</td>
+                                            <td style={{ padding: '1rem 0' }}>{new Date(order.createdAt).toLocaleDateString('pt-BR')}</td>
+                                            <td style={{ padding: '1rem 0' }}>{order.items?.length || 0}</td>
+                                            <td style={{ padding: '1rem 0' }}>R$ {order.total?.toFixed(2).replace('.', ',')}</td>
+                                            <td style={{ padding: '1rem 0' }}>
+                                                {getStatusLabel(order.status)}
+                                            </td>
+                                            <td style={{ padding: '1rem 0' }}>{order.user?.name || order.userId?.slice(-6).toUpperCase() || '-'}</td>
+                                            <td style={{ padding: '1rem 0', textTransform: 'uppercase' }}>
+                                                {order.paymentStatus === 'cancelled' ? 'CANCELADO' :
+                                                    order.paymentStatus === 'rejected' ? 'RECUSADO' : 'APROVADO'}
+                                            </td>
+                                            <td style={{ padding: '1rem 0', paddingRight: '1.5rem' }}>
+                                                {order.status === 'pending' && (
+                                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                        <button onClick={() => handleStatusUpdate(order._id, 'accepted')} style={{ padding: '4px 8px', fontSize: '12px', background: '#3BB77E', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Aceitar</button>
+                                                        <button onClick={() => handleStatusUpdate(order._id, 'cancelled')} style={{ padding: '4px 8px', fontSize: '12px', background: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Recusar</button>
+                                                    </div>
+                                                )}
+                                                {order.status === 'accepted' && (
+                                                    <button onClick={() => handleStatusUpdate(order._id, 'preparing')} style={{ padding: '4px 8px', fontSize: '12px', background: '#3BB77E', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Preparo</button>
+                                                )}
+                                                {order.status === 'preparing' && (
+                                                    <button onClick={() => handleStatusUpdate(order._id, 'out_for_delivery')} style={{ padding: '4px 8px', fontSize: '12px', background: '#3BB77E', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Enviar</button>
+                                                )}
+                                                {order.status === 'out_for_delivery' && (
+                                                    <button onClick={() => handleStatusUpdate(order._id, 'delivered')} style={{ padding: '4px 8px', fontSize: '12px', background: '#3BB77E', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Entregue</button>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     );
 }

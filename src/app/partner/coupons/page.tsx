@@ -14,6 +14,8 @@ export default function CouponsPage() {
         minPurchase: '',
         maxUses: '',
         expiresAt: '',
+        type: 'percentage',
+        maxDiscount: '',
     });
 
     useEffect(() => {
@@ -38,7 +40,7 @@ export default function CouponsPage() {
 
             if (res.ok) {
                 showToast('Cupom criado com sucesso!');
-                setFormData({ code: '', discount: '', minPurchase: '', maxUses: '', expiresAt: '' });
+                setFormData({ code: '', discount: '', minPurchase: '', maxUses: '', expiresAt: '', type: 'percentage', maxDiscount: '' });
                 setShowForm(false);
                 fetchCoupons();
             } else {
@@ -89,17 +91,47 @@ export default function CouponsPage() {
                             />
                         </div>
                         <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Desconto (%)</label>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Tipo de Desconto</label>
+                            <select
+                                style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
+                                value={formData.type}
+                                onChange={e => setFormData({ ...formData, type: e.target.value })}
+                            >
+                                <option value="percentage">Porcentagem (%)</option>
+                                <option value="fixed">Valor Fixo (R$)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                        <div>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                                {formData.type === 'percentage' ? 'Desconto (%)' : 'Valor do Desconto (R$)'}
+                            </label>
                             <input
                                 type="number"
                                 required
                                 min="1"
-                                max="100"
+                                max={formData.type === 'percentage' ? '100' : undefined}
+                                step={formData.type === 'fixed' ? '0.01' : '1'}
                                 style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
                                 value={formData.discount}
                                 onChange={e => setFormData({ ...formData, discount: e.target.value })}
                             />
                         </div>
+                        {formData.type === 'percentage' && (
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Desconto Máximo (R$)</label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    placeholder="Sem limite"
+                                    style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
+                                    value={formData.maxDiscount}
+                                    onChange={e => setFormData({ ...formData, maxDiscount: e.target.value })}
+                                />
+                            </div>
+                        )}
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
@@ -155,7 +187,7 @@ export default function CouponsPage() {
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
                                     <h3 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#6CC551', fontFamily: 'monospace' }}>{coupon.code}</h3>
                                     <span style={{ background: '#6CC551', color: 'white', padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.9rem', fontWeight: 600 }}>
-                                        -{coupon.discount}%
+                                        {coupon.type === 'fixed' ? `- R$ ${coupon.discount.toFixed(2)}` : `- ${coupon.discount}%`}
                                     </span>
                                     {isExpired(coupon.expiresAt) && (
                                         <span style={{ background: '#dc3545', color: 'white', padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.85rem' }}>

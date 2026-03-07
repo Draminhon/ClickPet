@@ -17,24 +17,52 @@ export async function POST(req: Request) {
 
         await dbConnect();
         const body = await req.json();
-        // console.log('[Order Create] Received body:', JSON.stringify(body, null, 2));
 
-        // Get partnerId from first product
+        // Prevent mass assignment and force correct ownership/initial status
+        const allowedItems = (body.items || []).map((item: any) => ({
+            productId: item.productId,
+            title: item.title,
+            price: item.price,
+            quantity: item.quantity,
+            shopName: item.shopName
+        }));
+
+        const orderData: any = {
+            userId: session.user.id,
+            items: allowedItems,
+            total: body.total,
+            deliveryFee: body.deliveryFee || 0,
+            distance: body.distance,
+            isPickup: !!body.isPickup,
+            status: 'pending', // Always start as pending
+            address: body.address ? {
+                street: body.address.street,
+                number: body.address.number,
+                complement: body.address.complement,
+                city: body.address.city,
+                zip: body.address.zip,
+                coordinates: body.address.coordinates
+            } : undefined,
+            coupon: body.coupon,
+            pointsRedeemed: body.pointsRedeemed || 0,
+            paymentMethod: body.paymentMethod || 'cartao',
+            paymentStatus: body.paymentStatus || 'approved'
+        };
+
+        // Get partnerId from first product securely
         let partnerId = body.partnerId;
-        if (!partnerId && body.items && body.items.length > 0) {
-            const product = await Product.findById(body.items[0].productId);
+        if (!partnerId && allowedItems.length > 0) {
+            const product = await Product.findById(allowedItems[0].productId);
             partnerId = product?.partnerId;
         }
 
-        // If still no partnerId, try to find by shopName (common in this codebase)
-        if (!partnerId && body.items && body.items.length > 0 && body.items[0].shopName) {
-            const partner = await User.findOne({ name: body.items[0].shopName, role: 'partner' });
+        if (!partnerId && allowedItems.length > 0 && allowedItems[0].shopName) {
+            const partner = await User.findOne({ name: allowedItems[0].shopName, role: 'partner' });
             if (partner) partnerId = partner._id;
         }
 
         const order = await Order.create({
-            ...body,
-            userId: session.user.id,
+            ...orderData,
             partnerId,
         });
 
@@ -49,7 +77,7 @@ export async function POST(req: Request) {
 
         return NextResponse.json(order, { status: 201 });
     } catch (error: any) {
-        return NextResponse.json({ message: error.message }, { status: 500 });
+        return NextResponse.json({ message: 'Error creating order' }, { status: 500 });
     }
 }
 

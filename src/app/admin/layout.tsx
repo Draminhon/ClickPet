@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Link from 'next/link';
@@ -94,7 +94,7 @@ export default function AdminLayout({
                     </Link>
 
                     <button
-                        onClick={() => router.push('/api/auth/signout')}
+                        onClick={() => signOut({ callbackUrl: '/login' })}
                         style={{
                             display: 'flex',
                             alignItems: 'center',

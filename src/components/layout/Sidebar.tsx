@@ -29,6 +29,17 @@ interface SidebarProps {
 export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
     const pathname = usePathname();
     const { data: session } = useSession();
+
+    const handleLogout = async () => {
+        try {
+            await fetch('/api/auth/logout', { method: 'POST' });
+        } catch (error) {
+            console.error("Failed to invalidate session remotely:", error);
+        }
+        signOut({ callbackUrl: '/login' });
+    };
+
+    const isAdmin = session?.user?.role === 'admin';
     const [shopData, setShopData] = useState({
         name: 'Petshop',
         logo: ''
@@ -135,7 +146,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                 </div>
 
                 <div className={styles.logoutContainer}>
-                    <button onClick={() => signOut()} className={styles.logoutBtn}>
+                    <button onClick={handleLogout} className={styles.logoutBtn}>
                         <LogOut className={styles.navIcon} />
                         {!isCollapsed && <span>Sair</span>}
                     </button>

@@ -30,14 +30,19 @@ export async function POST(req: Request) {
         await dbConnect();
         const body = await req.json();
 
-        const pet = await Pet.create({
-            ...body,
-            ownerId: session.user.id,
+        // Explicitly allowed fields to prevent mass assignment
+        const allowedFields = ['name', 'species', 'breed', 'age', 'weight', 'photo', 'gender', 'size', 'temperament', 'medicalNotes', 'isVaccinated', 'notes'];
+        const petData: any = { ownerId: session.user.id };
+
+        allowedFields.forEach(field => {
+            if (body[field] !== undefined) petData[field] = body[field];
         });
+
+        const pet = await Pet.create(petData);
 
         return NextResponse.json(pet, { status: 201 });
     } catch (error: any) {
-        return NextResponse.json({ message: error.message }, { status: 500 });
+        return NextResponse.json({ message: 'Error saving pet' }, { status: 500 });
     }
 }
 
@@ -57,9 +62,17 @@ export async function PUT(req: Request) {
         await dbConnect();
         const body = await req.json();
 
+        // Explicitly allowed fields for update
+        const allowedFields = ['name', 'species', 'breed', 'age', 'weight', 'photo', 'gender', 'size', 'temperament', 'medicalNotes', 'isVaccinated', 'notes'];
+        const updateData: any = {};
+
+        allowedFields.forEach(field => {
+            if (body[field] !== undefined) updateData[field] = body[field];
+        });
+
         const pet = await Pet.findOneAndUpdate(
             { _id: petId, ownerId: session.user.id },
-            { ...body },
+            updateData,
             { new: true }
         );
 

@@ -125,7 +125,7 @@ export default function HeroBanner() {
 
             <div className={styles.rightContent}>
                 <Image
-                    src="/assets/banner/banner_image.png"
+                    src="/banner/banner_image.png"
                     alt="Banner Image"
                     fill
                     className={styles.bannerImage}

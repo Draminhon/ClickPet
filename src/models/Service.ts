@@ -19,6 +19,11 @@ const ServiceSchema = new mongoose.Schema({
         enum: ['bath', 'grooming', 'veterinary', 'training', 'aquarismo', 'daycare', 'hotel', 'other'],
         required: true,
     },
+    species: {
+        type: String,
+        enum: ['dog', 'cat', 'fish', 'bird', 'all', 'other'],
+        default: 'all',
+    },
     prices: [{
         size: {
             type: String,

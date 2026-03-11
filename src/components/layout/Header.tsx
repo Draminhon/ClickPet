@@ -155,6 +155,9 @@ export default function Header() {
                         <Link href="/" className={`${styles.navLink} ${pathname === '/' ? styles.navLinkActive : ''}`}>
                             Início
                         </Link>
+                        <Link href="/services" className={`${styles.navLink} ${pathname === '/services' ? styles.navLinkActive : ''}`}>
+                            Serviços
+                        </Link>
                         <Link href="/suporte" className={`${styles.navLink} ${pathname === '/suporte' ? styles.navLinkActive : ''}`}>
                             Suporte
                         </Link>

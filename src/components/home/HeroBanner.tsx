@@ -67,6 +67,10 @@ export default function HeroBanner() {
     });
 
     const handleSearch = () => {
+        if (activeTab === 'BANHO & TOSA') {
+            window.location.href = `/services?category=bath`;
+            return;
+        }
         const query = `?cat=${activeTab.toLowerCase()}&marca=${filters.marca}&qualidade=${filters.qualidade}&animal=${filters.animal}`;
         window.location.href = `/search${query}`;
     };

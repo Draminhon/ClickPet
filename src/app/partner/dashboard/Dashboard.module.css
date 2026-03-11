@@ -179,30 +179,38 @@
 
 .quickActions {
     display: flex;
-    gap: 24px;
+    gap: 12px;
     margin-bottom: 32px;
+    justify-content: flex-end;
+    align-items: center;
 }
 
 .actionBtn {
-    flex: 1;
+    width: 288px;
+    height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     text-align: center;
-    padding: 24px;
+    padding: 0;
     font-size: 14px;
     text-decoration: none;
     border-radius: 12px;
     transition: all 0.2s;
     text-transform: uppercase;
     font-weight: 500;
+    flex-shrink: 0;
 }
 
 .addBtn {
-    background-color: #F9FBFD;
-    border: 1px solid #D1D9E2;
-    color: #757575;
+    background-color: #3BB77E;
+    border: none;
+    color: #FEFEFE;
 }
 
 .searchContainer {
-    flex: 1;
+    width: 288px;
+    height: 46px;
     display: flex;
     align-items: center;
     background-color: rgba(255, 255, 255, 1);
@@ -210,6 +218,7 @@
     border-radius: 12px;
     padding: 0 16px;
     gap: 12px;
+    flex-shrink: 0;
 }
 
 .searchIcon {
@@ -226,7 +235,19 @@
     font-size: 14px;
     color: #757575;
     font-weight: 500;
-    text-transform: uppercase;
+}
+
+.optionsBtn {
+    width: 46px;
+    height: 46px;
+    background-color: rgba(230, 233, 236, 1);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    border: none;
 }
 
 .searchInput::placeholder {

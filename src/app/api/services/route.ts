@@ -49,6 +49,11 @@ export async function GET(req: Request) {
         if (category) query.category = category;
         if (partnerId) query.partnerId = partnerId;
 
+        // For public listing, only show active services
+        if (!partnerId) {
+            query.isActive = true;
+        }
+
         const services = await Service.find(query).populate('partnerId', 'name');
         return NextResponse.json(services);
     } catch (error: any) {

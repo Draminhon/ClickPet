@@ -213,8 +213,17 @@ export default function ServiceDetailsPage({ params: paramsPromise }: { params: 
                                             ))}
                                         </select>
                                     ) : (
-                                        <div style={{ fontSize: '0.9rem', color: '#dc3545' }}>
-                                            Você precisa cadastrar um pet primeiro. <a href="/profile" style={{ textDecoration: 'underline' }}>Ir para perfil</a>
+                                        <div style={{ padding: '1rem', background: '#fff3cd', borderRadius: '8px', border: '1px solid #ffeeba' }}>
+                                            <p style={{ fontSize: '0.9rem', color: '#856404', marginBottom: '1rem' }}>
+                                                Você precisa cadastrar um pet primeiro para agendar este serviço.
+                                            </p>
+                                            <button
+                                                onClick={() => router.push('/profile')}
+                                                className="btn btn-secondary"
+                                                style={{ width: '100%', fontSize: '0.9rem' }}
+                                            >
+                                                Cadastrar meu Pet
+                                            </button>
                                         </div>
                                     )}
                                 </div>

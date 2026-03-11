@@ -12,7 +12,8 @@ import {
     ArrowUp,
     ArrowDown,
     Search,
-    BarChart2
+    BarChart2,
+    MoreHorizontal
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -247,6 +248,9 @@ export default function Dashboard() {
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
                 </div>
+                <button className={styles.optionsBtn}>
+                    <MoreHorizontal size={15} color="rgba(124,139,157,1)" />
+                </button>
             </div>
 
             <div className={styles.productsContainer}>

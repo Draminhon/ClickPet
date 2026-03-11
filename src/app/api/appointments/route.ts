@@ -53,7 +53,7 @@ export async function GET(req: Request) {
 
         const appointments = await Appointment.find(query)
             .sort({ date: -1 })
-            .populate('serviceId', 'name duration prices category')
+            .populate('serviceId', 'name duration prices category image')
             .populate('petId', 'name species breed age weight gender size temperament medicalNotes isVaccinated photo')
             .populate('userId', 'name email phone') // For partners to see who booked
             .populate('partnerId', 'name address'); // For users to see where

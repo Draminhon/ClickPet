@@ -1,0 +1,244 @@
+.appointmentsContainer {
+    padding: 24px;
+    background-color: #FEFEFE;
+    min-height: 100vh;
+}
+
+.title {
+    font-size: 14px;
+    color: #253D4E;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    font-weight: 400;
+}
+
+.sectionSubtitle {
+    font-size: 12px;
+    color: #757575;
+    font-weight: 400;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+}
+
+/* Table styling similar to Orders */
+.tableContainer {
+    background: #F9FBFD;
+    border-radius: 12px;
+    padding: 1.5rem 0;
+    border: 1px solid rgba(209, 217, 226, 1);
+    overflow: auto;
+    margin-bottom: 32px;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.tableHeaderRow {
+    border-bottom: 1px solid rgba(209, 217, 226, 1);
+    color: #757575;
+    font-size: 13px;
+}
+
+.tableHeaderCell {
+    padding: 1rem 0;
+    font-weight: 600;
+}
+
+.tableRow {
+    font-size: 14px;
+    color: #757575;
+    font-weight: 400;
+}
+
+.tableCell {
+    padding: 1rem 0;
+}
+
+.productCell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-left: 8px;
+}
+
+.productPhoto {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    background-color: #eee;
+    flex-shrink: 0;
+}
+
+/* Charts Section */
+.chartsRow {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 40px;
+}
+
+.graphContainer {
+    flex: 1;
+    background-color: #F9FBFD;
+    border: 1px solid #D1D9E2;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.graphHeader {
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.graphHeaderText {
+    display: flex;
+    flex-direction: column;
+}
+
+.graphMainTitle {
+    font-size: 12px;
+    color: #253D4E;
+    font-weight: 700;
+}
+
+.graphSubTitle {
+    font-size: 12px;
+    color: #253D4E;
+    font-weight: 400;
+}
+
+.graphDivider {
+    width: 100%;
+    height: 1px;
+    background-color: #D1D9E2;
+}
+
+.chartBody {
+    flex: 1;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chartWithLegend {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 24px;
+}
+
+.customLegend {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 200px;
+}
+
+.legendItem {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: #253D4E;
+    font-weight: 500;
+}
+
+.legendColor {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.graphFooter {
+    padding: 24px;
+    font-size: 12px;
+    color: #253D4E;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+/* Upcoming Schedules Sidebar */
+.upcomingContainer {
+    width: 463px;
+    background-color: #F9FBFD;
+    border: 1px solid #D1D9E2;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.upcomingHeader {
+    padding: 16px 24px;
+    font-size: 12px;
+    color: #000000;
+    font-weight: 400;
+    text-transform: uppercase;
+}
+
+.upcomingItem {
+    padding: 16px 24px;
+}
+
+.upcomingRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.text01 {
+    font-size: 14px;
+    color: #757575;
+    font-weight: 400;
+}
+
+.boldValue {
+    font-size: 14px;
+    color: #757575;
+    font-weight: 700;
+}
+
+.text02 {
+    font-size: 14px;
+    color: #000000;
+    font-weight: 400;
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 16px;
+}
+
+.paginationBtn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    color: #757575;
+}
+
+.pageNumbers {
+    display: flex;
+    gap: 8px;
+}
+
+.activePage {
+    background-color: #F7FBFF;
+    border: 1px solid #D4D7E3;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-weight: 600;
+}

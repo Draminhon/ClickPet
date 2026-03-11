@@ -2,8 +2,9 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import ProductOfferCard from '@/components/home/ProductOfferCard';
-import { Filter, ChevronDown } from 'lucide-react';
+import { Filter, ChevronDown, Scissors } from 'lucide-react';
 import styles from './Search.module.css';
 
 function SearchContent() {
@@ -12,7 +13,9 @@ function SearchContent() {
     const initialSearch = searchParams.get('q') || '';
 
     const [products, setProducts] = useState<any[]>([]);
+    const [services, setServices] = useState<any[]>([]);
     const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
+    const [filteredServices, setFilteredServices] = useState<any[]>([]);
     const [category, setCategory] = useState(initialCategory);
     const [search, setSearch] = useState(initialSearch);
 
@@ -26,71 +29,81 @@ function SearchContent() {
     const [breedType, setBreedType] = useState('');
 
     useEffect(() => {
-        let url = '/api/products?';
-        if (category) url += `category=${category}&`;
-        if (search) url += `search=${search}`;
+        let productUrl = '/api/products?';
+        if (category && category !== 'bath') productUrl += `category=${category}&`;
+        if (search) productUrl += `search=${search}`;
 
-        fetch(url)
-            .then(res => res.json())
-            .then(data => setProducts(data));
+        let serviceUrl = '/api/services?';
+        if (category === 'bath') serviceUrl += `category=bath&`;
+
+        Promise.all([
+            fetch(productUrl).then(res => res.json()),
+            fetch(serviceUrl).then(res => res.json())
+        ]).then(([prodData, servData]) => {
+            setProducts(Array.isArray(prodData) ? prodData : []);
+            setServices(Array.isArray(servData) ? servData : []);
+        });
     }, [category, search]);
 
     useEffect(() => {
-        let filtered = [...products];
-
-        // Price filter
+        // Filter Products
+        let fProducts = [...products];
         if (minPrice) {
-            filtered = filtered.filter(p => {
+            fProducts = fProducts.filter(p => {
                 const price = p.discount ? p.price * (1 - p.discount / 100) : p.price;
                 return price >= parseFloat(minPrice);
             });
         }
         if (maxPrice) {
-            filtered = filtered.filter(p => {
+            fProducts = fProducts.filter(p => {
                 const price = p.discount ? p.price * (1 - p.discount / 100) : p.price;
                 return price <= parseFloat(maxPrice);
             });
         }
+        if (onlyDiscount) fProducts = fProducts.filter(p => p.discount && p.discount > 0);
+        if (age) fProducts = fProducts.filter(p => p.subCategory?.toLowerCase().includes(age.toLowerCase()));
+        if (foodType) fProducts = fProducts.filter(p => p.productType?.toLowerCase().includes(foodType.toLowerCase()));
+        if (breedType) fProducts = fProducts.filter(p => p.subCategory?.toLowerCase().includes(breedType.toLowerCase()));
 
-        // Discount filter
-        if (onlyDiscount) {
-            filtered = filtered.filter(p => p.discount && p.discount > 0);
+        // Filter Services (Simple search match)
+        let fServices = [...services];
+        if (search) {
+            fServices = fServices.filter(s =>
+                s.name?.toLowerCase().includes(search.toLowerCase()) ||
+                s.description?.toLowerCase().includes(search.toLowerCase())
+            );
         }
-
-        // Age filter (mocking logic based on subCategory/tags if needed)
-        if (age) {
-            filtered = filtered.filter(p => p.subCategory?.toLowerCase().includes(age.toLowerCase()));
-        }
-
-        // Food Type filter
-        if (foodType) {
-            filtered = filtered.filter(p => p.productType?.toLowerCase().includes(foodType.toLowerCase()));
-        }
-
-        // Breed filter
-        if (breedType) {
-            filtered = filtered.filter(p => p.subCategory?.toLowerCase().includes(breedType.toLowerCase()));
-        }
-
-        // Sort
-        if (sortBy === 'price_asc') {
-            filtered.sort((a, b) => {
-                const priceA = a.discount ? a.price * (1 - a.discount / 100) : a.price;
-                const priceB = b.discount ? b.price * (1 - b.discount / 100) : b.price;
-                return priceA - priceB;
+        if (minPrice) {
+            fServices = fServices.filter(s => {
+                const minSPrice = Math.min(...(s.prices?.map((p: any) => p.price) || [0]));
+                return minSPrice >= parseFloat(minPrice);
             });
-        } else if (sortBy === 'price_desc') {
-            filtered.sort((a, b) => {
-                const priceA = a.discount ? a.price * (1 - a.discount / 100) : a.price;
-                const priceB = b.discount ? b.price * (1 - b.discount / 100) : b.price;
-                return priceB - priceA;
+        }
+        if (maxPrice) {
+            fServices = fServices.filter(s => {
+                const minSPrice = Math.min(...(s.prices?.map((p: any) => p.price) || [0]));
+                return minSPrice <= parseFloat(maxPrice);
             });
-        } else if (sortBy === 'discount') {
-            filtered.sort((a, b) => (b.discount || 0) - (a.discount || 0));
         }
 
-        setFilteredProducts(filtered);
-    }, [products, minPrice, maxPrice, onlyDiscount, sortBy, age, foodType, breedType]);
+        // Sorting
+        const sortFn = (a: any, b: any) => {
+            const getPrice = (item: any) => {
+                if (item.prices) return Math.min(...item.prices.map((p: any) => p.price));
+                return item.discount ? item.price * (1 - item.discount / 100) : item.price;
+            };
+            const priceA = getPrice(a);
+            const priceB = getPrice(b);
+
+            if (sortBy === 'price_asc') return priceA - priceB;
+            if (sortBy === 'price_desc') return priceB - priceA;
+            if (sortBy === 'discount') return (b.discount || 0) - (a.discount || 0);
+            return 0;
+        };
+
+        setFilteredProducts(fProducts.sort(sortFn));
+        setFilteredServices(fServices.sort(sortFn));
+    }, [products, services, minPrice, maxPrice, onlyDiscount, sortBy, age, foodType, breedType, search]);
 
     const clearFilters = () => {
         setMinPrice('');
@@ -269,31 +282,69 @@ function SearchContent() {
 
             {/* Results Grid */}
             <main className={styles.mainContent}>
-                {filteredProducts.length === 0 ? (
+                {filteredProducts.length === 0 && filteredServices.length === 0 ? (
                     <div className={styles.noResults}>
-                        <p>Nenhum produto encontrado com os filtros selecionados.</p>
+                        <p>Nenhum produto ou serviço encontrado com os filtros selecionados.</p>
                         <button onClick={clearFilters} className="btn btn-primary">
                             Limpar Filtros
                         </button>
                     </div>
                 ) : (
-                    <div className={styles.grid}>
-                        {filteredProducts.map(product => (
-                            <ProductOfferCard
-                                key={product._id}
-                                id={product._id}
-                                title={product.title}
-                                price={product.price}
-                                image={product.image}
-                                discount={product.discount}
-                                shopName={product.partnerId?.name || 'Petshop'}
-                                productType={product.productType}
-                                subCategory={product.subCategory}
-                                rating={product.rating}
-                                salesCount={product.salesCount}
-                                noBorder
-                            />
-                        ))}
+                    <div className={styles.resultsWrapper}>
+                        {filteredServices.length > 0 && (
+                            <section className={styles.servicesSection}>
+                                <h2 className={styles.resultTitle}>Serviços Disponíveis</h2>
+                                <div className={styles.grid}>
+                                    {filteredServices.map(service => (
+                                        <Link href={`/services/${service._id}`} key={service._id} className={styles.serviceSearchCard}>
+                                            <div className={styles.serviceImageWrapper}>
+                                                {service.image ? (
+                                                    <img src={service.image} alt={service.name} className={styles.serviceImage} />
+                                                ) : (
+                                                    <div className={styles.servicePlaceholder}>
+                                                        <Scissors size={32} color="#ccc" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className={styles.serviceInfo}>
+                                                <h4 className={styles.serviceName}>{service.name}</h4>
+                                                <p className={styles.serviceShop}>{service.partnerId?.name}</p>
+                                                <div className={styles.serviceFooter}>
+                                                    <span className={styles.servicePrice}>
+                                                        R$ {Math.min(...(service.prices?.map((p: any) => p.price) || [0])).toFixed(2)}
+                                                    </span>
+                                                    <button className={styles.viewServiceBtn}>Agendar</button>
+                                                </div>
+                                            </div>
+                                        </Link>
+                                    ))}
+                                </div>
+                            </section>
+                        )}
+
+                        {filteredProducts.length > 0 && (
+                            <section className={styles.productsSection}>
+                                <h2 className={styles.resultTitle}>Produtos Encontrados</h2>
+                                <div className={styles.grid}>
+                                    {filteredProducts.map(product => (
+                                        <ProductOfferCard
+                                            key={product._id}
+                                            id={product._id}
+                                            title={product.title}
+                                            price={product.price}
+                                            image={product.image}
+                                            discount={product.discount}
+                                            shopName={product.partnerId?.name || 'Petshop'}
+                                            productType={product.productType}
+                                            subCategory={product.subCategory}
+                                            rating={product.rating}
+                                            salesCount={product.salesCount}
+                                            noBorder
+                                        />
+                                    ))}
+                                </div>
+                            </section>
+                        )}
                     </div>
                 )}
             </main>

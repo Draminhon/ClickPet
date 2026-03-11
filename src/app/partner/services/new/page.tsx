@@ -14,6 +14,7 @@ export default function NewService() {
         name: '',
         description: '',
         category: 'bath',
+        species: 'all',
         duration: '',
         image: '',
         prices: [
@@ -153,9 +154,28 @@ export default function NewService() {
                             <option value="veterinary">Veterinário</option>
                             <option value="training">Adestramento</option>
                             <option value="aquarismo">Aquarismo</option>
+                            <option value="daycare">Daycare/Creche</option>
+                            <option value="hotel">Hospedagem</option>
                             <option value="other">Outro</option>
                         </select>
                     </div>
+                    <div>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Espécie</label>
+                        <select
+                            style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
+                            value={formData.species}
+                            onChange={e => setFormData({ ...formData, species: e.target.value })}
+                        >
+                            <option value="all">Todas</option>
+                            <option value="dog">Cão</option>
+                            <option value="cat">Gato</option>
+                            <option value="bird">Pássaro</option>
+                            <option value="fish">Peixe</option>
+                            <option value="other">Outro</option>
+                        </select>
+                    </div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem', marginBottom: '1.5rem' }}>
                     <div>
                         <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Duração (min)</label>
                         <input
@@ -218,7 +238,7 @@ export default function NewService() {
                 >
                     {loading ? 'Salvando...' : 'Salvar Serviço'}
                 </button>
-            </form>
-        </div>
+            </form >
+        </div >
     );
 }

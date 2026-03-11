@@ -48,6 +48,8 @@ export default function ServicesPage() {
             veterinary: 'Veterinário',
             training: 'Adestramento',
             aquarismo: 'Aquarismo',
+            daycare: 'Daycare/Creche',
+            hotel: 'Hospedagem',
             other: 'Outro'
         };
         return labels[category] || category;
@@ -81,6 +83,8 @@ export default function ServicesPage() {
                     <option value="veterinary">Veterinário</option>
                     <option value="training">Adestramento</option>
                     <option value="aquarismo">Aquarismo</option>
+                    <option value="daycare">Daycare/Creche</option>
+                    <option value="hotel">Hospedagem</option>
                     <option value="other">Outro</option>
                 </select>
             </div>
@@ -124,7 +128,9 @@ export default function ServicesPage() {
                                         <div>
                                             <span style={{ fontSize: '0.8rem', color: '#999', display: 'block' }}>A partir de</span>
                                             <span style={{ fontSize: '1.2rem', fontWeight: 700, color: '#6CC551' }}>
-                                                R$ {Math.min(...service.prices.map((p: any) => p.price)).toFixed(2)}
+                                                R$ {service.prices && service.prices.length > 0
+                                                    ? Math.min(...service.prices.map((p: any) => p.price)).toFixed(2)
+                                                    : '0.00'}
                                             </span>
                                         </div>
                                         <button className="btn btn-primary" style={{ padding: '0.5rem 1rem' }}>

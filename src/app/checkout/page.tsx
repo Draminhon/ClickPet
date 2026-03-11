@@ -79,6 +79,27 @@ export default function CheckoutPage() {
     }, [items]);
 
     useEffect(() => {
+        // Fetch user profile to pre-fill address
+        fetch('/api/profile')
+            .then(res => res.json())
+            .then(data => {
+                if (data.address && data.address.street) {
+                    setAddress({
+                        street: data.address.street || '',
+                        number: data.address.number || '',
+                        complement: data.address.complement || '',
+                        city: data.address.city || '',
+                        zip: data.address.zip || '',
+                        lat: data.address.coordinates?.coordinates?.[1]?.toString() || '',
+                        lng: data.address.coordinates?.coordinates?.[0]?.toString() || '',
+                    });
+                    showToast('Endereço salvo preenchido automaticamente!');
+                }
+            })
+            .catch(err => console.error('Error fetching profile for checkout:', err));
+    }, []);
+
+    useEffect(() => {
         // Calculate delivery fees when address changes
         if (address.lat && address.lng && partnerIds.length > 0 && !isPickup) {
             calculateAllDeliveryFees();
@@ -279,25 +300,33 @@ export default function CheckoutPage() {
     const totalDeliveryFee = Object.values(partnerData).reduce((sum, d) => sum + (isPickup ? 0 : d.deliveryFee), 0);
     const finalTotal = total - totalDiscount + totalDeliveryFee;
 
-    const fetchAddressFromCoordinates = async (lat: number, lng: number) => {
+    const fetchAddressFromCEP = async (cep: string) => {
+        const cleanedCep = cep.replace(/\D/g, '');
+        if (cleanedCep.length !== 8) return;
+
         try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+            const res = await fetch(`https://viacep.com.br/ws/${cleanedCep}/json/`);
             const data = await res.json();
 
-            if (data.address) {
+            if (!data.erro) {
                 setAddress(prev => ({
                     ...prev,
-                    street: data.address.road || data.address.pedestrian || prev.street || '',
-                    number: data.address.house_number || prev.number || '',
-                    city: data.address.city || data.address.town || data.address.village || prev.city || '',
-                    zip: data.address.postcode || prev.zip || '',
-                    lat: lat.toString(),
-                    lng: lng.toString()
+                    street: data.logradouro || '',
+                    city: data.localidade || '',
+                    zip: maskZip(data.cep),
                 }));
-                showToast('Endereço preenchido automaticamente!');
+                showToast('Endereço atualizado pelo CEP!');
             }
         } catch (error) {
-            console.error('Error fetching address:', error);
+            console.error('Error fetching CEP in checkout:', error);
+        }
+    };
+
+    const handleZipChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const zip = maskZip(e.target.value);
+        setAddress(prev => ({ ...prev, zip }));
+        if (zip.length === 9) {
+            fetchAddressFromCEP(zip);
         }
     };
 
@@ -399,7 +428,7 @@ export default function CheckoutPage() {
                                         required
                                         placeholder="CEP"
                                         value={address.zip}
-                                        onChange={e => setAddress({ ...address, zip: maskZip(e.target.value) })}
+                                        onChange={handleZipChange}
                                         style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd', width: '100%' }}
                                     />
                                 </div>

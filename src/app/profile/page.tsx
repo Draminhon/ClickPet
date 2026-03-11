@@ -79,8 +79,38 @@ export default function ProfilePage() {
         setFormData({ ...formData, phone: maskPhone(e.target.value) });
     };
 
+    const fetchAddressFromCEP = async (cep: string) => {
+        const cleanedCep = cep.replace(/\D/g, '');
+        if (cleanedCep.length !== 8) return;
+
+        try {
+            const res = await fetch(`https://viacep.com.br/ws/${cleanedCep}/json/`);
+            const data = await res.json();
+
+            if (!data.erro) {
+                setFormData(prev => ({
+                    ...prev,
+                    address: {
+                        ...prev.address,
+                        street: data.logradouro || '',
+                        neighborhood: data.bairro || '',
+                        city: data.localidade || '',
+                        state: data.uf || '',
+                    }
+                }));
+                showToast('Endereço preenchido automaticamente pelo CEP!');
+            }
+        } catch (error) {
+            console.error('Error fetching CEP:', error);
+        }
+    };
+
     const handleZipChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setFormData({ ...formData, address: { ...formData.address, zip: maskZip(e.target.value) } });
+        const zip = maskZip(e.target.value);
+        setFormData({ ...formData, address: { ...formData.address, zip } });
+        if (zip.length === 9) { // 00000-000
+            fetchAddressFromCEP(zip);
+        }
     };
 
     const handleProfileImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {

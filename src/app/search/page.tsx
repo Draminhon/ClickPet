@@ -131,6 +131,10 @@ function SearchContent() {
                             { value: 'food', label: 'Rações' },
                             { value: 'toys', label: 'Brinquedos' },
                             { value: 'pharma', label: 'Farmácia' },
+                            { value: 'accessories', label: 'Acessórios' },
+                            { value: 'pets', label: 'Pets' },
+                            { value: 'aquarismo', label: 'Aquarismo' },
+                            { value: 'vet', label: 'Veterinário' },
                             { value: 'bath', label: 'Banho & Tosa' },
                         ].map(cat => (
                             <label key={cat.value} className={styles.radioLabel}>

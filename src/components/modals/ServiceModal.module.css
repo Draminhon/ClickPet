@@ -1,0 +1,248 @@
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    backdrop-filter: blur(2px);
+}
+
+.modalContent {
+    background: #FFFFFF;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 640px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    animation: slideUp 0.25s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+}
+
+.modalTitle {
+    font-size: 14px;
+    font-weight: 700;
+    color: #253D4E;
+    text-transform: uppercase;
+}
+
+.modalCloseBtn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #757575;
+    padding: 4px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.modalCloseBtn:hover {
+    background-color: #f0f0f0;
+    color: #253D4E;
+}
+
+.divider {
+    width: 100%;
+    height: 1px;
+    background-color: rgba(209, 217, 226, 1);
+}
+
+.modalBody {
+    padding: 1.5rem;
+}
+
+.formContainer {
+    display: flex;
+    gap: 24px;
+}
+
+.imageColumn {
+    display: flex;
+    flex-direction: column;
+}
+
+.imageUploadLabel {
+    width: 120px;
+    height: 120px;
+    border: 2px dashed #D1D9E2;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    overflow: hidden;
+    position: relative;
+    margin: 0 auto 24px;
+    background-color: #F9FBFD;
+    transition: all 0.2s;
+}
+
+.imageUploadLabel:hover {
+    border-color: #3BB77E;
+    background-color: rgba(59, 183, 126, 0.05);
+}
+
+.imagePreview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.uploadIconText {
+    font-size: 12px;
+    color: #999;
+    margin-top: 8px;
+}
+
+.fieldsColumn {
+    flex: 1;
+}
+
+.formGroup {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 16px;
+}
+
+.formLabel {
+    font-size: 12px;
+    font-weight: 600;
+    color: #253D4E;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+}
+
+.formInput {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid #D1D9E2;
+    font-size: 14px;
+    color: #253D4E;
+    outline: none;
+    transition: border-color 0.2s;
+    background: #FEFEFE;
+}
+
+.formInput:focus {
+    border-color: #3BB77E;
+}
+
+.formRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.formTextarea {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid #D1D9E2;
+    font-size: 14px;
+    color: #253D4E;
+    outline: none;
+    transition: border-color 0.2s;
+    background: #FEFEFE;
+    min-height: 80px;
+    resize: vertical;
+}
+
+.priceSection {
+    background-color: #F9FBFD;
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid #D1D9E2;
+    margin-bottom: 16px;
+}
+
+.priceHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.addPriceBtn {
+    background: none;
+    border: none;
+    color: #3BB77E;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.priceRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.removePriceBtn {
+    background: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+    border: none;
+    border-radius: 8px;
+    padding: 0 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.removePriceBtn:hover {
+    background: rgba(220, 53, 69, 0.2);
+}
+
+.formSubmitBtn {
+    width: 100%;
+    height: 46px;
+    background-color: #3BB77E;
+    color: #FFFFFF;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.2s;
+    margin-top: 1rem;
+}
+
+.formSubmitBtn:hover {
+    opacity: 0.9;
+}
+
+.formSubmitBtn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}

@@ -119,7 +119,7 @@ export default function AppointmentsPage() {
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#666' }}>
                                         <Calendar size={18} />
-                                        <span>{appointmentDate.toLocaleDateString('pt-BR')}</span>
+                                        <span>{appointmentDate.toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</span>
                                     </div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#666' }}>
                                         <Clock size={18} />

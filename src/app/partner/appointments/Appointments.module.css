@@ -39,29 +39,33 @@
 .tableHeaderRow {
     border-bottom: 1px solid rgba(209, 217, 226, 1);
     color: #757575;
-    font-size: 13px;
+    font-size: 14px;
 }
 
 .tableHeaderCell {
     padding: 1rem 0;
-    font-weight: 600;
+    font-weight: 700;
+    width: 16.6%;
+    text-align: center;
+    text-transform: uppercase;
 }
 
 .tableRow {
-    font-size: 14px;
-    color: #757575;
+    font-size: 16px;
+    color: #475569;
     font-weight: 400;
 }
 
 .tableCell {
     padding: 1rem 0;
+    text-align: center;
 }
 
 .productCell {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 12px;
-    padding-left: 8px;
 }
 
 .productPhoto {

@@ -1,0 +1,466 @@
+.container {
+    padding: 0;
+}
+
+/* Page Title */
+.pageTitle {
+    font-size: 12px;
+    font-weight: 400;
+    color: #253D4E;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+}
+
+/* Top Row: Status + Usage */
+.topRow {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+/* Account Status Container */
+.statusContainer {
+    flex: 1.5;
+    min-height: 249px;
+    background-color: #F9FBFD;
+    border: 1px solid #D1D9E2;
+    border-radius: 10px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+}
+
+.statusHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.statusLabel {
+    font-size: 13px;
+    font-weight: 400;
+    color: #253D4E;
+    text-transform: uppercase;
+}
+
+.statusBadge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 85px;
+    height: 25px;
+    border: 1px solid #D1D9E2;
+    border-radius: 10px;
+    padding: 0 12px;
+    justify-content: center;
+}
+
+.statusDot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.statusDot.active {
+    background-color: #4CAF50;
+}
+
+.statusDot.inactive {
+    background-color: #F44336;
+}
+
+.statusText {
+    font-size: 12px;
+    font-weight: 400;
+    color: #253D4E;
+}
+
+.planName {
+    font-size: 40px;
+    font-weight: 700;
+    color: #253D4E;
+    margin-bottom: 15px;
+}
+
+.renewalDate {
+    font-size: 12px;
+    font-weight: 400;
+    color: #253D4E;
+    text-transform: uppercase;
+    margin-bottom: 35px;
+}
+
+.statusActions {
+    display: flex;
+    gap: 12px;
+    margin-top: auto;
+}
+
+.upgradeBtn {
+    min-width: 253px;
+    height: 53px;
+    border-radius: 5px;
+    background-color: #3BB77E;
+    border: none;
+    color: #FEFEFE;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: opacity 0.2s;
+}
+
+.upgradeBtn:hover {
+    opacity: 0.9;
+}
+
+.managePaymentBtn {
+    min-width: 260px;
+    height: 53px;
+    border-radius: 5px;
+    background-color: transparent;
+    border: 1px solid #D1D9E2;
+    color: #253D4E;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: background-color 0.2s;
+}
+
+.managePaymentBtn:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Usage Container */
+.usageContainer {
+    flex: 1;
+    min-height: 249px;
+    background-color: #F9FBFD;
+    border: 1px solid #D1D9E2;
+    border-radius: 10px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+}
+
+.usageTitle {
+    font-size: 12px;
+    font-weight: 700;
+    color: #253D4E;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+}
+
+.usageItem {
+    margin-bottom: 16px;
+}
+
+.usageItemHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.usageItemLabel {
+    font-size: 12px;
+    font-weight: 700;
+    color: #253D4E;
+    text-transform: uppercase;
+}
+
+.usageItemCount {
+    font-size: 12px;
+    font-weight: 400;
+    color: #757575;
+}
+
+.usageBar {
+    width: 100%;
+    height: 8px;
+    background-color: #EDEEEF;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.usageBarFill {
+    height: 100%;
+    background-color: #3BB77E;
+    border-radius: 4px;
+    transition: width 0.4s ease;
+}
+
+.usageCapacity {
+    font-size: 12px;
+    font-weight: 400;
+    color: #757575;
+    margin-top: auto;
+}
+
+.usageCapacity strong {
+    font-weight: 700;
+}
+
+/* Plans Section Title */
+.plansSectionTitle {
+    font-size: 12px;
+    font-weight: 400;
+    color: #253D4E;
+    text-align: left;
+    text-transform: uppercase;
+    margin-bottom: 50px;
+    margin-top: 50px;
+
+}
+
+/* Plans Grid */
+.plansGrid {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.planCard {
+    flex: 1;
+    height: 657px;
+    border-radius: 10px;
+    border: 1px solid #D1D9E2;
+    display: flex;
+    flex-direction: column;
+    padding: 24px;
+    position: relative;
+    box-sizing: border-box;
+    transition: transform 0.2s;
+}
+
+.planCard:hover {
+    transform: translateY(-2px);
+}
+
+.planCard.activePlan {
+    border: 2px solid #3BB77E;
+}
+
+.planCard.premiumCard {
+    position: relative;
+}
+
+.recommendedBadge {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 124px;
+    height: 25px;
+    background-color: #3BB77E;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: #FEFEFE;
+    text-transform: uppercase;
+}
+
+.planCardName {
+    font-size: 36px;
+    font-weight: 700;
+    color: #253D4E;
+    margin-bottom: 4px;
+    width: 100%;
+}
+
+.planCardPrice {
+    font-size: 46px;
+    font-weight: 700;
+    color: #253D4E;
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+.planCardPrice .perMonth {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.planFeatures {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    flex: 1;
+}
+
+.featureItem {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 35px;
+}
+
+.featureIcon {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 1.5px solid #3BB77E;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.featureText {
+    font-size: 14px;
+    font-weight: 400;
+    color: #757575;
+}
+
+.planCardBtn {
+    width: 180px;
+    height: 42px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    text-transform: uppercase;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    transition: opacity 0.2s;
+}
+
+.planCardBtn:hover {
+    opacity: 0.9;
+}
+
+.planCardBtn.activeBtn {
+    background-color: transparent;
+    border: 1px solid #D1D9E2;
+    color: #3BB77E;
+}
+
+.planCardBtn.upgradeCardBtn {
+    background-color: #3BB77E;
+    color: #FEFEFE;
+}
+
+.planCardBtn.downgradeBtn {
+    background-color: #253D4E;
+    color: #FEFEFE;
+}
+
+/* Custom Plan CTA */
+.customPlanCta {
+    display: flex;
+    align-items: center;
+    background-color: #F9FBFD;
+    border: 1px solid #D1D9E2;
+    border-radius: 8px;
+    padding: 0 24px;
+    height: 66px;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.ctaIcon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid #757575;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: #757575;
+}
+
+.ctaTextCol {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.ctaTitle {
+    font-size: 14px;
+    font-weight: 700;
+    color: #253D4E;
+    text-transform: uppercase;
+}
+
+.ctaSubtitle {
+    font-size: 14px;
+    font-weight: 400;
+    color: #757575;
+    text-transform: uppercase;
+}
+
+.ctaBtn {
+    width: 175px;
+    height: 33px;
+    border-radius: 8px;
+    background-color: #F6F6F6;
+    border: none;
+    font-size: 12px;
+    font-weight: 700;
+    color: #757575;
+    cursor: pointer;
+    text-transform: uppercase;
+    flex-shrink: 0;
+    transition: background-color 0.2s;
+}
+
+.ctaBtn:hover {
+    background-color: #EDEEEF;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .topRow {
+        flex-direction: column;
+    }
+
+    .plansGrid {
+        flex-wrap: wrap;
+    }
+
+    .planCard {
+        flex: 1 1 calc(50% - 12px);
+        min-width: 220px;
+    }
+}
+
+@media (max-width: 768px) {
+    .plansGrid {
+        flex-direction: column;
+    }
+
+    .planCard {
+        flex: 1 1 100%;
+        height: auto;
+        min-height: 400px;
+    }
+
+    .statusActions {
+        flex-direction: column;
+    }
+
+    .upgradeBtn,
+    .managePaymentBtn {
+        width: 100%;
+    }
+
+    .customPlanCta {
+        flex-direction: column;
+        height: auto;
+        padding: 16px;
+        text-align: center;
+    }
+}

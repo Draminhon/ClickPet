@@ -2,34 +2,56 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { X, Minus, Plus, ArrowLeft } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import styles from './Cart.module.css';
 
 export default function CartPage() {
+    const router = useRouter();
     const { items, removeFromCart, updateQuantity, total } = useCart();
     const [couponCode, setCouponCode] = useState('');
     const [couponMessage, setCouponMessage] = useState({ text: '', type: '' });
     const [discount, setDiscount] = useState(0);
     const [discountPercentage, setDiscountPercentage] = useState(0);
 
-    const handleApplyCoupon = () => {
+    const handleApplyCoupon = async () => {
         if (!couponCode) return;
 
-        // Mock coupon logic
-        if (couponCode.toUpperCase() === 'CLICK10') {
-            setDiscount(total * 0.1);
-            setDiscountPercentage(10);
-            setCouponMessage({ text: 'Cupom aplicado com sucesso! (10%)', type: 'success' });
-        } else if (couponCode.toUpperCase() === 'CLICK20') {
-            setDiscount(total * 0.2);
-            setDiscountPercentage(20);
-            setCouponMessage({ text: 'Cupom aplicado com sucesso! (20%)', type: 'success' });
-        } else {
+        try {
+            const res = await fetch('/api/coupons/validate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: couponCode, total })
+            });
+            const data = await res.json();
+
+            if (res.ok && data.valid) {
+                let discountAmount: number;
+                if (data.type === 'fixed') {
+                    discountAmount = data.discount;
+                } else {
+                    discountAmount = (total * data.discount) / 100;
+                    if (data.maxDiscount && discountAmount > data.maxDiscount) {
+                        discountAmount = data.maxDiscount;
+                    }
+                }
+
+                setDiscount(discountAmount);
+                setDiscountPercentage(data.type === 'fixed' ? 0 : data.discount);
+                setCouponMessage({ text: data.type === 'fixed'
+                    ? `Cupom aplicado! Desconto de R$ ${discountAmount.toFixed(2)}`
+                    : `Cupom aplicado com sucesso! (${data.discount}%)`, type: 'success' });
+            } else {
+                setDiscount(0);
+                setDiscountPercentage(0);
+                setCouponMessage({ text: data.message || 'Cupom inválido ou expirado.', type: 'error' });
+            }
+        } catch (error) {
             setDiscount(0);
             setDiscountPercentage(0);
-            setCouponMessage({ text: 'Cupom inválido ou expirado.', type: 'error' });
+            setCouponMessage({ text: 'Erro ao validar cupom.', type: 'error' });
         }
     };
 
@@ -179,9 +201,18 @@ export default function CartPage() {
                             <span style={{ color: '#3bb77e' }}>R$ {finalTotal.toFixed(2).replace('.', ',')}</span>
                         </div>
 
-                        <Link href="/checkout" className={styles.checkoutBtn}>
+                        <button
+                            className={styles.checkoutBtn}
+                            onClick={() => {
+                                const params = new URLSearchParams();
+                                if (couponCode && discount > 0) {
+                                    params.set('coupon', couponCode);
+                                }
+                                router.push(`/checkout${params.toString() ? '?' + params.toString() : ''}`);
+                            }}
+                        >
                             Finalizar Compra
-                        </Link>
+                        </button>
                     </div>
                 </div>
             </div>

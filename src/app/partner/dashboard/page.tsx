@@ -17,9 +17,11 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import ProductModal from '@/components/modals/ProductModal';
+import { useSession } from 'next-auth/react';
 import {
-    BarChart,
-    Bar,
+    AreaChart,
+    Area,
     XAxis,
     YAxis,
     CartesianGrid,
@@ -53,13 +55,20 @@ export default function Dashboard() {
         dailySales: [] as { name: string; value: number }[],
         topProducts: [] as { name: string; value: number }[]
     });
+    const { data: session } = useSession();
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
     const [searchQuery, setSearchQuery] = useState('');
     const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
+    const [showCreateModal, setShowCreateModal] = useState(false);
     const itemsPerPage = 7;
 
     useEffect(() => {
+        fetchData();
+    }, []);
+
+    const fetchData = () => {
+        setLoading(true);
         fetch('/api/dashboard')
             .then(res => res.json())
             .then(data => {
@@ -70,7 +79,7 @@ export default function Dashboard() {
                 console.error(err);
                 setLoading(false);
             });
-    }, []);
+    };
 
     const formatCurrency = (value: number) => {
         return `R$ ${value.toFixed(2).replace('.', ',')}`;
@@ -235,9 +244,13 @@ export default function Dashboard() {
             </div>
 
             <div className={styles.quickActions}>
-                <Link href="/partner/catalog/new" className={`${styles.actionBtn} ${styles.addBtn}`}>
+                <button 
+                    type="button"
+                    onClick={() => setShowCreateModal(true)} 
+                    className={`${styles.actionBtn} ${styles.addBtn}`}
+                >
                     ADICIONAR PRODUTOS
-                </Link>
+                </button>
                 <div className={styles.searchContainer}>
                     <Search size={20} className={styles.searchIcon} />
                     <input
@@ -258,15 +271,21 @@ export default function Dashboard() {
                     <thead>
                         <tr className={styles.tableHeader}>
                             <th className={`${styles.headerCell} ${styles.sortable}`} onClick={() => requestSort('title')}>
-                                PRODUTOS {getSortIcon('title')}
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                    PRODUTOS {getSortIcon('title')}
+                                </div>
                             </th>
                             <th className={styles.headerCell}>DESCRIÇÃO</th>
                             <th className={styles.headerCell}>TIPO</th>
                             <th className={`${styles.headerCell} ${styles.sortable}`} onClick={() => requestSort('price')}>
-                                PREÇO {getSortIcon('price')}
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                    PREÇO {getSortIcon('price')}
+                                </div>
                             </th>
                             <th className={`${styles.headerCell} ${styles.sortable}`} onClick={() => requestSort('discount')}>
-                                DESCONTO {getSortIcon('discount')}
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                    DESCONTO {getSortIcon('discount')}
+                                </div>
                             </th>
                             <th className={styles.headerCell}>CATEGORIAS</th>
                         </tr>
@@ -275,9 +294,9 @@ export default function Dashboard() {
                         {currentTableData.map((product) => (
                             <tr key={product._id} className={styles.tableRow}>
                                 <td className={styles.cell}>
-                                    <div className={styles.productCell}>
+                                    <div className={styles.productCell} style={{ justifyContent: 'center' }}>
                                         <Link href={`/partner/catalog/edit/${product._id}`}>
-                                            <Pencil size={16} className={styles.editIcon} />
+                                            <Pencil size={18} className={styles.editIcon} />
                                         </Link>
                                         <Image
                                             src={product.image || '/assets/placeholder-food.png'}
@@ -286,7 +305,7 @@ export default function Dashboard() {
                                             height={32}
                                             className={styles.productPhoto}
                                         />
-                                        <span className={styles.productName}>{product.title}</span>
+                                        <span className={styles.productName} style={{ fontSize: '16px' }}>{product.title}</span>
                                     </div>
                                 </td>
                                 <td className={styles.cell}>{product.description}</td>
@@ -337,13 +356,38 @@ export default function Dashboard() {
                     <div className={styles.graphDivider} />
                     <div className={styles.chartBody}>
                         <ResponsiveContainer width="100%" height={250}>
-                            <BarChart data={stats.dailySales} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                <XAxis dataKey="name" axisLine={false} tickLine={false} />
-                                <YAxis axisLine={false} tickLine={false} />
-                                <Tooltip cursor={{ fill: '#f4f6f8' }} />
-                                <Bar dataKey="value" fill="#3BB77E" radius={[4, 4, 0, 0]} />
-                            </BarChart>
+                            <AreaChart data={stats.dailySales} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                                <defs>
+                                    <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#3BB77E" stopOpacity={0.3} />
+                                        <stop offset="95%" stopColor="#3BB77E" stopOpacity={0} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E6E9EC" />
+                                <XAxis
+                                    dataKey="name"
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tick={{ fontSize: 12, fill: '#757575' }}
+                                    dy={10}
+                                />
+                                <YAxis
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tick={{ fontSize: 12, fill: '#757575' }}
+                                />
+                                <Tooltip
+                                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                                />
+                                <Area
+                                    type="monotone"
+                                    dataKey="value"
+                                    stroke="#3BB77E"
+                                    strokeWidth={3}
+                                    fillOpacity={1}
+                                    fill="url(#colorValue)"
+                                />
+                            </AreaChart>
                         </ResponsiveContainer>
                     </div>
                     <div className={styles.graphDivider} />
@@ -401,6 +445,13 @@ export default function Dashboard() {
                     </div>
                 </div>
             </div>
+
+            <ProductModal 
+                isOpen={showCreateModal} 
+                onClose={() => setShowCreateModal(false)}
+                partnerId={session?.user?.id || ''}
+                onSuccess={fetchData}
+            />
         </div>
     );
 }

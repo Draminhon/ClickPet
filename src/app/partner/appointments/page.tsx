@@ -203,7 +203,7 @@ export default function PartnerAppointmentsPage() {
                         ) : (
                             currentTableData.map((a) => (
                                 <tr key={a._id} className={styles.tableRow} style={{ borderBottom: '1px solid rgba(209, 217, 226, 1)' }}>
-                                    <td className={styles.tableCell} style={{ paddingLeft: '1.5rem' }}>
+                                    <td className={styles.tableCell}>
                                         <div className={styles.productCell}>
                                             <Image
                                                 src={a.serviceId?.image || '/assets/animals/chihuaha.png'}
@@ -216,19 +216,21 @@ export default function PartnerAppointmentsPage() {
                                         </div>
                                     </td>
                                     <td className={styles.tableCell}>{a.time}</td>
-                                    <td className={styles.tableCell}>{new Date(a.date).toLocaleDateString('pt-BR')}</td>
+                                    <td className={styles.tableCell}>{new Date(a.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</td>
                                     <td className={styles.tableCell}>{a.userId?.name || 'Cliente'}</td>
                                     <td className={styles.tableCell}>{a.status.toUpperCase()}</td>
-                                    <td className={styles.tableCell} style={{ paddingRight: '1.5rem' }}>
-                                        {a.status === 'pending' && (
-                                            <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                                <button onClick={() => handleStatusUpdate(a._id, 'confirmed')} style={{ padding: '4px 8px', fontSize: '12px', background: '#3BB77E', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Confirmar</button>
-                                                <button onClick={() => handleStatusUpdate(a._id, 'cancelled')} style={{ padding: '4px 8px', fontSize: '12px', background: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Cancelar</button>
-                                            </div>
-                                        )}
-                                        {a.status === 'confirmed' && (
-                                            <button onClick={() => handleStatusUpdate(a._id, 'completed')} style={{ padding: '4px 8px', fontSize: '12px', background: '#3BB77E', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Concluir</button>
-                                        )}
+                                    <td className={styles.tableCell}>
+                                        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+                                            {a.status === 'pending' && (
+                                                <>
+                                                    <button onClick={() => handleStatusUpdate(a._id, 'confirmed')} style={{ padding: '4px 8px', fontSize: '12px', background: '#3BB77E', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Confirmar</button>
+                                                    <button onClick={() => handleStatusUpdate(a._id, 'cancelled')} style={{ padding: '4px 8px', fontSize: '12px', background: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Cancelar</button>
+                                                </>
+                                            )}
+                                            {a.status === 'confirmed' && (
+                                                <button onClick={() => handleStatusUpdate(a._id, 'completed')} style={{ padding: '4px 8px', fontSize: '12px', background: '#3BB77E', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Concluir</button>
+                                            )}
+                                        </div>
                                     </td>
                                 </tr>
                             ))
@@ -335,7 +337,7 @@ export default function PartnerAppointmentsPage() {
                                         </div>
                                         <div className={styles.upcomingRow} style={{ marginTop: '4px' }}>
                                             <span className={styles.text02}>{a.petId?.name || a.userId?.name}</span>
-                                            <span className={styles.text02}>{new Date(a.date).toLocaleDateString('pt-BR')}</span>
+                                            <span className={styles.text02}>{new Date(a.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</span>
                                         </div>
                                     </div>
                                     {i < upcomingSchedules.length - 1 && <div className={styles.graphDivider} />}

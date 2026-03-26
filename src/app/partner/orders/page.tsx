@@ -319,15 +319,15 @@ export default function PartnerOrders() {
                 }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                         <thead>
-                            <tr style={{ borderBottom: '1px solid rgba(209, 217, 226, 1)', color: '#757575', fontSize: '13px' }}>
-                                <th style={{ padding: '1rem 0', paddingLeft: '1.5rem', fontWeight: 600 }}>ID</th>
-                                <th style={{ padding: '1rem 0', fontWeight: 600 }}>DATA</th>
-                                <th style={{ padding: '1rem 0', fontWeight: 600 }}>ITENS</th>
-                                <th style={{ padding: '1rem 0', fontWeight: 600 }}>TOTAL</th>
-                                <th style={{ padding: '1rem 0', fontWeight: 600 }}>STATUS</th>
-                                <th style={{ padding: '1rem 0', fontWeight: 600 }}>ID_CLIENTE</th>
-                                <th style={{ padding: '1rem 0', fontWeight: 600 }}>PAGAMENTO</th>
-                                <th style={{ padding: '1rem 0', paddingRight: '1.5rem', fontWeight: 600 }}>AÇÕES</th>
+                            <tr style={{ borderBottom: '1px solid rgba(209, 217, 226, 1)', color: '#757575', fontSize: '14px' }}>
+                                <th style={{ padding: '1rem 0', fontWeight: 700, width: '12.5%', textAlign: 'center' }}>ID</th>
+                                <th style={{ padding: '1rem 0', fontWeight: 700, width: '12.5%', textAlign: 'center' }}>DATA</th>
+                                <th style={{ padding: '1rem 0', fontWeight: 700, width: '12.5%', textAlign: 'center' }}>ITENS</th>
+                                <th style={{ padding: '1rem 0', fontWeight: 700, width: '12.5%', textAlign: 'center' }}>TOTAL</th>
+                                <th style={{ padding: '1rem 0', fontWeight: 700, width: '12.5%', textAlign: 'center' }}>STATUS</th>
+                                <th style={{ padding: '1rem 0', fontWeight: 700, width: '12.5%', textAlign: 'center' }}>ID_CLIENTE</th>
+                                <th style={{ padding: '1rem 0', fontWeight: 700, width: '12.5%', textAlign: 'center' }}>PAGAMENTO</th>
+                                <th style={{ padding: '1rem 0', fontWeight: 700, width: '12.5%', textAlign: 'center' }}>AÇÕES</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -359,24 +359,23 @@ export default function PartnerOrders() {
 
                                     return (
                                         <tr key={order._id} style={{
-                                            fontSize: '14px',
-                                            color: '#757575',
+                                            fontSize: '16px',
+                                            color: '#475569',
                                             fontWeight: 400,
-                                            background: getRowBackground()
+                                            background: getRowBackground(),
+                                            textAlign: 'center'
                                         }}>
-                                            <td style={{ padding: '1rem 0', paddingLeft: '1.5rem' }}>#{order._id.slice(-6).toUpperCase()}</td>
-                                            <td style={{ padding: '1rem 0' }}>{new Date(order.createdAt).toLocaleDateString('pt-BR')}</td>
+                                            <td style={{ padding: '1rem 0' }}>#{order._id.slice(-6).toUpperCase()}</td>
+                                            <td style={{ padding: '1rem 0' }}>{new Date(order.createdAt).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</td>
                                             <td style={{ padding: '1rem 0' }}>{order.items?.length || 0}</td>
                                             <td style={{ padding: '1rem 0' }}>R$ {order.total?.toFixed(2).replace('.', ',')}</td>
-                                            <td style={{ padding: '1rem 0' }}>
-                                                {getStatusLabel(order.status)}
-                                            </td>
+                                            <td style={{ padding: '1rem 0' }}>{getStatusLabel(order.status)}</td>
                                             <td style={{ padding: '1rem 0' }}>{order.user?.name || order.userId?.slice(-6).toUpperCase() || '-'}</td>
                                             <td style={{ padding: '1rem 0', textTransform: 'uppercase' }}>
                                                 {order.paymentStatus === 'cancelled' ? 'CANCELADO' :
                                                     order.paymentStatus === 'rejected' ? 'RECUSADO' : 'APROVADO'}
                                             </td>
-                                            <td style={{ padding: '1rem 0', paddingRight: '1.5rem' }}>
+                                            <td style={{ padding: '1rem 0' }}>
                                                 {order.status === 'pending' && (
                                                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                                                         <button onClick={() => handleStatusUpdate(order._id, 'accepted')} style={{ padding: '4px 8px', fontSize: '12px', background: '#3BB77E', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Aceitar</button>

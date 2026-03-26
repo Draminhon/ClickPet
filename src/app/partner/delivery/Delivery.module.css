@@ -1,0 +1,395 @@
+.container {
+    padding: 24px 48px 24px 24px; /* Increased right padding */
+    background-color: #FEFEFE;
+    min-height: 100vh;
+}
+
+.headerText {
+    font-size: 18px;
+    font-weight: 600;
+    color: #253D4E;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    letter-spacing: 0.5px;
+}
+
+.formContainer {
+    width: 100%;
+    /* max-width removed to occupy full space */
+    height: auto;
+    min-height: 396px;
+    border-radius: 10px;
+    border: 1px solid #D1D9E2;
+    background-color: #FFFFFF;
+    padding: 32px;
+    display: flex;
+    gap: 48px;
+    margin-bottom: 40px;
+}
+
+.photoUploadSection {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.photoCircle {
+    width: 171px;
+    height: 171px;
+    border-radius: 50%;
+    border: 2px dashed #D1D9E2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    overflow: hidden;
+    background-color: #F9FBFD;
+    transition: all 0.2s;
+}
+
+.photoCircle:hover {
+    border-color: #3BB77E;
+    background-color: rgba(59, 183, 126, 0.05);
+}
+
+.photoPreview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.uploadLabel {
+    font-size: 14px; /* Increased from 12 */
+    font-weight: 500;
+    color: #757575;
+    text-transform: uppercase;
+}
+
+.formGrid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* Changed from 363px to 1fr */
+    gap: 20px 32px; /* Increased gap */
+}
+
+.formGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.fieldLabel {
+    font-size: 14px; /* Increased from 12 */
+    font-weight: 500;
+    color: #757575;
+    text-transform: uppercase;
+}
+
+.inputContainer {
+    width: 100%; /* Stretch to fill column */
+    height: 52px; /* Increased height */
+    border: 1px solid #D1D9E2;
+    border-radius: 8px;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    background-color: #FFFFFF;
+}
+
+.input {
+    width: 100%;
+    height: 100%;
+    border: none;
+    outline: none;
+    font-size: 16px; /* Increased from 14 */
+    color: #253D4E;
+    background: transparent;
+}
+
+.select {
+    width: 100%;
+    height: 100%;
+    border: none;
+    outline: none;
+    font-size: 16px; /* Increased from 14 */
+    color: #253D4E;
+    background: transparent;
+    cursor: pointer;
+}
+
+.submitBtnContainer {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: 24px;
+}
+
+.submitBtn {
+    width: 100%;
+    max-width: 758px;
+    height: 52px; /* Increased height */
+    background-color: #3BB77E;
+    color: #F9FBFD;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px; /* Increased from 14 */
+    font-weight: 700;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: opacity 0.2s;
+}
+
+.submitBtn:hover {
+    opacity: 0.9;
+}
+
+/* List Section */
+.listHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.listTitle {
+    font-size: 18px;
+    font-weight: 600;
+    color: #253D4E;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.searchAndFilter {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.searchContainer {
+    width: 300px; /* Increased width */
+    height: 44px; /* Increased height */
+    background: #FFFFFF;
+    border: 1px solid #D1D9E2;
+    border-radius: 8px;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.searchIcon {
+    color: #757575;
+}
+
+.searchInput {
+    border: none;
+    outline: none;
+    font-size: 14px;
+    width: 100%;
+}
+
+.filterBtn {
+    height: 44px; /* Increased height */
+    padding: 0 40px 0 16px; /* Increased right padding for arrow */
+    background: #FFFFFF;
+    border: 1px solid #D1D9E2;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #757575;
+    min-width: 180px; /* Added min-width */
+    appearance: none; /* For cleaner styling if needed */
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2218%22%20height%3D%2218%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23757575%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+}
+
+/* Grid */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 200px); /* Increased from 156px */
+    gap: 32px;
+    justify-content: flex-start;
+}
+
+.card {
+    width: 200px; /* Increased from 156px */
+    height: 320px; /* Increased slightly to handle spacing better */
+    border-radius: 12px; /* More rounded */
+    border: 1px solid #D1D9E2;
+    background-color: #FFFFFF;
+    padding: 24px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.cardContent {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    width: 100%;
+    align-items: center;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+
+.deleteBtn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: none;
+    border: none;
+    color: #757575;
+    cursor: pointer;
+    padding: 4px;
+    transition: color 0.2s;
+}
+
+.editBtn {
+    position: absolute;
+    top: 12px;
+    right: 44px; /* Positioned to the left of delete button */
+    background: none;
+    border: none;
+    color: #757575;
+    cursor: pointer;
+    padding: 4px;
+    transition: color 0.2s;
+}
+
+.deleteBtn:hover {
+    color: #dc3545;
+}
+
+.editBtn:hover {
+    color: #3BB77E;
+}
+
+.cardPhoto {
+    width: 80px; /* Increased from 60px */
+    height: 80px; /* Increased from 60px */
+    border-radius: 50%;
+    object-fit: cover;
+    background-color: #F9FBFD;
+    margin-top: 12px;
+    margin-bottom: 16px;
+}
+
+.cardName {
+    font-size: 14px; /* Increased from 12 */
+    font-weight: 700;
+    color: #253D4E;
+    text-align: center;
+    margin-bottom: 12px;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cardInfo {
+    font-size: 14px; /* Increased from 12 */
+    font-weight: 400;
+    color: #757575;
+    text-align: center;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-bottom: 4px;
+}
+
+/* Modal Overlay */
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(2px);
+}
+
+.modalContent {
+    background: #FFFFFF;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 400px;
+    padding: 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    text-align: center;
+}
+
+.modalTitle {
+    font-size: 18px;
+    font-weight: 700;
+    color: #253D4E;
+    margin-bottom: 12px;
+}
+
+.modalText {
+    font-size: 14px;
+    color: #757575;
+    margin-bottom: 24px;
+}
+
+.modalActions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.cancelBtn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: 1px solid #D1D9E2;
+    background: transparent;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.confirmDeleteBtn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    background: #dc3545;
+    color: white;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.saveEditBtn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    background: #3BB77E;
+    color: white;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.editModalContent {
+    background: #FFFFFF;
+    border-radius: 16px;
+    width: 95%;
+    max-width: 900px; /* Wider for the form */
+    padding: 32px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    max-height: 90vh;
+    overflow-y: auto;
+}

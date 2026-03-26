@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import styles from './Services.module.css';
 import {
     Plus,
@@ -13,22 +14,23 @@ import {
     Calendar,
     Pencil,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    X,
+    Upload
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import ServiceModal from '@/components/modals/ServiceModal';
 import { useSession } from 'next-auth/react';
 import { useToast } from '@/context/ToastContext';
 import {
-    BarChart,
-    Bar,
+    AreaChart,
+    Area,
     XAxis,
     YAxis,
     CartesianGrid,
     Tooltip,
-    ResponsiveContainer,
-    Cell,
-    LabelList
+    ResponsiveContainer
 } from 'recharts';
 
 export default function ServicesPage() {
@@ -42,6 +44,16 @@ export default function ServicesPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 7;
 
+    // Create Modal state
+    const [showCreateModal, setShowCreateModal] = useState(false);
+    const searchParams = useSearchParams();
+
+    useEffect(() => {
+        if (searchParams.get('create') === 'true') {
+            setShowCreateModal(true);
+        }
+    }, [searchParams]);
+
     useEffect(() => {
         if (session?.user?.id) {
             fetchData();
@@ -50,6 +62,7 @@ export default function ServicesPage() {
 
     const fetchData = async () => {
         try {
+            setLoading(true);
             const [servicesRes, appointmentsRes] = await Promise.all([
                 fetch(`/api/services?partnerId=${session?.user?.id}`),
                 fetch('/api/appointments')
@@ -60,12 +73,13 @@ export default function ServicesPage() {
 
             setServices(Array.isArray(servicesData) ? servicesData : []);
             setAppointments(Array.isArray(appointmentsData) ? appointmentsData : []);
-            setLoading(false);
         } catch (err) {
             console.error(err);
+        } finally {
             setLoading(false);
         }
     };
+
 
     const sortedServices = useMemo(() => {
         const filtered = services.filter(s =>
@@ -94,41 +108,52 @@ export default function ServicesPage() {
             .slice(0, 5);
     }, [appointments]);
 
-    // Calculate actual revenue from completed appointments
+    // Get current week boundaries (Monday to Sunday)
+    const { weekStart, weekEnd, weekLabel } = useMemo(() => {
+        const now = new Date();
+        const dayOfWeek = now.getDay(); // 0=Sun, 1=Mon...
+        const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+        const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diffToMonday);
+        monday.setHours(0, 0, 0, 0);
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+        sunday.setHours(23, 59, 59, 999);
+
+        const fmt = (d: Date) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+        return { weekStart: monday, weekEnd: sunday, weekLabel: `${fmt(monday)} - ${fmt(sunday)}` };
+    }, []);
+
+    // Filter appointments to current week only
+    const currentWeekAppointments = useMemo(() => {
+        return appointments.filter(a => {
+            const d = new Date(a.date);
+            return d >= weekStart && d <= weekEnd;
+        });
+    }, [appointments, weekStart, weekEnd]);
+
+    // Calculate revenue from current week completed appointments
     const totalSalesRevenue = useMemo(() => {
-        return appointments
+        return currentWeekAppointments
             .filter(a => a.status === 'completed')
             .reduce((acc, a) => acc + (a.serviceId?.prices?.[0]?.price || 0), 0);
-    }, [appointments]);
-
-    const mapValueToRank = (val: number) => {
-        if (val <= 0) return 0;
-        if (val <= 10) return (val / 10);
-        if (val <= 50) return 1 + (val - 10) / (40);
-        if (val <= 100) return 2 + (val - 50) / (50);
-        if (val <= 1000) return 3 + (val - 100) / (900);
-        return 4;
-    };
+    }, [currentWeekAppointments]);
 
     const weeklyChartData = useMemo(() => {
         const days = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB'];
-        const data = days.map(day => ({ name: day, realValue: 0, value: 0 }));
+        const data = days.map(day => ({ name: day, value: 0 }));
 
-        appointments.forEach(app => {
+        currentWeekAppointments.forEach(app => {
             if (app.status === 'completed' || app.status === 'concluido' || app.status === 'CONFIRMADOS' || app.status === 'pending') {
                 const date = new Date(app.date);
                 const dayIndex = date.getUTCDay();
                 const price = app.serviceId?.prices?.[0]?.price || 0;
-                data[dayIndex].realValue += price;
+                data[dayIndex].value += price;
             }
         });
 
-        const reordered = [data[1], data[2], data[3], data[4], data[5], data[6], data[0]];
-        return reordered.map(d => ({
-            ...d,
-            value: mapValueToRank(d.realValue)
-        }));
-    }, [appointments]);
+        // Reorder: SEG, TER, QUA, QUI, SEX, SAB, DOM
+        return [data[1], data[2], data[3], data[4], data[5], data[6], data[0]];
+    }, [currentWeekAppointments]);
 
     if (loading) return <div style={{ padding: '2rem', textAlign: 'center' }}>Carregando...</div>;
 
@@ -165,9 +190,9 @@ export default function ServicesPage() {
 
             {/* Quick Actions */}
             <div className={styles.quickActions}>
-                <Link href="/partner/services/new" className={styles.actionBtn}>
+                <button className={styles.actionBtn} onClick={() => setShowCreateModal(true)}>
                     ADICIONAR SERVIÇO
-                </Link>
+                </button>
                 <div className={styles.searchContainer}>
                     <Search size={20} className={styles.searchIcon} />
                     <input
@@ -289,7 +314,7 @@ export default function ServicesPage() {
                                     </div>
                                 </div>
                                 <div className={styles.dateBadge}>
-                                    {new Date(a.date).toLocaleDateString('pt-BR')}
+                                    {new Date(a.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
                                 </div>
                             </div>
                         ))}
@@ -315,7 +340,13 @@ export default function ServicesPage() {
                         </div>
                         <div className={styles.chartBody}>
                             <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={weeklyChartData} margin={{ left: 20, right: 10, top: 20, bottom: 0 }}>
+                                <AreaChart data={weeklyChartData} margin={{ left: 20, right: 10, top: 20, bottom: 0 }}>
+                                    <defs>
+                                        <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#3BB77E" stopOpacity={0.3} />
+                                            <stop offset="95%" stopColor="#3BB77E" stopOpacity={0.02} />
+                                        </linearGradient>
+                                    </defs>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
                                     <XAxis
                                         dataKey="name"
@@ -324,55 +355,44 @@ export default function ServicesPage() {
                                         tick={{ fontSize: 10, fill: '#757575' }}
                                     />
                                     <YAxis
-                                        ticks={[1, 2, 3, 4]}
-                                        domain={[0, 4]}
                                         width={60}
-                                        tickFormatter={(val) => {
-                                            if (val === 1) return '10';
-                                            if (val === 2) return '50';
-                                            if (val === 3) return '100';
-                                            if (val === 4) return '1000';
-                                            return '';
-                                        }}
                                         axisLine={{ stroke: '#eee' }}
                                         tickLine={false}
                                         tick={{ fontSize: 10, fill: '#757575' }}
+                                        tickFormatter={(val) => `R$ ${val}`}
                                     />
                                     <Tooltip
-                                        cursor={{ fill: 'transparent' }}
-                                        formatter={(val: any, name: any, props: any) => [`R$ ${props.payload.realValue.toFixed(2)}`, 'Total']}
+                                        formatter={(val: any) => [`R$ ${Number(val).toFixed(2)}`, 'Total']}
                                     />
-                                    <Bar
+                                    <Area
+                                        type="monotone"
                                         dataKey="value"
-                                        fill="#3BB77E"
-                                        radius={[4, 4, 0, 0]}
-                                        barSize={30}
-                                        minPointSize={5}
-                                    >
-                                        <LabelList
-                                            dataKey="realValue"
-                                            position="top"
-                                            formatter={(val: number) => val > 0 ? `R$ ${val}` : ''}
-                                            style={{ fontSize: 10, fill: '#3BB77E', fontWeight: 'bold' }}
-                                        />
-                                        {weeklyChartData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill="#3BB77E" />
-                                        ))}
-                                    </Bar>
-                                </BarChart>
+                                        stroke="#3BB77E"
+                                        strokeWidth={2}
+                                        fill="url(#colorValue)"
+                                    />
+                                </AreaChart>
                             </ResponsiveContainer>
                         </div>
                     </div>
 
                     <div className={styles.graphDivider} />
                     <div className={styles.chartFooter}>
-                        <div className={styles.optionsBtn} style={{ background: 'transparent', width: 40, height: 40, marginLeft: '-1.5rem' }}>
+                        <span className={styles.totalSemana}>TOTAL DA SEMANA ({weekLabel}): R$ {totalSalesRevenue.toFixed(2)}</span>
+                        <div className={styles.optionsBtn} style={{ background: 'transparent', width: 40, height: 40 }}>
                             <MoreHorizontal size={15} color="rgba(95,109,126,1)" />
                         </div>
-                        <span className={styles.totalSemana}>TOTAL DA SEMANA: R$ {totalSalesRevenue.toFixed(2)}</span>
                     </div>
                 </div>
             </div>
+
+            <ServiceModal 
+                isOpen={showCreateModal}
+                onClose={() => setShowCreateModal(false)}
+                partnerId={session?.user?.id || ''}
+                onSuccess={fetchData}
+            />
         </div>
     );
 }
+

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/context/ToastContext';
 import { AlertCircle, Truck, MapPin } from 'lucide-react';
@@ -10,6 +10,7 @@ import { maskZip } from '@/utils/masks';
 
 export default function CheckoutPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { items, total, clearCart } = useCart();
     const { showToast } = useToast();
 
@@ -140,21 +141,22 @@ export default function CheckoutPage() {
         }
     };
 
-    const handleApplyCoupon = async () => {
-        if (!couponCode) return;
+    const handleApplyCoupon = useCallback(async (codeOverride?: string) => {
+        const code = codeOverride || couponCode;
+        if (!code) return;
 
         try {
             const res = await fetch(`/api/coupons/validate`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ code: couponCode, total })
+                body: JSON.stringify({ code, total })
             });
             const data = await res.json();
 
             if (res.ok && data.valid) {
                 // Check if already applied
                 if (appliedCoupons.some(c => c.code === data.code)) {
-                    showToast('Este cupom já foi aplicado', 'error');
+                    if (!codeOverride) showToast('Este cupom já foi aplicado', 'error');
                     return;
                 }
 
@@ -166,7 +168,15 @@ export default function CheckoutPage() {
                 }
 
                 const partnerSubtotal = partnerItems.reduce((sum: number, i: any) => sum + (i.price * i.quantity), 0);
-                const discountAmount = (partnerSubtotal * data.discount) / 100;
+                let discountAmount: number;
+                if (data.type === 'fixed') {
+                    discountAmount = data.discount;
+                } else {
+                    discountAmount = (partnerSubtotal * data.discount) / 100;
+                    if (data.maxDiscount && discountAmount > data.maxDiscount) {
+                        discountAmount = data.maxDiscount;
+                    }
+                }
 
                 setAppliedCoupons(prev => [...prev, {
                     code: data.code,
@@ -176,14 +186,31 @@ export default function CheckoutPage() {
                     shopName: partnerItems[0].shopName
                 }]);
                 setCouponCode('');
-                showToast(`Cupom aplicado! ${data.discount}% de desconto na loja ${partnerItems[0].shopName}`);
+                showToast(
+                    data.type === 'fixed'
+                        ? `Cupom aplicado! Desconto de R$ ${discountAmount.toFixed(2)} na loja ${partnerItems[0].shopName}`
+                        : `Cupom aplicado! ${data.discount}% de desconto na loja ${partnerItems[0].shopName}`
+                );
             } else {
                 showToast(data.message || 'Cupom inválido', 'error');
             }
         } catch (error) {
             showToast('Erro ao validar cupom', 'error');
         }
-    };
+    }, [couponCode, total, appliedCoupons, itemsByPartner, showToast]);
+
+    // Auto-apply coupon from URL (passed from Cart page)
+    useEffect(() => {
+        const urlCoupon = searchParams.get('coupon');
+        if (urlCoupon && items.length > 0 && appliedCoupons.length === 0) {
+            setCouponCode(urlCoupon.toUpperCase());
+            // Small delay to ensure partner data is loaded
+            const timer = setTimeout(() => {
+                handleApplyCoupon(urlCoupon.toUpperCase());
+            }, 500);
+            return () => clearTimeout(timer);
+        }
+    }, [searchParams, items]);
 
     const handleRemoveCoupon = (code: string) => {
         setAppliedCoupons(prev => prev.filter(c => c.code !== code));
@@ -439,7 +466,7 @@ export default function CheckoutPage() {
                             />
                             <button
                                 type="button"
-                                onClick={handleApplyCoupon}
+                                onClick={() => handleApplyCoupon()}
                                 style={{ padding: '0.8rem 1.5rem', background: '#6CC551', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}
                             >
                                 Aplicar

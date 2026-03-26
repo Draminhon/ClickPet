@@ -3,6 +3,12 @@ import dbConnect from '@/lib/db';
 import Product from '@/models/Product';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]/route";
+import { sanitizeObject } from '@/lib/sanitize';
+
+// Escape special regex characters to prevent ReDoS / injection
+function escapeRegex(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 
 export async function POST(req: Request) {
     try {
@@ -25,8 +31,16 @@ export async function POST(req: Request) {
             }, { status: 403 });
         }
 
-        const body = await req.json();
-        console.log('Creating product with body:', JSON.stringify(body, null, 2));
+        const rawBody = await req.json();
+        const body = sanitizeObject(rawBody);
+
+        // Validate required fields
+        if (!body.title || body.title.trim().length < 2) {
+            return NextResponse.json({ message: 'Título deve ter pelo menos 2 caracteres' }, { status: 400 });
+        }
+        if (body.price === undefined || body.price <= 0) {
+            return NextResponse.json({ message: 'Preço deve ser maior que zero' }, { status: 400 });
+        }
 
         const product = await Product.create({
             ...body,
@@ -51,7 +65,7 @@ export async function GET(req: Request) {
         if (category) query.category = category;
         if (partnerId) query.partnerId = partnerId;
         if (search) {
-            query.title = { $regex: search, $options: 'i' };
+            query.title = { $regex: escapeRegex(search), $options: 'i' };
         }
 
         const products = await Product.find(query).populate('partnerId', 'name');

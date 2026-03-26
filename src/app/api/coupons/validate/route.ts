@@ -29,7 +29,9 @@ export async function POST(req: Request) {
 
         return NextResponse.json({
             valid: true,
+            type: coupon.type,
             discount: coupon.discount,
+            maxDiscount: coupon.maxDiscount,
             code: coupon.code,
             partnerId: coupon.partnerId.toString()
         });

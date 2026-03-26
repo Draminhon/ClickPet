@@ -86,11 +86,6 @@ export async function PUT(req: Request) {
         const updatedFields = Object.keys(updateData);
         await logAction(req, 'profile_update', { updatedFields });
 
-        // Debug logging
-        if (body.image) {
-            console.log(`[DEBUG] Received image length: ${body.image.length}`);
-            console.log(`[DEBUG] Saved user image field present: ${!!user?.image}`);
-        }
 
         return NextResponse.json(updatedUser);
     } catch (error: any) {

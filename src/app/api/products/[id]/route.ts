@@ -8,7 +8,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     try {
         const { id } = await params;
         await dbConnect();
-        const product = await Product.findById(id);
+        const product = await Product.findById(id).populate('partnerId', 'name');
 
         if (!product) {
             return NextResponse.json({ message: 'Product not found' }, { status: 404 });
@@ -31,9 +31,21 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         await dbConnect();
         const body = await req.json();
 
+        // SECURITY: Whitelist allowed fields to prevent mass assignment
+        const allowedFields = ['title', 'description', 'price', 'category', 'image', 'images',
+            'discount', 'productType', 'subCategory', 'weights', 'stock', 'isActive', 'brand', 'sku', 'unit'];
+        const updateData: any = {};
+        for (const field of allowedFields) {
+            if (body[field] !== undefined) {
+                updateData[field] = typeof body[field] === 'string'
+                    ? body[field] // Mongoose schema will validate
+                    : body[field];
+            }
+        }
+
         const product = await Product.findOneAndUpdate(
             { _id: id, partnerId: session.user.id },
-            body,
+            updateData,
             { new: true }
         );
 

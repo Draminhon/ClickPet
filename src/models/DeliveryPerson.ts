@@ -50,6 +50,14 @@ const DeliveryPersonSchema = new mongoose.Schema({
         type: Number,
         default: 0,
     },
+    entryDate: {
+        type: Date,
+        default: Date.now,
+    },
+    cnhCategory: {
+        type: String,
+        default: 'A',
+    },
 }, { timestamps: true });
 
 DeliveryPersonSchema.plugin(fieldEncryption, {
@@ -59,5 +67,10 @@ DeliveryPersonSchema.plugin(fieldEncryption, {
 
 DeliveryPersonSchema.index({ partnerId: 1 });
 DeliveryPersonSchema.index({ status: 1 });
+
+// Force model refresh for schema changes in development
+if (process.env.NODE_ENV === 'development') {
+    delete mongoose.models.DeliveryPerson;
+}
 
 export default mongoose.models.DeliveryPerson || mongoose.model('DeliveryPerson', DeliveryPersonSchema);

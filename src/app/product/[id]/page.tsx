@@ -24,6 +24,7 @@ interface Product {
     rating: number;
     salesCount: number;
     weights: string[];
+    partnerId?: any;
 }
 
 interface Review {
@@ -139,15 +140,23 @@ export default function ProductDetailPage() {
 
     const handleAddToCart = () => {
         if (!product) return;
+        // partnerId may be populated (object) or a raw string
+        const pid = typeof product.partnerId === 'object' 
+            ? product.partnerId?._id?.toString() || product.partnerId?.toString()
+            : product.partnerId?.toString();
+        const shopName = typeof product.partnerId === 'object' 
+            ? product.partnerId?.name || 'Petshop'
+            : 'Petshop';
         addToCart({
             id: product._id,
             title: product.title,
             price: currentPrice,
-            shopName: 'Petshop', // Normally this would come from the product
+            shopName,
             image: product.image,
             productType: product.productType || 'Produto',
             subCategory: product.subCategory || 'Geral',
             selectedWeight: selectedWeight,
+            partnerId: pid,
         }, quantity);
         showToast('Produto adicionado ao carrinho!');
     };

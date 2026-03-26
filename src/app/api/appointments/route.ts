@@ -25,7 +25,7 @@ export async function POST(req: Request) {
             partnerId: body.partnerId,
             serviceId: body.serviceId,
             petId: body.petId, // Optional
-            date: new Date(body.date),
+            date: new Date(body.date + 'T12:00:00'),
             time: body.time,
             notes: body.notes,
             status: 'pending'

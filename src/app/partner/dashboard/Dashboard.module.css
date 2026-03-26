@@ -271,22 +271,18 @@
 }
 
 .tableHeader {
-    display: grid;
-    grid-template-columns: 3fr 2fr 1fr 1fr 1fr 1.5fr;
     background-color: transparent;
     border-bottom: 1px solid #D1D9E2;
 }
 
 .headerCell {
     padding: 20px 16px;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 700;
     color: #757575;
     text-transform: uppercase;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    text-align: left;
+    width: 16.6%;
+    text-align: center;
 }
 
 .headerCell:first-child {
@@ -306,10 +302,7 @@
 
 /* Table Row */
 .tableRow {
-    display: grid;
-    grid-template-columns: 3fr 2fr 1fr 1fr 1fr 1.5fr;
     border-bottom: 1px solid #D1D9E2;
-    align-items: center;
 }
 
 .tableRow:last-child {
@@ -318,11 +311,9 @@
 
 .cell {
     padding: 16px;
-    font-size: 14px;
-    color: #000000;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    font-size: 16px;
+    color: #475569;
+    text-align: center;
 }
 
 /* Products Column Specifics */

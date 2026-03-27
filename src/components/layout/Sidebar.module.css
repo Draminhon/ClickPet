@@ -136,30 +136,7 @@
     color: #3BB77E;
 }
 
-.configSection {
-    margin-top: 8px;
-}
 
-.configSelector {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 12px;
-    color: rgba(117, 117, 117, 1);
-    cursor: pointer;
-    font-size: 14px;
-    border-radius: 8px;
-}
-
-.configSelector:hover {
-    background-color: rgba(246, 246, 246, 1);
-}
-
-.configLeft {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
 
 .logoutContainer {
     margin-top: auto;
@@ -210,7 +187,6 @@
 .collapsed .petshopLabel,
 .collapsed .sectionLabel,
 .collapsed .navItem span,
-.collapsed .configSelector span,
 .collapsed .logoutBtn span,
 .collapsed .chevron {
     display: none;

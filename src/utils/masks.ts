@@ -6,6 +6,15 @@ export const maskPhone = (value: string) => {
         .replace(/(-\d{4})\d+?$/, '$1'); // Limit size
 };
 
+export const maskCPF = (value: string) => {
+    return value
+        .replace(/\D/g, '')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d{1,2})/, '$1-$2')
+        .replace(/(-\d{2})\d+?$/, '$1');
+};
+
 export const maskCNPJ = (value: string) => {
     return value
         .replace(/\D/g, '')
@@ -102,4 +111,17 @@ export const maskLicensePlate = (value: string) => {
 
     // Default fallback (just uppercase, no hyphen if not sure)
     return value;
+};
+export const maskPrice = (value: string) => {
+    let cleanValue = value.replace(/\D/g, "");
+    if (cleanValue === "") return "";
+    let numberValue = parseInt(cleanValue) / 100;
+    return numberValue.toLocaleString("pt-BR", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    });
+};
+
+export const parseMaskedPrice = (value: string) => {
+    return parseFloat(value.replace(/\./g, "").replace(",", "."));
 };

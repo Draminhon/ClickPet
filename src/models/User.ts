@@ -98,6 +98,29 @@ const UserSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
+    workingHours: [{
+        day: { type: String, required: true },
+        active: { type: Boolean, default: true },
+        open: { type: String, default: '08:00' },
+        close: { type: String, default: '18:00' },
+    }],
+    // Payment settings
+    paymentConfig: {
+        creditCard: { type: Boolean, default: true },
+        debitCard: { type: Boolean, default: true },
+        cash: { type: Boolean, default: true },
+    },
+    paymentMethods: [{
+        method: { type: String, required: true },
+        fee: { type: Number, default: 0 },
+        term: { type: String, default: '1 dia' },
+    }],
+    pixConfig: {
+        keyType: { type: String, default: 'CPF' },
+        key: { type: String, default: '' },
+        beneficiary: { type: String, default: '' },
+        dynamicPix: { type: Boolean, default: false },
+    },
 }, { timestamps: true });
 
 // Encrypt sensitive fields: CNPJ/CPF, phone, address components, and 2FA secret.

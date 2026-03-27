@@ -135,15 +135,13 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
 
                 <span className={styles.sectionLabel}>CONFIGURAÇÃO</span>
 
-                <div className={styles.configSection}>
-                    <div className={styles.configSelector}>
-                        <div className={styles.configLeft}>
-                            <Settings className={styles.navIcon} />
-                            {!isCollapsed && <span>Configuração</span>}
-                        </div>
-                        {!isCollapsed && <ChevronDown className={styles.chevron} size={14} />}
-                    </div>
-                </div>
+                <Link 
+                    href="/partner/settings" 
+                    className={`${styles.navItem} ${isActive('/partner/settings')}`}
+                >
+                    <Settings className={styles.navIcon} />
+                    {!isCollapsed && <span>Configuração</span>}
+                </Link>
 
                 <div className={styles.logoutContainer}>
                     <button onClick={handleLogout} className={styles.logoutBtn}>

@@ -77,6 +77,22 @@ export async function PUT(req: Request) {
             user.shopLogo = body.shopLogo;
             updateData.shopLogo = body.shopLogo;
         }
+        if (body.workingHours !== undefined) {
+            user.workingHours = body.workingHours;
+            updateData.workingHours = body.workingHours;
+        }
+        if (body.paymentConfig !== undefined) {
+            user.paymentConfig = body.paymentConfig;
+            updateData.paymentConfig = body.paymentConfig;
+        }
+        if (body.paymentMethods !== undefined) {
+            user.paymentMethods = body.paymentMethods;
+            updateData.paymentMethods = body.paymentMethods;
+        }
+        if (body.pixConfig !== undefined) {
+            user.pixConfig = body.pixConfig;
+            updateData.pixConfig = body.pixConfig;
+        }
 
         await user.save();
 

@@ -51,22 +51,27 @@ export async function middleware(req: NextRequest) {
             return NextResponse.redirect(new URL('/?error=partner_role_mismatch', req.url));
         }
 
-        // Allow access to subscription pages even if subscription is not active
-        if (pathname.startsWith('/partner/subscription')) {
-            return NextResponse.next();
-        }
-
-        // Check subscription status for other partner routes
+        // Check subscription status
         const subscriptionStatus = token?.subscriptionStatus as string | undefined;
+        const isProfileComplete = token?.isProfileComplete as boolean | undefined;
 
-        // If subscription is not active, redirect to subscription page
+        // Step 1: Active Subscription
         if (!subscriptionStatus || subscriptionStatus !== 'active') {
-            // Allow access to dashboard to see the warning
-            if (pathname === '/partner/dashboard') {
+             if (pathname.startsWith('/partner/subscription') || pathname === '/partner/dashboard') {
                 return NextResponse.next();
             }
             return NextResponse.redirect(new URL('/partner/subscription', req.url));
         }
+
+        // Step 2: Complete Profile
+        if (!isProfileComplete) {
+            // Force settings page if profile is incomplete. Only allow subscription page as fallback.
+            if (pathname === '/partner/settings' || pathname.startsWith('/partner/subscription')) {
+                return NextResponse.next();
+            }
+            return NextResponse.redirect(new URL('/partner/settings', req.url));
+        }
+
         return NextResponse.next();
     }
 

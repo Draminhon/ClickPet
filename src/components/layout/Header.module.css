@@ -77,11 +77,30 @@
     color: rgba(51, 51, 51, 0.4);
 }
 
+.headerActions {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-left: auto;
+    margin-right: 80px;
+}
+
+.notificationWrapper {
+    position: relative;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.notificationIcon {
+    color: #000;
+    width: 24px;
+    height: 24px;
+}
+
 .cartWrapper {
     position: relative;
     cursor: pointer;
-    margin-right: 23px;
-    margin-left: auto;
     display: flex;
     align-items: center;
 }
@@ -119,7 +138,6 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    margin-right: 80px;
 }
 
 .profileIcon {

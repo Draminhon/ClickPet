@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useSession } from 'next-auth/react';
 
 export interface CartItem {
     id: string;
@@ -28,24 +29,43 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
+    const { data: session } = useSession();
     const [items, setItems] = useState<CartItem[]>([]);
+    const [userId, setUserId] = useState<string | null>(null);
 
-    // Load from localStorage on mount
+    // Update current userId from session
     useEffect(() => {
-        const saved = localStorage.getItem('cart');
-        if (saved) {
-            try {
-                setItems(JSON.parse(saved));
-            } catch (e) {
-                console.error('Failed to parse cart', e);
+        if (session?.user?.id) {
+            setUserId(session.user.id);
+        } else {
+            setUserId(null);
+            setItems([]); // Clear in-memory items when logged out
+        }
+    }, [session]);
+
+    // Load from localStorage when userId is available
+    useEffect(() => {
+        if (userId) {
+            const saved = localStorage.getItem(`clickpet_cart_${userId}`);
+            if (saved) {
+                try {
+                    setItems(JSON.parse(saved));
+                } catch (e) {
+                    console.error('Failed to parse cart', e);
+                    setItems([]);
+                }
+            } else {
+                setItems([]);
             }
         }
-    }, []);
+    }, [userId]);
 
-    // Save to localStorage on change
+    // Save to localStorage whenever items OR userId change
     useEffect(() => {
-        localStorage.setItem('cart', JSON.stringify(items));
-    }, [items]);
+        if (userId) {
+            localStorage.setItem(`clickpet_cart_${userId}`, JSON.stringify(items));
+        }
+    }, [items, userId]);
 
     const addToCart = (newItem: Omit<CartItem, 'quantity'>, quantity: number = 1) => {
         setItems(current => {

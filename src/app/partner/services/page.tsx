@@ -46,6 +46,7 @@ export default function ServicesPage() {
 
     // Create Modal state
     const [showCreateModal, setShowCreateModal] = useState(false);
+    const [editingService, setEditingService] = useState<any | null>(null);
     const searchParams = useSearchParams();
 
     useEffect(() => {
@@ -213,16 +214,16 @@ export default function ServicesPage() {
                 <table className={styles.table}>
                     <thead>
                         <tr className={styles.tableHeaderRow}>
-                            <th className={styles.tableHeaderCell} style={{ paddingLeft: '1.5rem' }}>SERVIÇO</th>
+                            <th className={styles.tableHeaderCell}>SERVIÇO</th>
                             <th className={styles.tableHeaderCell}>CATEGORIA</th>
                             <th className={styles.tableHeaderCell}>PORTE</th>
                             <th className={styles.tableHeaderCell}>
-                                <div className={styles.sortableHeader} onClick={() => { setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc'); }}>
-                                    PREÇO <ArrowUpDown size={14} />
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                    PREÇO {sortOrder === 'asc' ? <ArrowUpDown size={12} style={{ opacity: 0.3 }} /> : <ArrowUpDown size={12} />}
                                 </div>
                             </th>
                             <th className={styles.tableHeaderCell}>DURAÇÃO (MIN)</th>
-                            <th className={styles.tableHeaderCell} style={{ paddingRight: '1.5rem' }}>ESPECIE</th>
+                            <th className={styles.tableHeaderCell}>ESPECIE</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -234,22 +235,32 @@ export default function ServicesPage() {
                                 <tr key={s._id} className={styles.tableRow} style={{ borderBottom: showDivider ? '1px solid rgba(209, 217, 226, 1)' : 'none' }}>
                                     <td className={styles.tableCell}>
                                         <div className={styles.serviceCell}>
-                                            <Pencil size={12.82} className={styles.pencilIcon} />
-                                            <Image
-                                                src={s.image || '/assets/animals/chihuaha.png'}
-                                                alt={s.name}
-                                                width={32}
-                                                height={32}
-                                                className={styles.productPhoto}
-                                            />
-                                            <span className={styles.serviceNameText}>{s.name}</span>
+                                            <div 
+                                                className={styles.editBtn}
+                                                onClick={() => {
+                                                    setEditingService(s);
+                                                    setShowCreateModal(true);
+                                                }}
+                                            >
+                                                <Pencil size={18} className={styles.pencilIcon} />
+                                            </div>
+                                            <div className={styles.imageWrapper}>
+                                                <Image
+                                                    src={s.image || '/assets/animals/chihuaha.png'}
+                                                    alt={s.name}
+                                                    width={32}
+                                                    height={32}
+                                                    className={styles.productPhoto}
+                                                />
+                                            </div>
+                                            <span className={styles.serviceNameText} style={{ fontSize: '16px' }}>{s.name}</span>
                                         </div>
                                     </td>
                                     <td className={styles.tableCell}><span className={styles.tableCellDefault}>{getCategoryLabel(s.category)}</span></td>
                                     <td className={styles.tableCell}><span className={styles.tableCellDefault}>{s.prices?.[0]?.size || '-'}</span></td>
                                     <td className={styles.tableCell}><span className={styles.tableCellDefault}>R$ {s.prices?.[0]?.price?.toFixed(2) || '0.00'}</span></td>
                                     <td className={styles.tableCell}><span className={styles.tableCellDefault}>{s.duration || '-'}</span></td>
-                                    <td className={styles.tableCell} style={{ paddingRight: '1.5rem' }}><span className={styles.tableCellDefault}>{getSpeciesLabel(s.species)}</span></td>
+                                    <td className={styles.tableCell}><span className={styles.tableCellDefault}>{getSpeciesLabel(s.species)}</span></td>
                                 </tr>
                             );
                         })}
@@ -388,9 +399,13 @@ export default function ServicesPage() {
 
             <ServiceModal 
                 isOpen={showCreateModal}
-                onClose={() => setShowCreateModal(false)}
+                onClose={() => {
+                    setShowCreateModal(false);
+                    setEditingService(null);
+                }}
                 partnerId={session?.user?.id || ''}
                 onSuccess={fetchData}
+                service={editingService}
             />
         </div>
     );

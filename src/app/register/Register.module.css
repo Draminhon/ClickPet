@@ -1,4 +1,4 @@
-.loginContainer {
+.registerContainer {
     display: flex;
     min-height: 100vh;
     background-color: rgba(254, 254, 254, 1);
@@ -55,8 +55,8 @@
     font-weight: 600;
     font-size: 36px;
     color: rgba(37, 61, 78, 1);
-    margin-top: 40px;
-    margin-bottom: 24px;
+    margin-top: 20px;
+    margin-bottom: 12px;
     text-align: left;
     width: 100%;
 }
@@ -65,15 +65,42 @@
     font-weight: 400;
     font-size: 16px;
     color: rgba(37, 61, 78, 0.7);
-    margin-bottom: 32px;
+    margin-bottom: 24px;
     text-align: left;
     width: 100%;
+}
+
+.roleSelector {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+    width: 100%;
+}
+
+.roleBtn {
+    flex: 1;
+    height: 48px;
+    border-radius: 12px;
+    border: 1px solid rgba(212, 215, 227, 1);
+    background: rgba(247, 251, 255, 1);
+    font-size: 14px;
+    font-weight: 500;
+    color: rgba(37, 61, 78, 0.6);
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.roleBtn.active {
+    border-color: rgba(59, 183, 126, 1);
+    background-color: rgba(59, 183, 126, 0.05);
+    color: rgba(59, 183, 126, 1);
 }
 
 .form {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
+    width: 100%;
 }
 
 .inputGroup {
@@ -83,22 +110,28 @@
 
 .inputLabel {
     font-weight: 400;
-    font-size: 16px;
+    font-size: 14px;
     color: rgba(37, 61, 78, 1);
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .input {
-    width: 388px;
-    height: 48px;
+    width: 100%;
+    height: 46px;
     background-color: rgba(247, 251, 255, 1);
     border: 1px solid rgba(212, 215, 227, 1);
     border-radius: 12px;
     padding: 10px 16px;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 400;
     color: rgba(37, 61, 78, 1);
     outline: none;
+    transition: all 0.2s;
+}
+
+.input:focus {
+    border-color: rgba(59, 183, 126, 1);
+    box-shadow: 0 0 0 2px rgba(59, 183, 126, 0.1);
 }
 
 .input::placeholder {
@@ -106,7 +139,7 @@
 }
 
 .continueButton {
-    width: 388px;
+    width: 100%;
     height: 52px;
     background-color: rgba(59, 183, 126, 1);
     border-radius: 12px;
@@ -116,12 +149,22 @@
     justify-content: center;
     cursor: pointer;
     border: none;
-    margin-top: 8px;
+    margin-top: 12px;
+    transition: all 0.2s;
+}
+
+.continueButton:hover {
+    background-color: #35a570;
+}
+
+.continueButton:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 
 .continueText {
     font-weight: 400;
-    font-size: 20px;
+    font-size: 18px;
     color: rgba(254, 254, 254, 1);
     text-transform: uppercase;
 }
@@ -130,8 +173,8 @@
     display: flex;
     align-items: center;
     text-align: center;
-    margin: 12px 0;
-    width: 388px;
+    margin: 12px 0 8px 0;
+    width: 100%;
 }
 
 .divider {
@@ -141,10 +184,23 @@
 }
 
 .dividerText {
-    margin: 0 10px;
+    margin: 0 8px;
     font-weight: 400;
-    font-size: 16px;
+    font-size: 13px;
     color: rgba(37, 61, 78, 1);
+}
+
+.footer {
+    font-size: 14px;
+    color: rgba(37, 61, 78, 0.8);
+    width: 100%;
+    text-align: center;
+}
+
+.link {
+    color: rgba(59, 183, 126, 1);
+    font-weight: 600;
+    text-decoration: none;
 }
 
 .socialContainer {
@@ -162,9 +218,15 @@
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    padding: 12px 0px 12px 94px;
+    padding: 12px 0px 12px 64px;
     gap: 16px;
     cursor: pointer;
+    border: none;
+    transition: background 0.2s;
+}
+
+.socialButton:hover {
+    background: #eef7f8;
 }
 
 .socialIcon {
@@ -177,28 +239,15 @@
     color: rgba(37, 61, 78, 1);
 }
 
-
-.registerLink {
-    text-align: center;
-    margin-top: 24px;
-    font-size: 14px;
-    color: rgba(37, 61, 78, 0.8);
+.errorMessage {
+    color: #dc3545;
+    font-size: 13px;
+    margin-bottom: 12px;
     width: 100%;
 }
 
-.registerLink a {
-    color: rgba(59, 183, 126, 1);
-    font-weight: 600;
-    text-decoration: none;
-    margin-left: 4px;
-}
-
-.registerLink a:hover {
-    text-decoration: underline;
-}
-
 @media (max-width: 1100px) {
-    .loginContainer {
+    .registerContainer {
         flex-direction: column;
         align-items: center;
         padding: 16px;
@@ -207,12 +256,17 @@
 
     .carouselColumn {
         width: 100%;
-        height: 300px;
+        height: 200px;
         max-width: 388px;
     }
 
     .formColumn {
         width: 100%;
         max-width: 388px;
+        height: auto;
+    }
+
+    .topSection, .bottomSection {
+        width: 100%;
     }
 }

@@ -179,47 +179,55 @@ export default function Header() {
                         </form>
                     </div>
 
-                    <Link href="/cart" className={styles.cartWrapper}>
-                        <ShoppingCart className={styles.cartIcon} size={24} />
-                        {count > 0 && (
-                            <span className={styles.badge}>{count}</span>
-                        )}
-                    </Link>
+                    <div className={styles.headerActions}>
+                        <div className={styles.notificationWrapper}>
+                            <Bell className={styles.notificationIcon} size={24} />
+                        </div>
 
-                    <div
-                        className={styles.profileCircle}
-                        onClick={() => {
-                            if (!session?.user?.email) {
-                                setShowAuthDropdown(!showAuthDropdown);
-                            } else {
-                                router.push(getProfileLink());
-                            }
-                        }}
-                        style={{ cursor: 'pointer' }}
-                    >
-                        {session && userImage ? (
-                            <Image
-                                src={userImage}
-                                alt="Profile"
-                                width={48}
-                                height={48}
-                                className={styles.headerAvatar}
-                            />
-                        ) : (
-                            <User className={styles.profileIcon} size={24} />
+                        {session && (
+                            <Link href="/cart" className={styles.cartWrapper}>
+                                <ShoppingCart className={styles.cartIcon} size={24} />
+                                {count > 0 && (
+                                    <span className={styles.badge}>{count}</span>
+                                )}
+                            </Link>
                         )}
 
-                        {!session && showAuthDropdown && (
-                            <div className={styles.authDropdown} onClick={(e) => e.stopPropagation()}>
-                                <div className={styles.authDropdownTitle}>Bem-vindo!</div>
-                                <Link href="/login" className={`${styles.authButton} ${styles.loginBtn}`}>
-                                    Entrar
-                                </Link>
-                                <Link href="/register" className={`${styles.authButton} ${styles.registerBtn}`}>
-                                    Criar Conta
-                                </Link>
-                            </div>
-                        )}
+                        <div
+                            className={styles.profileCircle}
+                            onClick={() => {
+                                if (!session?.user?.email) {
+                                    setShowAuthDropdown(!showAuthDropdown);
+                                } else {
+                                    router.push(getProfileLink());
+                                }
+                            }}
+                            style={{ cursor: 'pointer' }}
+                        >
+                            {session && userImage ? (
+                                <Image
+                                    src={userImage}
+                                    alt="Profile"
+                                    width={48}
+                                    height={48}
+                                    className={styles.headerAvatar}
+                                />
+                            ) : (
+                                <User className={styles.profileIcon} size={24} />
+                            )}
+
+                            {!session && showAuthDropdown && (
+                                <div className={styles.authDropdown} onClick={(e) => e.stopPropagation()}>
+                                    <div className={styles.authDropdownTitle}>Bem-vindo!</div>
+                                    <Link href="/login" className={`${styles.authButton} ${styles.loginBtn}`}>
+                                        Entrar
+                                    </Link>
+                                    <Link href="/register" className={`${styles.authButton} ${styles.registerBtn}`}>
+                                        Criar Conta
+                                    </Link>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </header>

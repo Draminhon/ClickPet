@@ -61,6 +61,7 @@ export default function Dashboard() {
     const [searchQuery, setSearchQuery] = useState('');
     const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
     const [showCreateModal, setShowCreateModal] = useState(false);
+    const [editingProduct, setEditingProduct] = useState<Product | null>(null);
     const itemsPerPage = 7;
 
     useEffect(() => {
@@ -294,17 +295,25 @@ export default function Dashboard() {
                         {currentTableData.map((product) => (
                             <tr key={product._id} className={styles.tableRow}>
                                 <td className={styles.cell}>
-                                    <div className={styles.productCell} style={{ justifyContent: 'center' }}>
-                                        <Link href={`/partner/catalog/edit/${product._id}`}>
+                                    <div className={styles.productCell}>
+                                        <div 
+                                            className={styles.editBtn} 
+                                            onClick={() => {
+                                                setEditingProduct(product);
+                                                setShowCreateModal(true);
+                                            }}
+                                        >
                                             <Pencil size={18} className={styles.editIcon} />
-                                        </Link>
-                                        <Image
-                                            src={product.image || '/assets/placeholder-food.png'}
-                                            alt={product.title}
-                                            width={32}
-                                            height={32}
-                                            className={styles.productPhoto}
-                                        />
+                                        </div>
+                                        <div className={styles.imageWrapper}>
+                                            <Image
+                                                src={product.image || '/assets/placeholder-food.png'}
+                                                alt={product.title}
+                                                width={32}
+                                                height={32}
+                                                className={styles.productPhoto}
+                                            />
+                                        </div>
                                         <span className={styles.productName} style={{ fontSize: '16px' }}>{product.title}</span>
                                     </div>
                                 </td>
@@ -448,9 +457,13 @@ export default function Dashboard() {
 
             <ProductModal 
                 isOpen={showCreateModal} 
-                onClose={() => setShowCreateModal(false)}
+                onClose={() => {
+                    setShowCreateModal(false);
+                    setEditingProduct(null);
+                }}
                 partnerId={session?.user?.id || ''}
                 onSuccess={fetchData}
+                product={editingProduct}
             />
         </div>
     );

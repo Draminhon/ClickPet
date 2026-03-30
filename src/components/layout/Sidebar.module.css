@@ -79,6 +79,10 @@
     font-size: 14px;
     color: rgba(0, 0, 0, 1);
     font-weight: 400;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
 }
 
 .divider {
@@ -136,7 +140,46 @@
     color: #3BB77E;
 }
 
+.disabledNavItem {
+    background-color: #f5f5f5 !important;
+    opacity: 0.5;
+    pointer-events: none;
+    cursor: not-allowed;
+    filter: grayscale(1);
+}
 
+
+
+.navItemContainer {
+    position: relative;
+    width: 100%;
+}
+
+.notificationDot {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 8px;
+    height: 8px;
+    background-color: #3BB77E;
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px rgba(59, 183, 126, 0.2);
+    animation: pulse 2s infinite;
+    flex-shrink: 0;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0px rgba(59, 183, 126, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 6px rgba(59, 183, 126, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0px rgba(59, 183, 126, 0);
+    }
+}
 
 .logoutContainer {
     margin-top: auto;

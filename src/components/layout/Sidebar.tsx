@@ -36,13 +36,17 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
         } catch (error) {
             console.error("Failed to invalidate session remotely:", error);
         }
-        signOut({ callbackUrl: '/login' });
+        signOut({ callbackUrl: '/' });
     };
 
-    const isAdmin = session?.user?.role === 'admin';
     const [shopData, setShopData] = useState({
         name: 'Petshop',
         logo: ''
+    });
+
+    const [dismissedNotifs, setDismissedNotifs] = useState({
+        subscription: false,
+        settings: false
     });
 
     useEffect(() => {
@@ -64,12 +68,25 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
         if (session) {
             fetchShopData();
         }
+
+        if (session?.user?.id) {
+            const sub = localStorage.getItem(`clickpet_notif_subscription_${session.user.id}`) === 'true';
+            const set = localStorage.getItem(`clickpet_notif_settings_${session.user.id}`) === 'true';
+            setDismissedNotifs({ subscription: sub, settings: set });
+        }
     }, [session]);
 
     const isActive = (path: string) => pathname === path ? styles.active : '';
 
     const toggleSidebar = () => {
         setIsCollapsed(!isCollapsed);
+    };
+
+    const dismissNotification = (type: 'subscription' | 'settings') => {
+        if (session?.user?.id) {
+            localStorage.setItem(`clickpet_notif_${type}_${session.user.id}`, 'true');
+            setDismissedNotifs(prev => ({ ...prev, [type]: true }));
+        }
     };
 
     const navItems = [
@@ -79,7 +96,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
         { href: '/partner/appointments', label: 'Agendamentos', icon: Calendar },
         { href: '/partner/coupons', label: 'Cupons', icon: Ticket },
         { href: '/partner/delivery', label: 'Entregadores', icon: Truck },
-        { href: '/partner/subscription', label: 'Minha assinatura', icon: Zap },
+        { href: '/partner/subscription', label: 'Minha assinatura', icon: Zap, type: 'subscription' },
     ];
 
     return (
@@ -120,28 +137,43 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
 
                 <nav className={styles.nav}>
                     {navItems.map((item) => (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            className={`${styles.navItem} ${isActive(item.href)}`}
+                        <div key={item.href} className={styles.navItemContainer}>
+                                <Link
+                                    href={item.href}
+                                    className={`${styles.navItem} ${isActive(item.href)} ${
+                                        !session?.user?.isProfileComplete && item.href !== '/partner/subscription' ? styles.disabledNavItem : ''
+                                    }`}
+                                    onClick={() => item.type === 'subscription' && dismissNotification('subscription')}
+                                >
+                                    <item.icon className={styles.navIcon} />
+                                    {!isCollapsed && <span>{item.label}</span>}
+                                </Link>
+                                {item.href === '/partner/subscription' && 
+                                 !dismissedNotifs.subscription &&
+                                 (session?.user?.subscriptionStatus !== 'active' || !session?.user?.isProfileComplete) && (
+                                    <div className={styles.notificationDot} title="Confira nossos planos" />
+                                 )}
+                            </div>
+                        ))}
+                    </nav>
+    
+                    <div className={styles.divider} />
+    
+                    <span className={styles.sectionLabel}>CONFIGURAÇÃO</span>
+    
+                    <div className={styles.navItemContainer}>
+                        <Link 
+                            href="/partner/settings" 
+                            className={`${styles.navItem} ${isActive('/partner/settings')}`}
+                            onClick={() => dismissNotification('settings')}
                         >
-                            <item.icon className={styles.navIcon} />
-                            {!isCollapsed && <span>{item.label}</span>}
+                            <Settings className={styles.navIcon} />
+                            {!isCollapsed && <span>Configuração</span>}
                         </Link>
-                    ))}
-                </nav>
-
-                <div className={styles.divider} />
-
-                <span className={styles.sectionLabel}>CONFIGURAÇÃO</span>
-
-                <Link 
-                    href="/partner/settings" 
-                    className={`${styles.navItem} ${isActive('/partner/settings')}`}
-                >
-                    <Settings className={styles.navIcon} />
-                    {!isCollapsed && <span>Configuração</span>}
-                </Link>
+                    {!session?.user?.isProfileComplete && !dismissedNotifs.settings && (
+                        <div className={styles.notificationDot} title="Complete seu perfil" />
+                    )}
+                </div>
 
                 <div className={styles.logoutContainer}>
                     <button onClick={handleLogout} className={styles.logoutBtn}>

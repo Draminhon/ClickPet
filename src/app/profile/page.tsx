@@ -72,7 +72,7 @@ export default function ProfilePage() {
         } catch (error) {
             console.error("Failed to invalidate session remotely", error);
         }
-        signOut({ callbackUrl: '/login' });
+        signOut({ callbackUrl: '/' });
     };
 
     const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {

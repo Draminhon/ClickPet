@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useToast } from '@/context/ToastContext';
 import { Minus, Plus, ChevronUp, ChevronDown, QrCode } from 'lucide-react';
@@ -10,20 +11,21 @@ import MapPicker from '@/components/ui/MapPicker';
 // ... (InputContainer, WorkingHoursToggle, TimeSelector omitted)
 // I'll re-add the imports correctly
 
-const InputContainer = ({ label, value, onChange, type = "text", selector = false, onIncrement, onDecrement, placeholder = "", width = '450px' }: any) => (
+const InputContainer = ({ label, value, onChange, type = "text", selector = false, onIncrement, onDecrement, placeholder = "", width = '450px', error = false }: any) => (
     <div style={{ marginBottom: '24px', width: width === '100%' ? '100%' : 'auto' }}>
         <label style={{ display: 'block', fontSize: '14px', color: '#757575', marginBottom: '10px', textTransform: 'uppercase', fontWeight: 500 }}>{label}</label>
         <div style={{ 
             width: width, 
             height: '52px', 
             borderRadius: '8px', 
-            border: '1px solid #D1D9E2', 
+            border: error ? '1.5px solid #FF4D4D' : '1px solid #D1D9E2', 
             display: 'flex', 
             alignItems: 'center', 
             padding: '0 16px',
             position: 'relative',
             background: 'white',
-            transition: 'border-color 0.2s'
+            transition: 'all 0.2s',
+            boxShadow: error ? '0 0 0 1px rgba(255, 77, 77, 0.1)' : 'none'
         }}>
             <input 
                 type={type}
@@ -58,6 +60,7 @@ const InputContainer = ({ label, value, onChange, type = "text", selector = fals
                 </div>
             )}
         </div>
+        {error && <span style={{ color: '#FF4D4D', fontSize: '11px', marginTop: '6px', display: 'block', fontWeight: 500, letterSpacing: '0.02em' }}>CAMPO OBRIGATÓRIO</span>}
     </div>
 );
 
@@ -169,12 +172,89 @@ const TimeSelector = ({ value, onChange }: any) => {
     );
 };
 
+const WelcomeModal = ({ onClose }: { onClose: () => void }) => (
+    <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.4)',
+        backdropFilter: 'blur(4px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 9999,
+        animation: 'fadeIn 0.3s ease'
+    }}>
+        <div style={{
+            backgroundColor: 'white',
+            borderRadius: '16px',
+            padding: '48px',
+            maxWidth: '500px',
+            textAlign: 'center',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
+            animation: 'slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
+        }}>
+            <h2 style={{ 
+                fontSize: '24px', 
+                fontWeight: 700, 
+                color: '#253D4E', 
+                marginBottom: '16px' 
+            }}>
+                Bem-vindo ao ClickPet!
+            </h2>
+            <p style={{ 
+                fontSize: '16px', 
+                color: '#757575', 
+                lineHeight: '1.6', 
+                marginBottom: '32px' 
+            }}>
+                Para que seu petshop seja completamente registrado e apareça para os clientes, 
+                precisamos que você informe alguns dados básicos de localização e contato.
+            </p>
+            <button 
+                onClick={onClose}
+                style={{
+                    width: '100%',
+                    height: '52px',
+                    borderRadius: '10px',
+                    backgroundColor: '#3BB77E',
+                    color: 'white',
+                    border: 'none',
+                    fontSize: '14px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    transition: 'transform 0.2s, background 0.2s',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = '#35a570')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = '#3BB77E')}
+            >
+                VAMOS COMEÇAR
+            </button>
+        </div>
+        <style jsx>{`
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            @keyframes slideUp {
+                from { opacity: 0; transform: translateY(20px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+        `}</style>
+    </div>
+);
+
 export default function PartnerSettings() {
-    const { data: session } = useSession();
+    const pathname = usePathname();
+    const { data: session, update } = useSession();
     const { showToast } = useToast();
     const [loading, setLoading] = useState(false);
     const [initialData, setInitialData] = useState<any>(null);
     const [showKeyTypeDropdown, setShowKeyTypeDropdown] = useState(false);
+    const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+    const [validationErrors, setValidationErrors] = useState<string[]>([]);
     const [formData, setFormData] = useState({
         // ... (state preserved)
         phone: '',
@@ -210,9 +290,10 @@ export default function PartnerSettings() {
         address: {
             street: '',
             number: '',
+            neighborhood: '',
             city: '',
             state: '',
-            zipCode: '',
+            zip: '',
             coordinates: {
                 lat: -23.550520,
                 lng: -46.633308
@@ -221,6 +302,14 @@ export default function PartnerSettings() {
     });
 
     useEffect(() => {
+        // Toggle welcome modal if profile is incomplete AND not dismissed for THIS user
+        if (session?.user?.id) {
+            const isDismissed = localStorage.getItem(`clickpet_welcome_dismissed_${session.user.id}`) === 'true';
+            if (!session.user.isProfileComplete && !isDismissed) {
+                setShowWelcomeModal(true);
+            }
+        }
+
         fetch('/api/profile')
             .then(res => res.json())
             .then(data => {
@@ -246,9 +335,10 @@ export default function PartnerSettings() {
                     address: {
                         street: data.address?.street || '',
                         number: data.address?.number || '',
+                        neighborhood: data.address?.neighborhood || '',
                         city: data.address?.city || '',
                         state: data.address?.state || '',
-                        zipCode: data.address?.zipCode || data.address?.zip || '',
+                        zip: data.address?.zip || data.address?.zipCode || '',
                         coordinates: {
                             lat: data.address?.coordinates?.coordinates?.[1] ?? -23.550520,
                             lng: data.address?.coordinates?.coordinates?.[0] ?? -46.633308
@@ -258,7 +348,7 @@ export default function PartnerSettings() {
                 setInitialData(formatted);
                 setFormData(formatted);
             });
-    }, []);
+    }, [session]);
 
     const handleDiscard = () => {
         if (initialData) {
@@ -269,6 +359,23 @@ export default function PartnerSettings() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        
+        const errors: string[] = [];
+        if (!formData.phone || formData.phone.length < 14) errors.push('phone');
+        if (!formData.address.street) errors.push('street');
+        if (!formData.address.number) errors.push('number');
+        if (!formData.address.city) errors.push('city');
+        if (!formData.address.neighborhood) errors.push('neighborhood');
+        if (!formData.address.zip || formData.address.zip.length < 9) errors.push('zip');
+
+        if (errors.length > 0) {
+            setValidationErrors(errors);
+            showToast('Por favor, preencha todos os campos obrigatórios', 'error');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+        }
+
+        setValidationErrors([]);
         setLoading(true);
 
         try {
@@ -298,6 +405,7 @@ export default function PartnerSettings() {
             if (res.ok) {
                 showToast('Informações atualizadas com sucesso!');
                 setInitialData(formData);
+                await update();
             } else {
                 showToast('Erro ao atualizar informações', 'error');
             }
@@ -335,6 +443,17 @@ export default function PartnerSettings() {
 
     return (
         <div style={{ padding: '32px', background: 'white', minHeight: '100vh' }}>
+            {showWelcomeModal && (
+                <WelcomeModal 
+                    onClose={() => {
+                        if (session?.user?.id) {
+                            localStorage.setItem(`clickpet_welcome_dismissed_${session.user.id}`, 'true');
+                        }
+                        setShowWelcomeModal(false);
+                    }} 
+                />
+            )}
+            
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '48px' }}>
                 <h1 style={{ fontSize: '14px', color: '#253D4E', fontWeight: 400, margin: 0, letterSpacing: '0.05em' }}>CONFIGURAÇÕES</h1>
@@ -384,10 +503,11 @@ export default function PartnerSettings() {
                     <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#253D4E', marginBottom: '32px' }}>INFORMAÇÕES DO NEGÓCIO</h2>
                     
                     <InputContainer 
-                        label="TELEFONE"
+                        label={<>TELEFONE <span style={{ color: '#FF4D4D' }}>*</span></>}
                         value={formData.phone}
                         onChange={(e: any) => setFormData({ ...formData, phone: maskPhone(e.target.value) })}
                         placeholder="(00) 00000-0000"
+                        error={validationErrors.includes('phone')}
                     />
 
                     <InputContainer 
@@ -729,15 +849,18 @@ export default function PartnerSettings() {
                             {/* Row 1: Street and Number */}
                             <div style={{ display: 'flex', gap: '24px' }}>
                                 <div style={{ flex: 3 }}>
-                                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 400, color: '#757575', marginBottom: '8px' }}>RUA</label>
+                                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 400, color: '#757575', marginBottom: '8px' }}>
+                                        RUA <span style={{ color: '#FF4D4D' }}>*</span>
+                                    </label>
                                     <div style={{ 
                                         height: '52px', 
                                         borderRadius: '8px', 
-                                        border: '1px solid #D1D9E2', 
+                                        border: validationErrors.includes('street') ? '1.5px solid #FF4D4D' : '1px solid #D1D9E2', 
                                         display: 'flex', 
                                         alignItems: 'center', 
                                         padding: '0 16px',
-                                        background: 'white'
+                                        background: 'white',
+                                        boxShadow: validationErrors.includes('street') ? '0 0 0 1px rgba(255, 77, 77, 0.1)' : 'none'
                                     }}>
                                         <input 
                                             type="text"
@@ -750,17 +873,21 @@ export default function PartnerSettings() {
                                             placeholder="NOME DA RUA / AVENIDA"
                                         />
                                     </div>
+                                    {validationErrors.includes('street') && <span style={{ color: '#FF4D4D', fontSize: '10px', marginTop: '4px', display: 'block', fontWeight: 500 }}>Campo Obrigatório</span>}
                                 </div>
                                 <div style={{ flex: 1 }}>
-                                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 400, color: '#757575', marginBottom: '8px' }}>NÚMERO</label>
+                                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 400, color: '#757575', marginBottom: '8px' }}>
+                                        NÚMERO <span style={{ color: '#FF4D4D' }}>*</span>
+                                    </label>
                                     <div style={{ 
                                         height: '52px', 
                                         borderRadius: '8px', 
-                                        border: '1px solid #D1D9E2', 
+                                        border: validationErrors.includes('number') ? '1.5px solid #FF4D4D' : '1px solid #D1D9E2', 
                                         display: 'flex', 
                                         alignItems: 'center', 
                                         padding: '0 16px',
-                                        background: 'white'
+                                        background: 'white',
+                                        boxShadow: validationErrors.includes('number') ? '0 0 0 1px rgba(255, 77, 77, 0.1)' : 'none'
                                     }}>
                                         <input 
                                             type="text"
@@ -773,21 +900,52 @@ export default function PartnerSettings() {
                                             placeholder="S/N"
                                         />
                                     </div>
+                                    {validationErrors.includes('number') && <span style={{ color: '#FF4D4D', fontSize: '10px', marginTop: '4px', display: 'block', fontWeight: 500 }}>Campo Obrigatório</span>}
                                 </div>
                             </div>
 
-                            {/* Row 2: City and CEP */}
+                            {/* Row 2: Neighborhood and City */}
                             <div style={{ display: 'flex', gap: '24px' }}>
                                 <div style={{ flex: 1 }}>
-                                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 400, color: '#757575', marginBottom: '8px' }}>CIDADE</label>
+                                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 400, color: '#757575', marginBottom: '8px' }}>
+                                        BAIRRO <span style={{ color: '#FF4D4D' }}>*</span>
+                                    </label>
                                     <div style={{ 
                                         height: '52px', 
                                         borderRadius: '8px', 
-                                        border: '1px solid #D1D9E2', 
+                                        border: validationErrors.includes('neighborhood') ? '1.5px solid #FF4D4D' : '1px solid #D1D9E2', 
                                         display: 'flex', 
                                         alignItems: 'center', 
                                         padding: '0 16px',
-                                        background: 'white'
+                                        background: 'white',
+                                        boxShadow: validationErrors.includes('neighborhood') ? '0 0 0 1px rgba(255, 77, 77, 0.1)' : 'none'
+                                    }}>
+                                        <input 
+                                            type="text"
+                                            value={formData.address.neighborhood}
+                                            onChange={(e) => setFormData({
+                                                ...formData,
+                                                address: { ...formData.address, neighborhood: e.target.value }
+                                            })}
+                                            style={{ border: 'none', outline: 'none', width: '100%', fontSize: '14px', color: '#253D4E', background: 'transparent' }}
+                                            placeholder="NOME DO BAIRRO"
+                                        />
+                                    </div>
+                                    {validationErrors.includes('neighborhood') && <span style={{ color: '#FF4D4D', fontSize: '10px', marginTop: '4px', display: 'block', fontWeight: 500 }}>Campo Obrigatório</span>}
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 400, color: '#757575', marginBottom: '8px' }}>
+                                        CIDADE <span style={{ color: '#FF4D4D' }}>*</span>
+                                    </label>
+                                    <div style={{ 
+                                        height: '52px', 
+                                        borderRadius: '8px', 
+                                        border: validationErrors.includes('city') ? '1.5px solid #FF4D4D' : '1px solid #D1D9E2', 
+                                        display: 'flex', 
+                                        alignItems: 'center', 
+                                        padding: '0 16px',
+                                        background: 'white',
+                                        boxShadow: validationErrors.includes('city') ? '0 0 0 1px rgba(255, 77, 77, 0.1)' : 'none'
                                     }}>
                                         <input 
                                             type="text"
@@ -800,49 +958,62 @@ export default function PartnerSettings() {
                                             placeholder="NOME DA CIDADE"
                                         />
                                     </div>
+                                    {validationErrors.includes('city') && <span style={{ color: '#FF4D4D', fontSize: '10px', marginTop: '4px', display: 'block', fontWeight: 500 }}>Campo Obrigatório</span>}
                                 </div>
+                            </div>
+
+                            {/* Row 3: CEP */}
+                            <div style={{ display: 'flex', gap: '24px' }}>
                                 <div style={{ flex: 1 }}>
-                                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 400, color: '#757575', marginBottom: '8px' }}>CEP</label>
+                                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 400, color: '#757575', marginBottom: '8px' }}>
+                                        CEP <span style={{ color: '#FF4D4D' }}>*</span>
+                                    </label>
                                     <div style={{ 
                                         height: '52px', 
                                         borderRadius: '8px', 
-                                        border: '1px solid #D1D9E2', 
+                                        border: validationErrors.includes('zip') ? '1.5px solid #FF4D4D' : '1px solid #D1D9E2', 
                                         display: 'flex', 
                                         alignItems: 'center', 
                                         padding: '0 16px',
-                                        background: 'white'
+                                        background: 'white',
+                                        boxShadow: validationErrors.includes('zip') ? '0 0 0 1px rgba(255, 77, 77, 0.1)' : 'none'
                                     }}>
                                         <input 
                                             type="text"
-                                            value={formData.address.zipCode}
+                                            value={formData.address.zip}
                                             onChange={async (e) => {
                                                 const zip = maskZip(e.target.value);
-                                                setFormData({
-                                                    ...formData,
-                                                    address: { ...formData.address, zipCode: zip }
-                                                });
-
+                                                
+                                                setFormData(prev => ({
+                                                    ...prev,
+                                                    address: { ...prev.address, zip: zip }
+                                                }));
+ 
                                                 if (zip.length === 9) {
                                                     try {
                                                         const res = await fetch(`https://viacep.com.br/ws/${zip.replace('-', '')}/json/`);
                                                         const data = await res.json();
                                                         if (!data.erro) {
-                                                            const newAddress = {
-                                                                ...formData.address,
-                                                                street: data.logradouro,
-                                                                city: data.localidade,
-                                                                state: data.uf,
-                                                                zipCode: zip
-                                                            };
+                                                            const street = data.logradouro;
+                                                            const city = data.localidade;
+                                                            const state = data.uf;
+                                                            const neighborhood = data.bairro;
                                                             
                                                             setFormData(prev => ({
                                                                 ...prev,
-                                                                address: newAddress
+                                                                address: {
+                                                                    ...prev.address,
+                                                                    street: street || prev.address.street,
+                                                                    city: city || prev.address.city,
+                                                                    state: state || prev.address.state,
+                                                                    neighborhood: neighborhood || prev.address.neighborhood,
+                                                                    zip: zip
+                                                                }
                                                             }));
-
+ 
                                                             // Geocoding to center map
                                                             try {
-                                                                const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(`${data.logradouro}, ${data.localidade}, ${data.uf}, Brasil`)}`);
+                                                                const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(`${street}, ${city}, ${state}, Brasil`)}`);
                                                                 const geoData = await geoRes.json();
                                                                 if (geoData && geoData.length > 0) {
                                                                     const { lat, lon } = geoData[0];
@@ -867,6 +1038,7 @@ export default function PartnerSettings() {
                                             placeholder="00000-000"
                                         />
                                     </div>
+                                    {validationErrors.includes('zip') && <span style={{ color: '#FF4D4D', fontSize: '10px', marginTop: '4px', display: 'block', fontWeight: 500 }}>Campo Obrigatório</span>}
                                 </div>
                             </div>
                         </div>
@@ -922,8 +1094,9 @@ export default function PartnerSettings() {
                                             }
 
                                             const zip = postcode ? maskZip(postcode) : '';
-                                            console.log('Reverse Geocode Result:', { address: data.address, zip, postcodeSource: postcode ? 'found' : 'missing' });
-
+                                            const neighborhood = data.address.suburb || data.address.neighbourhood || data.address.city_district || '';
+                                            console.log('Reverse Geocode Result:', { address: data.address, zip, neighborhood, postcodeSource: postcode ? 'found' : 'missing' });
+ 
                                             setFormData(prev => ({
                                                 ...prev,
                                                 address: {
@@ -932,7 +1105,8 @@ export default function PartnerSettings() {
                                                     number: number || prev.address.number,
                                                     city: city || prev.address.city,
                                                     state: data.address.state || prev.address.state,
-                                                    zipCode: zip || prev.address.zipCode
+                                                    zip: zip || prev.address.zip,
+                                                    neighborhood: neighborhood || prev.address.neighborhood
                                                 }
                                             }));
                                         }
@@ -944,6 +1118,38 @@ export default function PartnerSettings() {
                             />
                         </div>
                     </div>
+                </div>
+
+                {/* Footer Save Button */}
+                <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'flex-end', 
+                    padding: '48px 0', 
+                    marginTop: '48px',
+                    borderTop: '1px solid #F0F0F0'
+                }}>
+                    <button 
+                        onClick={handleSubmit}
+                        disabled={loading}
+                        style={{ 
+                            width: '280px', 
+                            height: '48px', 
+                            borderRadius: '8px', 
+                            border: 'none', 
+                            background: '#3BB77E', 
+                            color: '#F9FBFD', 
+                            fontSize: '14px', 
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            opacity: loading ? 0.7 : 1,
+                            boxShadow: '0 4px 12px rgba(59, 183, 126, 0.2)'
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = '#35a570')}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = '#3BB77E')}
+                    >
+                        {loading ? 'SALVANDO...' : 'SALVAR INFORMAÇÕES'}
+                    </button>
                 </div>
             </div>
         </div>

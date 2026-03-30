@@ -3,6 +3,8 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import dbConnect from "@/lib/db";
 import User from "@/models/User";
 import bcrypt from "bcryptjs";
+import GoogleProvider from "next-auth/providers/google";
+import FacebookProvider from "next-auth/providers/facebook";
 import speakeasy from "speakeasy";
 
 export const authOptions: NextAuthOptions = {
@@ -71,35 +73,95 @@ export const authOptions: NextAuthOptions = {
                 };
             },
         }),
+        GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID!,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+        }),
+        FacebookProvider({
+            clientId: process.env.FACEBOOK_CLIENT_ID!,
+            clientSecret: process.env.FACEBOOK_CLIENT_SECRET!,
+        }),
     ],
     callbacks: {
+        async signIn({ user, account }: any) {
+            if (account.provider === "google" || account.provider === "facebook") {
+                await dbConnect();
+                
+                // Try to find the user by email
+                let dbUser = await User.findOne({ email: user.email });
+
+                if (!dbUser) {
+                    // Create a new user with default 'customer' role
+                    dbUser = await User.create({
+                        name: user.name,
+                        email: user.email,
+                        image: user.image,
+                        role: 'customer'
+                    });
+                }
+                
+                // Attach custom fields to use in the jwt callback
+                user.id = dbUser._id.toString();
+                user.role = dbUser.role;
+                return true;
+            }
+            return true;
+        },
         async jwt({ token, user }: any) {
             if (user) {
                 token.role = user.role;
                 token.id = user.id;
                 token.tokenVersion = user.tokenVersion;
 
-                // Fetch subscription data for partners
+                // Initial fetch for subscription and profile
                 if (user.role === 'partner') {
                     await dbConnect();
                     const Subscription = (await import('@/models/Subscription')).default;
                     const subscription = await Subscription.findOne({ partnerId: user.id }).lean() as any;
+                    
+                    const dbUser = await User.findById(user.id) as any;
+                    
+                    if (subscription) {
+                        token.subscriptionStatus = subscription.status;
+                        token.subscriptionPlan = subscription.plan;
+                    }
+                    
+                    // Strict check for profile completeness (address fields + phone)
+                    const addr = dbUser?.address;
+                    token.isProfileComplete = !!(dbUser?.phone && addr?.street && addr?.number && addr?.city && addr?.neighborhood && (addr?.zip || addr?.zipCode));
+                }
+            } else if (token.id && token.role === 'partner') {
+                // Refresh subscription and profile data on every JWT refresh for partners
+                try {
+                    await dbConnect();
+                    
+                    const [dbUser, subscription] = await Promise.all([
+                        User.findById(token.id).select('tokenVersion address phone') as any,
+                        (await import('@/models/Subscription')).default.findOne({ partnerId: token.id }).lean() as any
+                    ]);
+
+                    // Verify token version (logout invalidation)
+                    if (!dbUser || dbUser.tokenVersion !== token.tokenVersion) {
+                        return null as any;
+                    }
 
                     if (subscription) {
                         token.subscriptionStatus = subscription.status;
                         token.subscriptionPlan = subscription.plan;
                     }
+                    
+                    // Refresh profile status (strict check)
+                    const addr = dbUser?.address;
+                    token.isProfileComplete = !!(dbUser?.phone && addr?.street && addr?.number && addr?.city && addr?.neighborhood && (addr?.zip || addr?.zipCode));
+                } catch (error) {
+                    console.error("JWT Refresh Error:", error);
                 }
-            } else {
-                // Verify token version for server-side logout invalidation
+            } else if (token.id) {
+                // For regular users, just check token version
                 await dbConnect();
-                // Exclude encrypted fields here too
-                const dbUser = await User.findById(token.id)
-                    .select('tokenVersion')
-                    .lean() as any;
-
+                const dbUser = await User.findById(token.id).select('tokenVersion').lean() as any;
                 if (!dbUser || dbUser.tokenVersion !== token.tokenVersion) {
-                    return null as any; // Invalidates the token
+                    return null as any;
                 }
             }
             return token;
@@ -110,6 +172,7 @@ export const authOptions: NextAuthOptions = {
                 session.user.id = token.id;
                 session.user.subscriptionStatus = token.subscriptionStatus;
                 session.user.subscriptionPlan = token.subscriptionPlan;
+                session.user.isProfileComplete = token.isProfileComplete;
             }
             return session;
         },

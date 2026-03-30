@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Upload, Plus, Trash2 } from 'lucide-react';
 import styles from './ServiceModal.module.css';
 import { useToast } from '@/context/ToastContext';
@@ -15,9 +15,10 @@ interface ServiceModalProps {
     onClose: () => void;
     partnerId: string;
     onSuccess: () => void;
+    service?: any;
 }
 
-export default function ServiceModal({ isOpen, onClose, partnerId, onSuccess }: ServiceModalProps) {
+export default function ServiceModal({ isOpen, onClose, partnerId, onSuccess, service }: ServiceModalProps) {
     const { showToast } = useToast();
     const [isSaving, setIsSaving] = useState(false);
     const [formData, setFormData] = useState({
@@ -33,6 +34,40 @@ export default function ServiceModal({ isOpen, onClose, partnerId, onSuccess }: 
             { size: 'large', price: '' },
         ] as PriceRow[]
     });
+ 
+    useEffect(() => {
+        if (isOpen && service) {
+            setFormData({
+                name: service.name || '',
+                description: service.description || '',
+                category: service.category || 'bath',
+                species: service.species || 'all',
+                duration: service.duration?.toString() || '',
+                image: service.image || '',
+                prices: service.prices && service.prices.length > 0
+                    ? service.prices.map((p: any) => ({ size: p.size, price: p.price?.toString() || '' }))
+                    : [
+                        { size: 'small', price: '' },
+                        { size: 'medium', price: '' },
+                        { size: 'large', price: '' },
+                    ] as PriceRow[]
+            });
+        } else if (isOpen && !service) {
+            setFormData({
+                name: '',
+                description: '',
+                category: 'bath',
+                species: 'all',
+                duration: '',
+                image: '',
+                prices: [
+                    { size: 'small', price: '' },
+                    { size: 'medium', price: '' },
+                    { size: 'large', price: '' },
+                ] as PriceRow[]
+            });
+        }
+    }, [isOpen, service]);
 
     if (!isOpen) return null;
 
@@ -75,28 +110,38 @@ export default function ServiceModal({ isOpen, onClose, partnerId, onSuccess }: 
         e.preventDefault();
         setIsSaving(true);
 
+        // Filter and format prices
+        const formattedPrices = formData.prices
+            .filter(p => p.price && p.price.trim() !== '')
+            .map(p => ({
+                size: p.size,
+                price: Number(p.price)
+            }));
+ 
         const submitData = {
             ...formData,
             partnerId,
-            price: Number(formData.prices[0]?.price) || 0 // Legacy support if needed
+            duration: formData.duration ? Number(formData.duration) : undefined,
+            prices: formattedPrices,
+            price: formattedPrices[0]?.price || 0
         };
 
         try {
-            const res = await fetch('/api/services', {
-                method: 'POST',
+            const res = await fetch(service?._id ? `/api/services/${service._id}` : '/api/services', {
+                method: service?._id ? 'PUT' : 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(submitData),
             });
 
             if (res.ok) {
-                showToast('Serviço criado com sucesso!');
+                showToast(service?._id ? 'Serviço atualizado com sucesso!' : 'Serviço criado com sucesso!');
                 onSuccess();
                 onClose();
             } else {
-                showToast('Erro ao criar serviço', 'error');
+                showToast(service?._id ? 'Erro ao atualizar serviço' : 'Erro ao criar serviço', 'error');
             }
         } catch (error) {
-            showToast('Erro ao criar serviço', 'error');
+            showToast(service?._id ? 'Erro ao atualizar serviço' : 'Erro ao criar serviço', 'error');
         } finally {
             setIsSaving(false);
         }
@@ -106,7 +151,7 @@ export default function ServiceModal({ isOpen, onClose, partnerId, onSuccess }: 
         <div className={styles.modalOverlay} onClick={onClose}>
             <div className={styles.modalContent} style={{ maxWidth: 640 }} onClick={(e) => e.stopPropagation()}>
                 <div className={styles.modalHeader}>
-                    <h2 className={styles.modalTitle}>NOVO SERVIÇO</h2>
+                    <h2 className={styles.modalTitle}>{service?._id ? 'EDITAR SERVIÇO' : 'NOVO SERVIÇO'}</h2>
                     <button className={styles.modalCloseBtn} onClick={onClose}>
                         <X size={20} />
                     </button>
@@ -212,10 +257,11 @@ export default function ServiceModal({ isOpen, onClose, partnerId, onSuccess }: 
                                             value={priceItem.size}
                                             onChange={e => handlePriceChange(index, 'size', e.target.value)}
                                         >
+                                            <option value="mini">Mini</option>
                                             <option value="small">Pequeno</option>
                                             <option value="medium">Médio</option>
                                             <option value="large">Grande</option>
-                                            <option value="xlarge">Extra Grande</option>
+                                            <option value="giant">Gigante</option>
                                         </select>
                                         <input
                                             type="number"
@@ -244,7 +290,7 @@ export default function ServiceModal({ isOpen, onClose, partnerId, onSuccess }: 
                                 className={styles.formSubmitBtn}
                                 disabled={isSaving}
                             >
-                                {isSaving ? 'SALVANDO...' : 'CRIAR SERVIÇO'}
+                                {isSaving ? 'SALVANDO...' : (service?._id ? 'SALVAR ALTERAÇÕES' : 'CRIAR SERVIÇO')}
                             </button>
                         </div>
                     </div>

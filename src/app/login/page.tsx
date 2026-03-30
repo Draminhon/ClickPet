@@ -91,8 +91,10 @@ export default function Login() {
 
             <div className={styles.formColumn}>
                 <div className={styles.topSection}>
-                    <h1 className={styles.title}>ClickPet</h1>
-                    <p className={styles.subtitle}>Crie uma conta e aproveite nossas inumera ofertas pra você</p>
+                    <Link href="/" className={styles.title} style={{ color: '#3BB77E', fontWeight: 800, textDecoration: 'none' }}>
+                        ClickPet<span style={{ color: '#253D4E' }}>.</span>
+                    </Link>
+                    <p className={styles.subtitle}>Crie uma conta e aproveite nossas inúmeras ofertas pra você</p>
 
                     <form className={styles.form} onSubmit={handleContinue}>
                         <div className={styles.inputGroup}>
@@ -129,7 +131,7 @@ export default function Login() {
 
                 <div className={styles.dividerContainer}>
                     <div className={styles.divider}></div>
-                    <span className={styles.dividerText}>Ou</span>
+                    <span className={styles.dividerText}>ou</span>
                     <div className={styles.divider}></div>
                 </div>
 
@@ -144,6 +146,10 @@ export default function Login() {
                             <span className={styles.socialText}>Entre com Facebook</span>
                         </button>
                     </div>
+
+                    <p className={styles.registerLink}>
+                        Não tem uma conta? <Link href="/register">Cadastre-se</Link>
+                    </p>
                 </div>
             </div>
         </div>

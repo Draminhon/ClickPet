@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Upload } from 'lucide-react';
 import styles from './ProductModal.module.css';
 import { useToast } from '@/context/ToastContext';
@@ -10,9 +10,10 @@ interface ProductModalProps {
     onClose: () => void;
     partnerId: string;
     onSuccess: () => void;
+    product?: any;
 }
 
-export default function ProductModal({ isOpen, onClose, partnerId, onSuccess }: ProductModalProps) {
+export default function ProductModal({ isOpen, onClose, partnerId, onSuccess, product }: ProductModalProps) {
     const { showToast } = useToast();
     const [isSaving, setIsSaving] = useState(false);
     const [formData, setFormData] = useState({
@@ -31,6 +32,44 @@ export default function ProductModal({ isOpen, onClose, partnerId, onSuccess }: 
         unit: 'un',
         isActive: true,
     });
+ 
+    useEffect(() => {
+        if (isOpen && product) {
+            setFormData({
+                title: product.title || '',
+                description: product.description || '',
+                price: product.price?.toString() || '',
+                category: product.category || 'food',
+                image: product.image || '',
+                productType: product.productType || 'Produto',
+                subCategory: product.subCategory || 'Geral',
+                discount: product.discount?.toString() || '0',
+                weights: product.weights?.join(', ') || '',
+                stock: product.stock?.toString() || '0',
+                brand: product.brand || '',
+                sku: product.sku || '',
+                unit: product.unit || 'un',
+                isActive: product.isActive !== undefined ? product.isActive : true,
+            });
+        } else if (isOpen && !product) {
+            setFormData({
+                title: '',
+                description: '',
+                price: '',
+                category: 'food',
+                image: '',
+                productType: 'Produto',
+                subCategory: 'Geral',
+                discount: '0',
+                weights: '',
+                stock: '0',
+                brand: '',
+                sku: '',
+                unit: 'un',
+                isActive: true,
+            });
+        }
+    }, [isOpen, product]);
 
     if (!isOpen) return null;
 
@@ -64,21 +103,21 @@ export default function ProductModal({ isOpen, onClose, partnerId, onSuccess }: 
         };
 
         try {
-            const res = await fetch('/api/products', {
-                method: 'POST',
+            const res = await fetch(product?._id ? `/api/products/${product._id}` : '/api/products', {
+                method: product?._id ? 'PUT' : 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(submitData),
             });
 
             if (res.ok) {
-                showToast('Produto criado com sucesso!');
+                showToast(product?._id ? 'Produto atualizado com sucesso!' : 'Produto criado com sucesso!');
                 onSuccess();
                 onClose();
             } else {
-                showToast('Erro ao criar produto', 'error');
+                showToast(product?._id ? 'Erro ao atualizar produto' : 'Erro ao criar produto', 'error');
             }
         } catch (error) {
-            showToast('Erro ao criar produto', 'error');
+            showToast(product?._id ? 'Erro ao atualizar produto' : 'Erro ao criar produto', 'error');
         } finally {
             setIsSaving(false);
         }
@@ -88,7 +127,7 @@ export default function ProductModal({ isOpen, onClose, partnerId, onSuccess }: 
         <div className={styles.modalOverlay} onClick={onClose}>
             <div className={styles.modalContent} style={{ maxWidth: 640 }} onClick={(e) => e.stopPropagation()}>
                 <div className={styles.modalHeader}>
-                    <h2 className={styles.modalTitle}>NOVO PRODUTO</h2>
+                    <h2 className={styles.modalTitle}>{product?._id ? 'EDITAR PRODUTO' : 'NOVO PRODUTO'}</h2>
                     <button className={styles.modalCloseBtn} onClick={onClose}>
                         <X size={20} />
                     </button>
@@ -253,7 +292,7 @@ export default function ProductModal({ isOpen, onClose, partnerId, onSuccess }: 
                                 className={styles.formSubmitBtn}
                                 disabled={isSaving}
                             >
-                                {isSaving ? 'SALVANDO...' : 'CRIAR PRODUTO'}
+                                {isSaving ? 'SALVANDO...' : (product?._id ? 'SALVAR ALTERAÇÕES' : 'CRIAR PRODUTO')}
                             </button>
                         </div>
                     </div>

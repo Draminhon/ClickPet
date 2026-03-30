@@ -94,7 +94,7 @@ export default function AdminLayout({
                     </Link>
 
                     <button
-                        onClick={() => signOut({ callbackUrl: '/login' })}
+                        onClick={() => signOut({ callbackUrl: '/' })}
                         style={{
                             display: 'flex',
                             alignItems: 'center',

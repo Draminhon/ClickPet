@@ -1,0 +1,152 @@
+﻿node.exe : (node:2668) 
+[MONGOOSE] Warning: 
+Duplicate schema index on 
+{"code":1} found. This is 
+often due to declaring an 
+index using both "index: 
+true" and 
+"schema.index()". Please 
+remove the duplicate index 
+definition.
+No linha:1 caractere:1
++ & "C:\Program 
+Files\nodejs/node.exe" "C:\
+Users\brito\AppData\Roaming
+\ ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
+    + CategoryInfo         
+     : NotSpecified: ((no  
+  de:2668) [MO...dex def   
+ inition.:String) [], R    
+emoteException
+    + FullyQualifiedErrorI 
+   d : NativeCommandError
+ 
+(Use `node 
+--trace-warnings ...` to 
+show where the warning was 
+created)
+FAIL tests/security_exploit
+s.test.ts
+  Security Exploit 
+Verifications
+    Order Price Tampering 
+(Critical)
+      ├ù should NOT allow 
+arbitrary discounts sent 
+by the client (149 ms)
+      ├ù should validate 
+coupon and calculate 
+discount on server (23 ms)
+    Product Mass 
+Assignment (High)
+      ├ù should NOT allow 
+setting rating or 
+salesCount on creation (61 
+ms)
+    Review XSS (Medium)
+      ÔêÜ should sanitize 
+HTML in review comments 
+(25 ms)
+
+  ÔùÅ Security Exploit 
+Verifications ÔÇ║ Order 
+Price Tampering (Critical) 
+ÔÇ║ should NOT allow 
+arbitrary discounts sent 
+by the client
+
+    ValidationError: 
+Product validation failed: 
+description: Please 
+provide a description
+
+      at 
+model.Document.invalidate (
+node_modules/mongoose/lib/d
+ocument.js:3362:32)
+      at node_modules/mongo
+ose/lib/document.js:3123:17
+      at node_modules/mongo
+ose/lib/schemaType.js:1446:
+9
+
+  ÔùÅ Security Exploit 
+Verifications ÔÇ║ Order 
+Price Tampering (Critical) 
+ÔÇ║ should validate coupon 
+and calculate discount on 
+server
+
+    ValidationError: 
+Product validation failed: 
+description: Please 
+provide a description
+
+      at 
+model.Document.invalidate (
+node_modules/mongoose/lib/d
+ocument.js:3362:32)
+      at node_modules/mongo
+ose/lib/document.js:3123:17
+      at node_modules/mongo
+ose/lib/schemaType.js:1446:
+9
+
+  ÔùÅ Security Exploit 
+Verifications ÔÇ║ Product 
+Mass Assignment (High) ÔÇ║ 
+should NOT allow setting 
+rating or salesCount on 
+creation
+
+    TypeError: Cannot read 
+properties of null 
+(reading 'rating')
+
+    [0m [90m 131 |[39m
+     [90m 132 |[39m      
+       [36mconst[39m 
+savedProduct [33m=[39m 
+[36mawait[39m [33mProduc
+t[39m[33m.[39mfindById(d
+ata[33m.[39m_id)[33m;[3
+9m
+    
+[31m[1m>[22m[39m[90m 
+133 |[39m             expe
+ct(savedProduct[33m.[39mr
+ating)[33m.[39mtoBe([35m
+0[39m)[33m;[39m
+     [90m     |[39m      
+                           
+[31m[1m^[22m[39m
+     [90m 134 |[39m      
+       expect(savedProduct
+[33m.[39mreviewCount)[33m
+.[39mtoBe([35m0[39m)[33
+m;[39m
+     [90m 135 |[39m      
+       expect(savedProduct
+[33m.[39msalesCount)[33m.
+[39mtoBe([35m0[39m)[33m
+;[39m
+     [90m 136 |[39m      
+   })[33m;[39m[0m
+
+      at 
+Object.<anonymous> (tests/s
+ecurity_exploits.test.ts:13
+3:33)
+
+Test Suites: 1 failed, 1 
+total
+Tests:       3 failed, 1 
+passed, 4 total
+Snapshots:   0 total
+Time:        2.526 s
+Ran all test suites 
+matching tests/security_exp
+loits.test.ts.

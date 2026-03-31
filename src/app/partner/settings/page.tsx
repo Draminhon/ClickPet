@@ -257,6 +257,7 @@ export default function PartnerSettings() {
     const [validationErrors, setValidationErrors] = useState<string[]>([]);
     const [formData, setFormData] = useState({
         // ... (state preserved)
+        cnpj: '',
         phone: '',
         minimumOrderValue: '0',
         deliveryRadius: '10',
@@ -314,6 +315,7 @@ export default function PartnerSettings() {
             .then(res => res.json())
             .then(data => {
                 const formatted = {
+                    cnpj: data.cnpj || '',
                     phone: data.phone || '',
                     minimumOrderValue: data.minimumOrderValue?.toString() || '0',
                     deliveryRadius: data.deliveryRadius?.toString() || '10',
@@ -361,6 +363,7 @@ export default function PartnerSettings() {
         e.preventDefault();
         
         const errors: string[] = [];
+        if (!formData.cnpj || formData.cnpj.replace(/\D/g, '').length < 14) errors.push('cnpj');
         if (!formData.phone || formData.phone.length < 14) errors.push('phone');
         if (!formData.address.street) errors.push('street');
         if (!formData.address.number) errors.push('number');
@@ -383,6 +386,7 @@ export default function PartnerSettings() {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
+                    cnpj: formData.cnpj.replace(/\D/g, ''),
                     phone: formData.phone,
                     minimumOrderValue: parseFloat(formData.minimumOrderValue.replace(',', '.')),
                     deliveryRadius: parseFloat(formData.deliveryRadius),
@@ -508,6 +512,14 @@ export default function PartnerSettings() {
                         onChange={(e: any) => setFormData({ ...formData, phone: maskPhone(e.target.value) })}
                         placeholder="(00) 00000-0000"
                         error={validationErrors.includes('phone')}
+                    />
+
+                    <InputContainer 
+                        label={<>CNPJ <span style={{ color: '#FF4D4D' }}>*</span></>}
+                        value={formData.cnpj}
+                        onChange={(e: any) => setFormData({ ...formData, cnpj: maskCNPJ(e.target.value) })}
+                        placeholder="00.000.000/0000-00"
+                        error={validationErrors.includes('cnpj')}
                     />
 
                     <InputContainer 

@@ -17,13 +17,28 @@ export const authOptions: NextAuthOptions = {
                 twoFactorCode: { label: "2FA Token", type: "text" },
             },
             async authorize(credentials) {
+                const { headers } = await import("next/headers");
+                const headersList = await headers();
+                const ip = headersList.get("x-forwarded-for") || headersList.get("x-real-ip") || "127.0.0.1";
+                
+                const { authRateLimiter } = await import("@/lib/rateLimit");
+                const rateLimitResult = authRateLimiter.check(ip);
+                if (!rateLimitResult.success) {
+                    throw new Error("Muitas tentativas. Tente novamente em 5 minutos.");
+                }
+
                 if (!credentials?.email || !credentials?.password) {
                     throw new Error("Email e senha obrigatórios");
                 }
 
+                // Force Strings to prevent NoSQL Operator Injection payloads (e.g. { $gt: "" })
+                const emailStr = String(credentials.email);
+                const passwordStr = String(credentials.password);
+
                 await dbConnect();
-                // Exclude encrypted fields to prevent decryption errors during login
-                const user: any = await User.findOne({ email: credentials.email })
+                
+                // Exclude encrypted fields initially to prevent lean() decryption issues
+                const user: any = await User.findOne({ email: emailStr })
                     .select('-cnpj -phone -address -twoFactorSecret')
                     .lean();
 
@@ -36,7 +51,7 @@ export const authOptions: NextAuthOptions = {
                 }
 
                 const isPasswordValid = await bcrypt.compare(
-                    credentials.password,
+                    passwordStr,
                     user.password
                 );
 
@@ -50,19 +65,33 @@ export const authOptions: NextAuthOptions = {
                     throw new Error("Senha incorreta");
                 }
 
-                await User.findByIdAndUpdate(user._id, {
-                    failedLoginAttempts: 0,
-                    lockUntil: null
-                });
-
                 if (user.role === 'admin' && user.twoFactorEnabled) {
                     if (!credentials?.twoFactorCode) {
                         throw new Error("Código 2FA obrigatório para administradores");
                     }
-                    // Note: 2FA verification requires the secret, which is currently bypassed.
-                    // To fix truly, we'd need to decrypt only the secret here.
-                    // For now, we allow login to give the user access to fix the DB.
+                    
+                    // Fetch full document without lean() to trigger mongoose-field-encryption decryption
+                    const adminDoc = await User.findById(user._id);
+                    if (!adminDoc || !adminDoc.twoFactorSecret) {
+                        throw new Error("Configuração 2FA inválida no administrador");
+                    }
+
+                    const is2faValid = speakeasy.totp.verify({
+                        secret: adminDoc.twoFactorSecret,
+                        encoding: "base32",
+                        token: String(credentials.twoFactorCode),
+                        window: 1 // allows 30 seconds drift back/forward
+                    });
+
+                    if (!is2faValid) {
+                        throw new Error("Código 2FA inválido");
+                    }
                 }
+
+                await User.findByIdAndUpdate(user._id, {
+                    failedLoginAttempts: 0,
+                    lockUntil: null
+                });
 
                 return {
                     id: user._id.toString(),
@@ -76,6 +105,9 @@ export const authOptions: NextAuthOptions = {
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID!,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+            httpOptions: {
+                timeout: 10000,
+            },
         }),
         FacebookProvider({
             clientId: process.env.FACEBOOK_CLIENT_ID!,
@@ -85,89 +117,120 @@ export const authOptions: NextAuthOptions = {
     callbacks: {
         async signIn({ user, account }: any) {
             if (account.provider === "google" || account.provider === "facebook") {
-                await dbConnect();
-                
-                // Try to find the user by email
-                let dbUser = await User.findOne({ email: user.email });
+                try {
+                    await dbConnect();
+                    let dbUser = await User.findOne({ email: user.email });
 
-                if (!dbUser) {
-                    // Create a new user with default 'customer' role
-                    dbUser = await User.create({
-                        name: user.name,
-                        email: user.email,
-                        image: user.image,
-                        role: 'customer'
-                    });
+                    if (!dbUser) {
+                        const { cookies } = await import("next/headers");
+                        const cookieStore = await cookies();
+                        const intent = cookieStore.get('clickpet_register_intent')?.value;
+                        const roleToAssign = intent === 'partner' ? 'partner' : 'customer';
+
+                        dbUser = await User.create({
+                            name: user.name,
+                            email: user.email,
+                            image: user.image,
+                            role: roleToAssign
+                        });
+
+                        if (roleToAssign === 'partner') {
+                            const Subscription = (await import('@/models/Subscription')).default;
+                            await Subscription.create({
+                                partnerId: dbUser._id,
+                                plan: 'free',
+                                status: 'active',
+                                startDate: new Date(),
+                                endDate: new Date(Date.now() + 50 * 365 * 24 * 60 * 60 * 1000), // 50 years
+                                amount: 0,
+                                features: Subscription.getPlanFeatures('free'),
+                            });
+                        }
+                        cookieStore.delete('clickpet_register_intent');
+                    }
+                    user.id = dbUser._id.toString();
+                    user.role = dbUser.role;
+                    return true;
+                } catch (error) {
+                    console.error("[AUTH] OAuth SignIn Error:", error);
+                    return false;
                 }
-                
-                // Attach custom fields to use in the jwt callback
-                user.id = dbUser._id.toString();
-                user.role = dbUser.role;
-                return true;
             }
             return true;
         },
-        async jwt({ token, user }: any) {
+        async jwt({ token, user, account, trigger }: any) {
+            await dbConnect();
+
             if (user) {
-                token.role = user.role;
-                token.id = user.id;
-                token.tokenVersion = user.tokenVersion;
-
-                // Initial fetch for subscription and profile
-                if (user.role === 'partner') {
-                    await dbConnect();
-                    const Subscription = (await import('@/models/Subscription')).default;
-                    const subscription = await Subscription.findOne({ partnerId: user.id }).lean() as any;
-                    
-                    const dbUser = await User.findById(user.id) as any;
-                    
-                    if (subscription) {
-                        token.subscriptionStatus = subscription.status;
-                        token.subscriptionPlan = subscription.plan;
+                // Initial Login
+                token.lastRefreshed = Date.now();
+                if (account && account.provider !== 'credentials') {
+                    const dbUser = await User.findOne({ email: user.email }).lean() as any;
+                    if (dbUser) {
+                        token.id = dbUser._id.toString();
+                        token.role = dbUser.role;
+                        token.tokenVersion = dbUser.tokenVersion || 0;
+                        if (dbUser.role === 'partner') {
+                            const Subscription = (await import('@/models/Subscription')).default;
+                            const sub = await Subscription.findOne({ partnerId: dbUser._id }).lean() as any;
+                            if (sub) {
+                                token.subscriptionStatus = sub.status;
+                                token.subscriptionPlan = sub.plan;
+                            }
+                            const a = dbUser.address;
+                            token.isProfileComplete = !!(dbUser.cnpj && dbUser.phone && a?.street && a?.number && a?.city && a?.neighborhood && (a?.zip || a?.zipCode));
+                        }
                     }
-                    
-                    // Strict check for profile completeness (address fields + phone)
-                    const addr = dbUser?.address;
-                    token.isProfileComplete = !!(dbUser?.phone && addr?.street && addr?.number && addr?.city && addr?.neighborhood && (addr?.zip || addr?.zipCode));
-                }
-            } else if (token.id && token.role === 'partner') {
-                // Refresh subscription and profile data on every JWT refresh for partners
-                try {
-                    await dbConnect();
-                    
-                    const [dbUser, subscription] = await Promise.all([
-                        User.findById(token.id).select('tokenVersion address phone') as any,
-                        (await import('@/models/Subscription')).default.findOne({ partnerId: token.id }).lean() as any
-                    ]);
-
-                    // Verify token version (logout invalidation)
-                    if (!dbUser || dbUser.tokenVersion !== token.tokenVersion) {
-                        return null as any;
+                } else {
+                    token.role = user.role;
+                    token.id = user.id;
+                    token.tokenVersion = user.tokenVersion;
+                    if (user.role === 'partner') {
+                        const Subscription = (await import('@/models/Subscription')).default;
+                        const sub = await Subscription.findOne({ partnerId: user.id }).lean() as any;
+                        const dbUser = await User.findById(user.id).lean() as any;
+                        if (sub) {
+                            token.subscriptionStatus = sub.status;
+                            token.subscriptionPlan = sub.plan;
+                        }
+                        const a = dbUser?.address;
+                        token.isProfileComplete = !!(dbUser?.cnpj && dbUser?.phone && a?.street && a?.number && a?.city && a?.neighborhood && (a?.zip || a?.zipCode));
                     }
-
-                    if (subscription) {
-                        token.subscriptionStatus = subscription.status;
-                        token.subscriptionPlan = subscription.plan;
-                    }
-                    
-                    // Refresh profile status (strict check)
-                    const addr = dbUser?.address;
-                    token.isProfileComplete = !!(dbUser?.phone && addr?.street && addr?.number && addr?.city && addr?.neighborhood && (addr?.zip || addr?.zipCode));
-                } catch (error) {
-                    console.error("JWT Refresh Error:", error);
                 }
             } else if (token.id) {
-                // For regular users, just check token version
-                await dbConnect();
-                const dbUser = await User.findById(token.id).select('tokenVersion').lean() as any;
-                if (!dbUser || dbUser.tokenVersion !== token.tokenVersion) {
-                    return null as any;
+                const now = Date.now();
+                const shouldRefreshHeavy = trigger === "update" || (now - (token.lastRefreshed || 0) > 120000);
+
+                try {
+                    if (shouldRefreshHeavy) {
+                        const dbUser = await User.findById(token.id) as any;
+                        if (!dbUser || dbUser.tokenVersion !== token.tokenVersion) return {} as any;
+
+                        token.role = dbUser.role;
+                        token.lastRefreshed = now;
+                        if (dbUser.role === 'partner') {
+                            const Subscription = (await import('@/models/Subscription')).default;
+                            const sub = await Subscription.findOne({ partnerId: dbUser._id }).lean() as any;
+                            if (sub) {
+                                token.subscriptionStatus = sub.status;
+                                token.subscriptionPlan = sub.plan;
+                            }
+                            const a = dbUser.address;
+                            token.isProfileComplete = !!(dbUser.cnpj && dbUser.phone && a?.street && a?.number && a?.city && a?.neighborhood && (a?.zip || a?.zipCode));
+                        }
+                    } else {
+                        const dbUser = await User.findById(token.id).select('tokenVersion role').lean() as any;
+                        if (!dbUser || dbUser.tokenVersion !== token.tokenVersion) return {} as any;
+                        token.role = dbUser.role;
+                    }
+                } catch (e) {
+                    console.error("[AUTH] JWT Refresh Error:", e);
                 }
             }
             return token;
         },
         async session({ session, token }: any) {
-            if (session.user) {
+            if (session.user && token.id) {
                 session.user.role = token.role;
                 session.user.id = token.id;
                 session.user.subscriptionStatus = token.subscriptionStatus;
@@ -177,9 +240,7 @@ export const authOptions: NextAuthOptions = {
             return session;
         },
         async redirect({ url, baseUrl }: any) {
-            if (url.startsWith(baseUrl)) return url;
-            if (url.startsWith('/')) return `${baseUrl}${url}`;
-            return baseUrl;
+            return url.startsWith(baseUrl) ? url : url.startsWith('/') ? `${baseUrl}${url}` : baseUrl;
         },
     },
     pages: {
@@ -195,9 +256,9 @@ export const authOptions: NextAuthOptions = {
             name: process.env.NODE_ENV === "production" ? `__Secure-next-auth.session-token` : `next-auth.session-token`,
             options: {
                 httpOnly: true,
-                sameSite: "strict",
+                sameSite: "lax",
                 path: "/",
-                secure: true,
+                secure: process.env.NODE_ENV === "production",
             },
         },
     },

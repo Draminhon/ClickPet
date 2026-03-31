@@ -3,6 +3,7 @@ import dbConnect from '@/lib/db';
 import Review from '@/models/Review';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]/route";
+import { sanitizeObject } from '@/lib/sanitize';
 
 export async function POST(req: Request) {
     try {
@@ -25,8 +26,9 @@ export async function POST(req: Request) {
             return NextResponse.json({ message: 'Você já avaliou este item' }, { status: 400 });
         }
 
+        const sanitizedBody = sanitizeObject(body);
         const review = await Review.create({
-            ...body,
+            ...sanitizedBody,
             userId: session.user.id,
         });
 

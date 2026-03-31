@@ -126,10 +126,5 @@ OrderSchema.index({ userId: 1, createdAt: -1 });
 OrderSchema.index({ partnerId: 1, createdAt: -1 });
 OrderSchema.index({ status: 1 });
 
-// Force model refresh for schema changes in development
-if (process.env.NODE_ENV === 'development') {
-    delete mongoose.models.Order;
-}
-
 // Export with a fallback to the registered model
 export default mongoose.models.Order || mongoose.model('Order', OrderSchema);

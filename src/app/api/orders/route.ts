@@ -35,6 +35,18 @@ export async function POST(req: Request) {
         const products = await Product.find({ _id: { $in: productIds } });
         const productMap = new Map(products.map((p: any) => [p._id.toString(), p]));
 
+        // SECURITY: Ensure all products exist and belong to the SAME partner
+        if (products.length === 0) {
+            return NextResponse.json({ message: 'Produtos não encontrados' }, { status: 404 });
+        }
+
+        const firstPartnerId = products[0].partnerId?.toString();
+        const allSamePartner = products.every((p: any) => p.partnerId?.toString() === firstPartnerId);
+
+        if (!allSamePartner) {
+            return NextResponse.json({ message: 'Todos os itens devem ser da mesma loja' }, { status: 400 });
+        }
+
         const verifiedItems = rawItems.map((item: any) => {
             const dbProduct = productMap.get(item.productId);
             if (!dbProduct) {
@@ -49,16 +61,49 @@ export async function POST(req: Request) {
             };
         });
 
-        // Calculate total from verified prices
+        // Calculate subtotal from verified prices
         const subtotal = verifiedItems.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0);
-        const deliveryFee = Number(body.deliveryFee) || 0;
-        const discount = Number(body.discount) || 0;
-        const calculatedTotal = subtotal - discount + deliveryFee;
+        
+        // SECURITY: Validate Coupon and calculate discount on SERVER
+        let serverCalculatedDiscount = 0;
+        let verifiedCoupon = null;
+
+        if (body.coupon) {
+            const couponCode = String(body.coupon).toUpperCase();
+            const dbCoupon = await Coupon.findOne({ 
+                code: couponCode,
+                partnerId: firstPartnerId, // SECURITY: Coupon must belong to the cart's partner
+                isActive: true,
+                expiresAt: { $gt: new Date() }
+            });
+
+            if (dbCoupon) {
+                // Check min purchase
+                if (subtotal >= (dbCoupon.minPurchase || 0)) {
+                    // Check max uses
+                    if (!dbCoupon.maxUses || dbCoupon.usedCount < dbCoupon.maxUses) {
+                        verifiedCoupon = couponCode;
+                        if (dbCoupon.type === 'percentage') {
+                            serverCalculatedDiscount = (subtotal * dbCoupon.discount) / 100;
+                            if (dbCoupon.maxDiscount && serverCalculatedDiscount > dbCoupon.maxDiscount) {
+                                serverCalculatedDiscount = dbCoupon.maxDiscount;
+                            }
+                        } else {
+                            serverCalculatedDiscount = dbCoupon.discount;
+                        }
+                    }
+                }
+            }
+        }
+
+        // SECURITY: Ensure deliveryFee is non-negative and capped at a reasonable value
+        const deliveryFee = Math.max(0, Math.min(Number(body.deliveryFee) || 0, 1000)); 
+        const calculatedTotal = subtotal - serverCalculatedDiscount + deliveryFee;
 
         const orderData: any = {
             userId: session.user.id,
             items: verifiedItems,
-            total: calculatedTotal,
+            total: Math.max(0, calculatedTotal),
             deliveryFee,
             distance: body.distance,
             isPickup: !!body.isPickup,
@@ -71,25 +116,16 @@ export async function POST(req: Request) {
                 zip: body.address.zip,
                 coordinates: body.address.coordinates
             } : undefined,
-            coupon: body.coupon,
-            discount,
+            coupon: verifiedCoupon,
+            discount: serverCalculatedDiscount,
             pointsRedeemed: body.pointsRedeemed || 0,
             paymentMethod: body.paymentMethod || 'cartao',
             // SECURITY: Never trust client paymentStatus — always start as pending
             paymentStatus: 'pending',
         };
 
-        // Get partnerId from first product securely
-        let partnerId = body.partnerId;
-        if (!partnerId && verifiedItems.length > 0) {
-            const product = productMap.get(verifiedItems[0].productId);
-            partnerId = product?.partnerId;
-        }
-
-        if (!partnerId && verifiedItems.length > 0 && verifiedItems[0].shopName) {
-            const partner = await User.findOne({ name: verifiedItems[0].shopName, role: 'partner' });
-            if (partner) partnerId = partner._id;
-        }
+        // Get partnerId from verified source
+        const partnerId = firstPartnerId;
 
         const order = await Order.create({
             ...orderData,
@@ -106,9 +142,9 @@ export async function POST(req: Request) {
         }
 
         // Increment coupon usage if present
-        if (body.coupon) {
+        if (verifiedCoupon) {
             await Coupon.findOneAndUpdate(
-                { code: body.coupon.toUpperCase() },
+                { code: verifiedCoupon },
                 { $inc: { usedCount: 1 } },
                 { new: true }
             );

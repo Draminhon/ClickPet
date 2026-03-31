@@ -84,7 +84,6 @@ const SubscriptionSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // Index for efficient queries
-SubscriptionSchema.index({ partnerId: 1 });
 SubscriptionSchema.index({ status: 1 });
 SubscriptionSchema.index({ endDate: 1 });
 

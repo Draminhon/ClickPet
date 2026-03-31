@@ -180,10 +180,11 @@ export default function Header() {
                     </div>
 
                     <div className={styles.headerActions}>
-                        <div className={styles.notificationWrapper}>
-                            <Bell className={styles.notificationIcon} size={24} />
-                        </div>
-
+                        {session && (
+                            <div className={styles.notificationWrapper}>
+                                <Bell className={styles.notificationIcon} size={24} />
+                            </div>
+                        )}
                         {session && (
                             <Link href="/cart" className={styles.cartWrapper}>
                                 <ShoppingCart className={styles.cartIcon} size={24} />

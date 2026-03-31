@@ -5,15 +5,33 @@ import Subscription from '@/models/Subscription';
 import bcrypt from 'bcryptjs';
 import { sanitizeInput } from '@/lib/sanitize';
 
+import { authRateLimiter } from '@/lib/rateLimit';
+
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(req: Request) {
     try {
+        const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || '127.0.0.1';
+        const rateLimitResult = authRateLimiter.check(ip);
+        
+        if (!rateLimitResult.success) {
+            return NextResponse.json(
+                { message: 'Muitas solicitações. Tente novamente em alguns minutos.' },
+                { status: 429 }
+            );
+        }
+
         await dbConnect();
-        const { name, email, password, role, cnpj } = await req.json();
+        
+        const body = await req.json();
+        // Prevent NoSQL Object Injection by casting immediately to string
+        const name = String(body.name || '');
+        const email = String(body.email || '');
+        const password = String(body.password || '');
+        const role = String(body.role || '');
 
         // Validate required fields
-        const sanitizedName = sanitizeInput(name)?.trim();
+        const sanitizedName = sanitizeInput(name);
         if (!sanitizedName || sanitizedName.length < 2) {
             return NextResponse.json(
                 { message: 'Nome deve ter pelo menos 2 caracteres.' },
@@ -35,12 +53,7 @@ export async function POST(req: Request) {
             );
         }
 
-        if (role === 'partner' && (!cnpj || cnpj.length < 14)) {
-            return NextResponse.json(
-                { message: 'CNPJ é obrigatório para petshops.' },
-                { status: 400 }
-            );
-        }
+
 
         const existingUser = await User.findOne({ email: email.toLowerCase().trim() });
         if (existingUser) {
@@ -62,9 +75,7 @@ export async function POST(req: Request) {
             role: finalRole,
         };
 
-        if (finalRole === 'partner') {
-            userData.cnpj = cnpj;
-        }
+
 
         const user = await User.create(userData);
 

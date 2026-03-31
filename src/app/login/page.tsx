@@ -137,11 +137,11 @@ export default function Login() {
 
                 <div className={styles.bottomSection}>
                     <div className={styles.socialContainer}>
-                        <button className={styles.socialButton} onClick={() => signIn('google')}>
+                        <button className={styles.socialButton} onClick={() => signIn('google', { callbackUrl: '/' })}>
                             <Image src="/assets/google2.png" alt="Google" width={28} height={28} className={styles.socialIcon} />
                             <span className={styles.socialText}>Entre com Google</span>
                         </button>
-                        <button className={styles.socialButton} onClick={() => signIn('facebook')}>
+                        <button className={styles.socialButton} onClick={() => signIn('facebook', { callbackUrl: '/' })}>
                             <Image src="/assets/facebook2.png" alt="Facebook" width={28} height={28} className={styles.socialIcon} />
                             <span className={styles.socialText}>Entre com Facebook</span>
                         </button>

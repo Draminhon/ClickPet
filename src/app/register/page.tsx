@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import styles from './Register.module.css';
-import { maskCNPJ } from '@/utils/masks';
+
 import { useToast } from '@/context/ToastContext';
 
 const carouselImages = [
@@ -24,7 +24,7 @@ export default function Register() {
         email: '',
         password: '',
         confirmPassword: '',
-        cnpj: '',
+
     });
     const [loading, setLoading] = useState(false);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -40,7 +40,7 @@ export default function Register() {
         const { name, value } = e.target;
         setFormData(prev => ({
             ...prev,
-            [name]: name === 'cnpj' ? maskCNPJ(value) : value
+            [name]: value
         }));
     };
 
@@ -72,6 +72,16 @@ export default function Register() {
         } finally {
             setLoading(false);
         }
+    };
+    const handleSocialLogin = (provider: string) => {
+        if (role === 'partner') {
+            // Set intent cookie for 10 minutes so the server can pick it up during OAuth callback
+            document.cookie = `clickpet_register_intent=partner; path=/; max-age=600; SameSite=Lax`;
+        } else {
+            // Clear any potential leftover cookie
+            document.cookie = `clickpet_register_intent=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+        }
+        signIn(provider, { callbackUrl: '/' });
     };
 
     return (
@@ -184,21 +194,7 @@ export default function Register() {
                             </div>
                         </div>
 
-                        {role === 'partner' && (
-                            <div className={styles.inputGroup}>
-                                <label className={styles.inputLabel}>CNPJ</label>
-                                <input
-                                    name="cnpj"
-                                    type="text"
-                                    placeholder="00.000.000/0000-00"
-                                    className={styles.input}
-                                    value={formData.cnpj}
-                                    onChange={handleChange}
-                                    required
-                                    maxLength={18}
-                                />
-                            </div>
-                        )}
+
 
                         <button type="submit" className={styles.continueButton} disabled={loading}>
                             <span className={styles.continueText}>
@@ -216,11 +212,11 @@ export default function Register() {
 
                 <div className={styles.bottomSection} style={{ justifyContent: 'center', alignItems: 'center' }}>
                     <div className={styles.socialContainer}>
-                        <button className={styles.socialButton} onClick={() => signIn('google')}>
+                        <button className={styles.socialButton} onClick={() => handleSocialLogin('google')}>
                             <Image src="/assets/google2.png" alt="Google" width={28} height={28} className={styles.socialIcon} />
                             <span className={styles.socialText}>Cadastre-se com Google</span>
                         </button>
-                        <button className={styles.socialButton} onClick={() => signIn('facebook')}>
+                        <button className={styles.socialButton} onClick={() => handleSocialLogin('facebook')}>
                             <Image src="/assets/facebook2.png" alt="Facebook" width={28} height={28} className={styles.socialIcon} />
                             <span className={styles.socialText}>Cadastre-se com Facebook</span>
                         </button>

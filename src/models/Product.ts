@@ -94,7 +94,4 @@ ProductSchema.index({ partnerId: 1 });
 ProductSchema.index({ category: 1 });
 ProductSchema.index({ isActive: 1 });
 
-if (mongoose.models.Product) {
-    delete mongoose.models.Product;
-}
-export default mongoose.model('Product', ProductSchema);
+export default mongoose.models.Product || mongoose.model('Product', ProductSchema);

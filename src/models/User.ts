@@ -33,9 +33,6 @@ const UserSchema = new mongoose.Schema({
     },
     cnpj: {
         type: String,
-        required: function (this: any) {
-            return this.role === 'partner';
-        }
     },
     cpf: {
         type: String,

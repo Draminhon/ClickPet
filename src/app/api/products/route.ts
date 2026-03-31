@@ -43,8 +43,26 @@ export async function POST(req: Request) {
         }
 
         const product = await Product.create({
-            ...body,
+            title: body.title,
+            description: body.description,
+            price: body.price,
+            category: body.category,
+            image: body.image,
+            images: body.images || [],
+            discount: body.discount || 0,
+            productType: body.productType,
+            subCategory: body.subCategory,
+            weights: body.weights || [],
+            stock: body.stock || 0,
+            isActive: body.isActive !== undefined ? body.isActive : true,
+            brand: body.brand,
+            sku: body.sku,
+            unit: body.unit,
             partnerId: session.user.id,
+            // SECURITY: Statistics cannot be set by client
+            rating: 0,
+            reviewCount: 0,
+            salesCount: 0,
         });
 
         return NextResponse.json(product, { status: 201 });

@@ -33,7 +33,7 @@ import {
     ResponsiveContainer
 } from 'recharts';
 
-export default function ServicesPage() {
+function ServicesContent() {
     const { data: session } = useSession();
     const { showToast } = useToast();
     const [services, setServices] = useState<any[]>([]);
@@ -408,6 +408,16 @@ export default function ServicesPage() {
                 service={editingService}
             />
         </div>
+    );
+}
+
+import { Suspense } from 'react';
+
+export default function ServicesPage() {
+    return (
+        <Suspense fallback={<div style={{ padding: '2rem', textAlign: 'center' }}>Carregando...</div>}>
+            <ServicesContent />
+        </Suspense>
     );
 }
 

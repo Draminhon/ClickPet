@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/context/ToastContext';
-import { AlertCircle, Truck, MapPin } from 'lucide-react';
+import { AlertCircle, Truck, MapPin, CreditCard, QrCode, Plus, User } from 'lucide-react';
 import MapPicker from '@/components/ui/MapPicker';
 import { maskZip } from '@/utils/masks';
 
-export default function CheckoutPage() {
+function CheckoutContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { items, total, clearCart } = useCart();
@@ -33,6 +33,10 @@ export default function CheckoutPage() {
         lat: '',
         lng: '',
     });
+    const [deliveryAddresses, setDeliveryAddresses] = useState<any[]>([]);
+    const [selectedAddressIndex, setSelectedAddressIndex] = useState<number | null>(null);
+    const [showMissingDocModal, setShowMissingDocModal] = useState(false);
+    const [showAddressForm, setShowAddressForm] = useState(false);
     const [couponCode, setCouponCode] = useState('');
     const [appliedCoupons, setAppliedCoupons] = useState<Array<{
         code: string;
@@ -52,8 +56,43 @@ export default function CheckoutPage() {
 
     const [isPickup, setIsPickup] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [paymentMethod, setPaymentMethod] = useState<'pix' | 'cartao' | 'pix_cartao'>('pix_cartao');
 
     useEffect(() => {
+        // Fetch user addresses from profile
+        fetch('/api/profile')
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.deliveryAddresses && data.deliveryAddresses.length > 0) {
+                    setDeliveryAddresses(data.deliveryAddresses);
+                    setSelectedAddressIndex(0);
+                    // Update main address pointer
+                    setAddress({
+                        street: data.deliveryAddresses[0].street || '',
+                        number: data.deliveryAddresses[0].number || '',
+                        complement: data.deliveryAddresses[0].complement || '',
+                        city: data.deliveryAddresses[0].city || '',
+                        zip: data.deliveryAddresses[0].zip || '',
+                        lat: data.deliveryAddresses[0].coordinates?.coordinates?.[1]?.toString() || '',
+                        lng: data.deliveryAddresses[0].coordinates?.coordinates?.[0]?.toString() || '',
+                    });
+                } else if (data && data.address && data.address.street) {
+                    // Legacy fallback
+                    setDeliveryAddresses([data.address]);
+                    setSelectedAddressIndex(0);
+                    setAddress({
+                        street: data.address.street || '',
+                        number: data.address.number || '',
+                        complement: data.address.complement || '',
+                        city: data.address.city || '',
+                        zip: data.address.zip || '',
+                        lat: data.address.coordinates?.coordinates?.[1]?.toString() || '',
+                        lng: data.address.coordinates?.coordinates?.[0]?.toString() || '',
+                    });
+                }
+            })
+            .catch(err => console.error('Error fetching profile:', err));
+
         if (partnerIds.length > 0) {
             // Fetch partner minimum order values and names
             partnerIds.forEach(pId => {
@@ -245,7 +284,9 @@ export default function CheckoutPage() {
 
         try {
             // Submit separate orders for each partner
-            const orderPromises = partnerIds.map(async (pId) => {
+            const orderResults = [];
+
+            for (const pId of partnerIds) {
                 const pInfo = partnerData[pId];
                 const partnerItems = itemsByPartner[pId];
                 const partnerSubtotal = partnerItems.reduce((sum: number, i: any) => sum + (i.price * i.quantity), 0);
@@ -267,6 +308,7 @@ export default function CheckoutPage() {
                     deliveryFee: partnerDelivery,
                     distance: pInfo?.distance || 0,
                     isPickup,
+                    paymentMethod,
                     address: isPickup ? {} : {
                         ...address,
                         coordinates: address.lat && address.lng ? {
@@ -278,22 +320,58 @@ export default function CheckoutPage() {
                     discount: partnerDiscount,
                 };
 
-                return fetch('/api/orders', {
+                const orderRes = await fetch('/api/orders', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(orderPayload),
                 });
-            });
 
-            const results = await Promise.all(orderPromises);
-            const allOk = results.every(res => res.ok);
+                if (!orderRes.ok) {
+                    showToast('Erro ao criar pedido', 'error');
+                    setLoading(false);
+                    return;
+                }
 
-            if (allOk) {
-                showToast('Pedido(s) realizado(s) com sucesso!');
+                const orderData = await orderRes.json();
+                orderResults.push(orderData);
+            }
+
+            // Create billing for the first order (AbacatePay)
+            // Note: If multiple orders, we process the first one for now
+            const mainOrder = orderResults[0];
+
+            try {
+                const billingRes = await fetch('/api/payments/create-billing', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderId: mainOrder._id }),
+                });
+
+                const billingData = await billingRes.json();
+
+                if (billingRes.ok && billingData.billingUrl) {
+                    clearCart();
+                    // Redirect to AbacatePay payment page
+                    window.location.href = billingData.billingUrl;
+                    return;
+                } else if (billingRes.status === 400 && billingData.message && (billingData.message.includes('CPF') || billingData.message.includes('CNPJ'))) {
+                    setShowMissingDocModal(true);
+                } else {
+                    console.error('Billing error:', billingData);
+                    const errorMsg = billingData.message || 'Erro ao gerar pagamento. Tente novamente.';
+                    showToast(errorMsg, 'error');
+                    
+                    // If it's a validation error (like missing taxId), don't clear cart or redirect
+                    if (billingRes.status !== 400) {
+                        clearCart();
+                        router.push('/orders');
+                    }
+                }
+            } catch (billingError) {
+                console.error('Billing error:', billingError);
+                showToast('Pedido criado! Houve um erro ao gerar o pagamento.', 'error');
                 clearCart();
                 router.push('/orders');
-            } else {
-                showToast('Alguns pedidos falharam ao ser criados', 'error');
             }
         } catch (error) {
             showToast('Erro ao criar pedido', 'error');
@@ -328,6 +406,64 @@ export default function CheckoutPage() {
         }
     };
 
+    const handleSelectAddress = (idx: number) => {
+        setSelectedAddressIndex(idx);
+        const addr = deliveryAddresses[idx];
+        setAddress({
+            street: addr.street || '',
+            number: addr.number || '',
+            complement: addr.complement || '',
+            city: addr.city || '',
+            zip: addr.zip || '',
+            lat: addr.coordinates?.coordinates?.[1]?.toString() || '',
+            lng: addr.coordinates?.coordinates?.[0]?.toString() || '',
+        });
+        setShowAddressForm(false);
+    };
+
+    const handleSaveNewAddress = async () => {
+        if (!address.street || !address.city || !address.zip) {
+            showToast('Preencha os campos obrigatórios primeiro', 'error');
+            return;
+        }
+
+        try {
+            const formData = {
+                street: address.street,
+                number: address.number,
+                complement: address.complement,
+                neighborhood: '',
+                city: address.city,
+                state: '',
+                zip: address.zip,
+                coordinates: {
+                    type: 'Point',
+                    coordinates: [parseFloat(address.lng || '0'), parseFloat(address.lat || '0')]
+                }
+            };
+
+            const updatedAddrs = [...deliveryAddresses, formData];
+            
+            const res = await fetch('/api/profile', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ deliveryAddresses: updatedAddrs })
+            });
+
+            if (res.ok) {
+                setDeliveryAddresses(updatedAddrs);
+                setSelectedAddressIndex(updatedAddrs.length - 1);
+                setShowAddressForm(false);
+                showToast('Endereço adicionado aos seus locais!');
+            } else {
+                showToast('Erro ao salvar endereço', 'error');
+            }
+        } catch (error) {
+            console.error(error);
+            showToast('Erro interno', 'error');
+        }
+    };
+
     if (items.length === 0) {
         return (
             <div className="container" style={{ padding: '2rem 0', textAlign: 'center' }}>
@@ -346,128 +482,210 @@ export default function CheckoutPage() {
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
                 <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '1.5rem' }}>
                     {/* Delivery Option */}
-                    <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-                        <h3 style={{ marginBottom: '1rem' }}>Opção de Entrega</h3>
+                    <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
+                        <h3 style={{ marginBottom: '1.2rem', color: '#333' }}>Opção de Entrega</h3>
                         <div style={{ display: 'flex', gap: '1rem' }}>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', padding: '1rem', border: !isPickup ? '2px solid #6CC551' : '1px solid #ddd', borderRadius: '8px', flex: 1, background: !isPickup ? '#e8f5e9' : 'white' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', padding: '1.2rem', border: !isPickup ? '2px solid #3BB77E' : '1px solid #E5E7EB', borderRadius: '10px', flex: 1, background: !isPickup ? '#F3FAF6' : 'white', boxShadow: !isPickup ? '0 4px 10px rgba(59, 183, 126, 0.1)' : 'none', transition: 'all 0.2s' }}>
                                 <input
                                     type="radio"
                                     checked={!isPickup}
                                     onChange={() => setIsPickup(false)}
+                                    style={{ accentColor: '#3BB77E', width: '18px', height: '18px' }}
                                 />
-                                <Truck size={20} />
-                                <span>Entrega</span>
+                                <Truck size={22} color={!isPickup ? '#3BB77E' : '#9CA3AF'} />
+                                <span style={{ fontWeight: !isPickup ? 600 : 500, color: !isPickup ? '#111827' : '#4B5563' }}>Entrega</span>
                             </label>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', padding: '1rem', border: isPickup ? '2px solid #6CC551' : '1px solid #ddd', borderRadius: '8px', flex: 1, background: isPickup ? '#e8f5e9' : 'white' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', padding: '1.2rem', border: isPickup ? '2px solid #3BB77E' : '1px solid #E5E7EB', borderRadius: '10px', flex: 1, background: isPickup ? '#F3FAF6' : 'white', boxShadow: isPickup ? '0 4px 10px rgba(59, 183, 126, 0.1)' : 'none', transition: 'all 0.2s' }}>
                                 <input
                                     type="radio"
                                     checked={isPickup}
                                     onChange={() => setIsPickup(true)}
+                                    style={{ accentColor: '#3BB77E', width: '18px', height: '18px' }}
                                 />
-                                <MapPin size={20} />
-                                <span>Retirar na Loja</span>
+                                <MapPin size={22} color={isPickup ? '#3BB77E' : '#9CA3AF'} />
+                                <span style={{ fontWeight: isPickup ? 600 : 500, color: isPickup ? '#111827' : '#4B5563' }}>Retirar na Loja</span>
                             </label>
                         </div>
                     </div>
 
-                    {/* Address */}
+                    {/* Address UI Block */}
                     {!isPickup && (
-                        <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-                            <h3 style={{ marginBottom: '1rem' }}>Endereço de Entrega</h3>
-
-                            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                                <div>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Rua</label>
-                                    <input
-                                        required
-                                        placeholder="Nome da rua"
-                                        value={address.street}
-                                        onChange={e => setAddress({ ...address, street: e.target.value })}
-                                        style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd', width: '100%' }}
-                                    />
-                                </div>
-                                <div>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Número</label>
-                                    <input
-                                        type="text"
-                                        required
-                                        value={address.number}
-                                        onChange={e => setAddress({ ...address, number: e.target.value })}
-                                        placeholder="Ex: 123"
-                                        style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd', width: '100%' }}
-                                    />
-                                </div>
-                                <div>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Complemento</label>
-                                    <input
-                                        type="text"
-                                        value={address.complement}
-                                        onChange={e => setAddress({ ...address, complement: e.target.value })}
-                                        placeholder="Apto, bloco, etc"
-                                        style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd', width: '100%' }}
-                                    />
-                                </div>
+                        <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid #f0f0f0', paddingBottom: '0.8rem' }}>
+                                <h3 style={{ margin: 0, color: '#333' }}>Local de Entrega</h3>
+                                {deliveryAddresses.length > 0 && !showAddressForm && (
+                                    <button 
+                                        type="button" 
+                                        onClick={() => setShowAddressForm(true)}
+                                        style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: '#3BB77E', color: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '0.9rem', transition: 'all 0.2s' }}
+                                    >
+                                        <Plus size={16} /> Adicionar Endereço
+                                    </button>
+                                )}
                             </div>
 
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                                <div>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Cidade</label>
-                                    <input
-                                        required
-                                        placeholder="Cidade"
-                                        value={address.city}
-                                        onChange={e => setAddress({ ...address, city: e.target.value })}
-                                        style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd', width: '100%' }}
-                                    />
+                            {deliveryAddresses.length === 0 && !showAddressForm && (
+                                <div style={{ textAlign: 'center', padding: '2rem 1rem', background: '#f8f9fa', borderRadius: '8px', border: '2px dashed #ddd' }}>
+                                    <MapPin size={40} color="#b0bec5" style={{ margin: '0 auto 1rem' }} />
+                                    <p style={{ color: '#555', marginBottom: '1.2rem', fontWeight: 500 }}>
+                                        Você ainda não possui nenhum endereço para entrega salvo.
+                                    </p>
+                                    <button 
+                                        type="button" 
+                                        onClick={() => setShowAddressForm(true)}
+                                        style={{ background: '#253D4E', color: 'white', border: 'none', padding: '0.8rem 1.5rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '1rem', transition: 'all 0.2s' }}
+                                    >
+                                        Cadastrar Meu Endereço
+                                    </button>
                                 </div>
-                                <div>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>CEP</label>
-                                    <input
-                                        required
-                                        placeholder="CEP"
-                                        value={address.zip}
-                                        onChange={e => setAddress({ ...address, zip: maskZip(e.target.value) })}
-                                        style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd', width: '100%' }}
-                                    />
-                                </div>
-                            </div>
+                            )}
 
-                            <div style={{ marginTop: '1rem' }}>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Localização no Mapa (opcional)</label>
-                                <MapPicker
-                                    lat={address.lat ? parseFloat(address.lat) : -23.550520}
-                                    lng={address.lng ? parseFloat(address.lng) : -46.633308}
-                                    onLocationChange={(lat: number, lng: number) => {
-                                        setAddress(prev => ({
-                                            ...prev,
-                                            lat: lat.toString(),
-                                            lng: lng.toString(),
-                                        }));
-                                        fetchAddressFromCoordinates(lat, lng);
-                                    }}
-                                    height="300px"
-                                />
-                                <p style={{ fontSize: '0.85rem', color: '#666', marginTop: '0.5rem' }}>
-                                    💡 Selecione sua localização no mapa para cálculo preciso da taxa de entrega
-                                </p>
-                            </div>
+                            {deliveryAddresses.length > 0 && !showAddressForm && (
+                                <div style={{ display: 'grid', gap: '1rem' }}>
+                                    {deliveryAddresses.map((addr, idx) => (
+                                        <label key={idx} style={{ 
+                                            display: 'flex', alignItems: 'flex-start', gap: '1rem', padding: '1.2rem', 
+                                            border: selectedAddressIndex === idx ? '2px solid #3BB77E' : '1px solid #E5E7EB', 
+                                            borderRadius: '10px', cursor: 'pointer', transition: 'all 0.2s ease',
+                                            background: selectedAddressIndex === idx ? '#F3FAF6' : 'white',
+                                            boxShadow: selectedAddressIndex === idx ? '0 4px 10px rgba(59, 183, 126, 0.1)' : 'none'
+                                        }}>
+                                            <input 
+                                                type="radio" 
+                                                name="selectedAddress" 
+                                                checked={selectedAddressIndex === idx} 
+                                                onChange={() => handleSelectAddress(idx)}
+                                                style={{ marginTop: '0.3rem', width: '18px', height: '18px', accentColor: '#3BB77E' }}
+                                            />
+                                            <div style={{ flex: 1 }}>
+                                                <div style={{ fontWeight: 600, color: '#333', fontSize: '1.05rem', marginBottom: '0.2rem' }}>
+                                                    {addr.street}, {addr.number}
+                                                    {idx === 0 && <span style={{ marginLeft: '10px', fontSize: '0.7rem', background: '#e0f2fe', color: '#0369a1', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase', fontWeight: 700 }}>Principal</span>}
+                                                </div>
+                                                <div style={{ fontSize: '0.95rem', color: '#555', marginBottom: '0.2rem' }}>{addr.neighborhood} - {addr.city}/{addr.state}</div>
+                                                <div style={{ fontSize: '0.85rem', color: '#888' }}>CEP: {maskZip(addr.zip)} {addr.complement ? `| Cpl: ${addr.complement}` : ''}</div>
+                                            </div>
+                                        </label>
+                                    ))}
+                                </div>
+                            )}
+                            
+                            {showAddressForm && (
+                                <div style={{ background: '#F9FAFB', padding: '1.5rem', borderRadius: '10px', border: '1px solid #E5E7EB' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem' }}>
+                                        <h4 style={{ margin: 0, color: '#253D4E' }}>Novo Endereço</h4>
+                                        {deliveryAddresses.length > 0 && (
+                                            <button type="button" onClick={() => setShowAddressForm(false)} style={{ background: 'none', border: 'none', color: '#6B7280', fontSize: '0.9rem', cursor: 'pointer', textDecoration: 'underline' }}>
+                                                Cancelar
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                                        <div>
+                                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 500, color: '#374151' }}>Rua</label>
+                                            <input
+                                                required
+                                                placeholder="Nome da rua"
+                                                value={address.street}
+                                                onChange={e => setAddress({ ...address, street: e.target.value })}
+                                                style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #D1D5DB', width: '100%', fontSize: '0.95rem' }}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 500, color: '#374151' }}>Número</label>
+                                            <input
+                                                type="text"
+                                                required
+                                                value={address.number}
+                                                onChange={e => setAddress({ ...address, number: e.target.value })}
+                                                placeholder="Ex: 123"
+                                                style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #D1D5DB', width: '100%', fontSize: '0.95rem' }}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 500, color: '#374151' }}>Complemento</label>
+                                            <input
+                                                type="text"
+                                                value={address.complement}
+                                                onChange={e => setAddress({ ...address, complement: e.target.value })}
+                                                placeholder="Apto, bloco"
+                                                style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #D1D5DB', width: '100%', fontSize: '0.95rem' }}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                                        <div>
+                                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 500, color: '#374151' }}>Cidade</label>
+                                            <input
+                                                required
+                                                placeholder="Sua cidade"
+                                                value={address.city}
+                                                onChange={e => setAddress({ ...address, city: e.target.value })}
+                                                style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #D1D5DB', width: '100%', fontSize: '0.95rem' }}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 500, color: '#374151' }}>CEP</label>
+                                            <input
+                                                required
+                                                placeholder="00000-000"
+                                                value={address.zip}
+                                                onChange={e => setAddress({ ...address, zip: maskZip(e.target.value) })}
+                                                style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #D1D5DB', width: '100%', fontSize: '0.95rem' }}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div style={{ marginBottom: '1.5rem', background: 'white', padding: '1rem', borderRadius: '8px', border: '1px solid #E5E7EB' }}>
+                                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.8rem', fontWeight: 600, color: '#374151' }}>
+                                            <MapPin size={18} color="#3BB77E" /> Localização no Mapa (Recomendado)
+                                        </label>
+                                        <MapPicker
+                                            lat={address.lat ? parseFloat(address.lat) : -23.550520}
+                                            lng={address.lng ? parseFloat(address.lng) : -46.633308}
+                                            onLocationChange={(lat: number, lng: number) => {
+                                                setAddress(prev => ({
+                                                    ...prev,
+                                                    lat: lat.toString(),
+                                                    lng: lng.toString(),
+                                                }));
+                                                fetchAddressFromCoordinates(lat, lng);
+                                            }}
+                                            height="250px"
+                                        />
+                                        <p style={{ fontSize: '0.8rem', color: '#6B7280', marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                                            <AlertCircle size={14} /> Confirme o pino exato para evitar erros no cálculo do frete.
+                                        </p>
+                                    </div>
+                                    
+                                    <button 
+                                        type="button" 
+                                        onClick={handleSaveNewAddress} 
+                                        style={{ width: '100%', background: '#253D4E', color: 'white', border: 'none', padding: '1rem', borderRadius: '8px', fontWeight: 600, fontSize: '1rem', cursor: 'pointer', transition: 'background 0.2s' }}
+                                    >
+                                        Salvar e Utilizar Este Endereço
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     )}
 
                     {/* Coupon */}
-                    <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-                        <h3 style={{ marginBottom: '1rem' }}>Cupom de Desconto</h3>
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
+                        <h3 style={{ marginBottom: '1.2rem', color: '#333' }}>Cupom de Desconto</h3>
+                        <div style={{ display: 'flex', gap: '0.6rem' }}>
                             <input
-                                placeholder="Código do cupom"
+                                placeholder="Digite seu código"
                                 value={couponCode}
                                 onChange={e => setCouponCode(e.target.value.toUpperCase())}
-                                style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
+                                style={{ flex: 1, padding: '0.8rem 1rem', borderRadius: '8px', border: '1px solid #D1D5DB', fontSize: '1rem' }}
                             />
                             <button
                                 type="button"
                                 onClick={() => handleApplyCoupon()}
-                                style={{ padding: '0.8rem 1.5rem', background: '#6CC551', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}
+                                style={{ padding: '0.8rem 2rem', background: '#3BB77E', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '1rem', transition: 'background 0.2s' }}
                             >
                                 Aplicar
                             </button>
@@ -475,17 +693,17 @@ export default function CheckoutPage() {
 
                         {/* Applied Coupons List */}
                         {appliedCoupons.length > 0 && (
-                            <div style={{ marginTop: '1rem', display: 'grid', gap: '0.5rem' }}>
+                            <div style={{ marginTop: '1.2rem', display: 'grid', gap: '0.6rem' }}>
                                 {appliedCoupons.map((c) => (
-                                    <div key={c.code} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#e8f5e9', padding: '0.6rem 1rem', borderRadius: '8px', border: '1px solid #c8e6c9' }}>
-                                        <div style={{ fontSize: '0.9rem' }}>
-                                            <strong style={{ color: '#2e7d32' }}>{c.code}</strong>
-                                            <span style={{ marginLeft: '0.5rem', color: '#666' }}>({c.shopName}) - R$ {c.amount.toFixed(2)}</span>
+                                    <div key={c.code} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#F3FAF6', padding: '0.8rem 1rem', borderRadius: '8px', border: '1px solid #3BB77E', borderLeft: '4px solid #3BB77E' }}>
+                                        <div style={{ fontSize: '0.95rem' }}>
+                                            <strong style={{ color: '#047857' }}>{c.code}</strong>
+                                            <span style={{ marginLeft: '0.5rem', color: '#4B5563' }}>({c.shopName}) - R$ {c.amount.toFixed(2)}</span>
                                         </div>
                                         <button
                                             type="button"
                                             onClick={() => handleRemoveCoupon(c.code)}
-                                            style={{ background: 'none', border: 'none', color: '#d32f2f', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}
+                                            style={{ background: '#FEE2E2', border: 'none', color: '#EF4444', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, padding: '0.4rem 0.8rem', borderRadius: '6px', transition: 'all 0.2s' }}
                                         >
                                             Remover
                                         </button>
@@ -495,13 +713,66 @@ export default function CheckoutPage() {
                         )}
                     </div>
 
+                    {/* Payment Method Selection */}
+                    <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
+                        <h3 style={{ marginBottom: '1.2rem', color: '#333' }}>Método de Pagamento</h3>
+                        <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap' }}>
+                            <label style={{
+                                display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer',
+                                padding: '1.2rem', border: paymentMethod === 'pix_cartao' ? '2px solid #3BB77E' : '1px solid #E5E7EB',
+                                borderRadius: '10px', flex: 1, minWidth: '150px',
+                                background: paymentMethod === 'pix_cartao' ? '#F3FAF6' : 'white', transition: 'all 0.2s'
+                            }}>
+                                <input type="radio" checked={paymentMethod === 'pix_cartao'} onChange={() => setPaymentMethod('pix_cartao')} style={{ accentColor: '#3BB77E' }}/>
+                                <QrCode size={20} color={paymentMethod === 'pix_cartao' ? '#3BB77E' : '#6B7280'}/>
+                                <CreditCard size={20} color={paymentMethod === 'pix_cartao' ? '#3BB77E' : '#6B7280'}/>
+                                <span style={{ fontSize: '0.95rem', fontWeight: paymentMethod === 'pix_cartao' ? 600 : 500, color: paymentMethod === 'pix_cartao' ? '#111827' : '#4B5563' }}>PIX ou Cartão</span>
+                            </label>
+                            <label style={{
+                                display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer',
+                                padding: '1.2rem', border: paymentMethod === 'pix' ? '2px solid #3BB77E' : '1px solid #E5E7EB',
+                                borderRadius: '10px', flex: 1, minWidth: '150px',
+                                background: paymentMethod === 'pix' ? '#F3FAF6' : 'white', transition: 'all 0.2s'
+                            }}>
+                                <input type="radio" checked={paymentMethod === 'pix'} onChange={() => setPaymentMethod('pix')} style={{ accentColor: '#3BB77E' }}/>
+                                <QrCode size={20} color={paymentMethod === 'pix' ? '#3BB77E' : '#6B7280'}/>
+                                <span style={{ fontSize: '0.95rem', fontWeight: paymentMethod === 'pix' ? 600 : 500, color: paymentMethod === 'pix' ? '#111827' : '#4B5563' }}>Somente PIX</span>
+                            </label>
+                            <label style={{
+                                display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer',
+                                padding: '1.2rem', border: paymentMethod === 'cartao' ? '2px solid #3BB77E' : '1px solid #E5E7EB',
+                                borderRadius: '10px', flex: 1, minWidth: '150px',
+                                background: paymentMethod === 'cartao' ? '#F3FAF6' : 'white', transition: 'all 0.2s'
+                            }}>
+                                <input type="radio" checked={paymentMethod === 'cartao'} onChange={() => setPaymentMethod('cartao')} style={{ accentColor: '#3BB77E' }}/>
+                                <CreditCard size={20} color={paymentMethod === 'cartao' ? '#3BB77E' : '#6B7280'}/>
+                                <span style={{ fontSize: '0.95rem', fontWeight: paymentMethod === 'cartao' ? 600 : 500, color: paymentMethod === 'cartao' ? '#111827' : '#4B5563' }}>Somente Cartão</span>
+                            </label>
+                        </div>
+                        <p style={{ fontSize: '0.8rem', color: '#999', marginTop: '0.75rem' }}>
+                            💡 Você será redirecionado para uma página segura de pagamento
+                        </p>
+                    </div>
+
                     <button
                         type="submit"
                         disabled={loading}
-                        className="btn btn-primary"
-                        style={{ width: '100%' }}
+                        style={{ 
+                            width: '100%', 
+                            padding: '1.2rem', 
+                            background: '#3BB77E', 
+                            color: 'white', 
+                            border: 'none', 
+                            borderRadius: '10px', 
+                            fontSize: '1.1rem', 
+                            fontWeight: 700, 
+                            cursor: loading ? 'not-allowed' : 'pointer', 
+                            boxShadow: '0 4px 15px rgba(59, 183, 126, 0.3)',
+                            transition: 'all 0.2s ease',
+                            opacity: loading ? 0.7 : 1
+                        }}
                     >
-                        {loading ? 'Processando...' : 'Finalizar Pedido'}
+                        {loading ? 'Preparando Integração Segura...' : 'Pagar e Finalizar Pedido'}
                     </button>
                 </form>
 
@@ -556,7 +827,7 @@ export default function CheckoutPage() {
                         })}
 
                         <div style={{ padding: '0 1rem' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: '#4B5563', fontSize: '1.05rem' }}>
                                 <span>Subtotal Geral</span>
                                 <span>R$ {total.toFixed(2)}</span>
                             </div>
@@ -564,7 +835,7 @@ export default function CheckoutPage() {
                             {appliedCoupons.length > 0 && (
                                 <div style={{ marginBottom: '0.5rem' }}>
                                     {appliedCoupons.map(c => (
-                                        <div key={c.code} style={{ display: 'flex', justifyContent: 'space-between', color: '#6CC551', fontSize: '0.9rem' }}>
+                                        <div key={c.code} style={{ display: 'flex', justifyContent: 'space-between', color: '#3BB77E', fontSize: '0.95rem', fontWeight: 500 }}>
                                             <span>Desconto ({c.shopName})</span>
                                             <span>- R$ {c.amount.toFixed(2)}</span>
                                         </div>
@@ -581,14 +852,70 @@ export default function CheckoutPage() {
 
                             <hr style={{ margin: '1rem 0', border: 'none', borderTop: '2px solid #333' }} />
 
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.2rem', fontWeight: 700 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.3rem', fontWeight: 800, color: '#111827' }}>
                                 <span>Total Final</span>
-                                <span>R$ {finalTotal.toFixed(2)}</span>
+                                <span style={{ color: '#3BB77E' }}>R$ {finalTotal.toFixed(2)}</span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+            {/* Missing Document Modal */}
+            {showMissingDocModal && (
+                <div style={{ 
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
+                    backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', 
+                    justifyContent: 'center', alignItems: 'center', zIndex: 1000 
+                }}>
+                    <div style={{ 
+                        background: 'white', padding: '2.5rem', borderRadius: '16px', 
+                        maxWidth: '400px', width: '90%', textAlign: 'center', 
+                        boxShadow: '0 10px 25px rgba(0,0,0,0.2)' 
+                    }}>
+                        <div style={{ 
+                            width: '60px', height: '60px', background: '#ffebee', 
+                            borderRadius: '50%', display: 'flex', justifyContent: 'center', 
+                            alignItems: 'center', margin: '0 auto 1.5rem', color: '#f44336' 
+                        }}>
+                            <User size={32} />
+                        </div>
+                        <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', color: '#333' }}>Falta um detalhe!</h2>
+                        <p style={{ color: '#666', marginBottom: '1.5rem', lineHeight: '1.5' }}>
+                            Para prosseguirmos de forma segura e gerarmos o pagamento, exigimos que você <strong>informe seu CPF e Telefone</strong> no seu perfil.
+                        </p>
+                        <button 
+                            type="button"
+                            onClick={() => router.push('/profile')}
+                            style={{ 
+                                width: '100%', padding: '1rem', background: '#6CC551', color: 'white', 
+                                border: 'none', borderRadius: '8px', fontWeight: 600, fontSize: '1rem', 
+                                cursor: 'pointer', transition: 'background 0.2s' 
+                            }}
+                        >
+                            Ir para Meu Perfil
+                        </button>
+                        <button 
+                            type="button"
+                            onClick={() => setShowMissingDocModal(false)}
+                            style={{ 
+                                width: '100%', padding: '1rem', background: 'transparent', color: '#666', 
+                                border: 'none', fontWeight: 600, marginTop: '0.5rem', cursor: 'pointer' 
+                            }}
+                        >
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
+    );
+}
+
+export default function CheckoutPage() {
+    return (
+        <Suspense fallback={<div style={{ textAlign: 'center', padding: '5rem' }}>Carregando dados do checkout...</div>}>
+            <CheckoutContent />
+        </Suspense>
     );
 }

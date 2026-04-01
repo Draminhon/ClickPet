@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useToast } from '@/context/ToastContext';
-import { User, Phone, Upload, Trash2, Plus, LogOut, Pencil, MapPin, Camera, Mail } from 'lucide-react';
-import { maskPhone, maskZip } from '@/utils/masks';
+import { User, Phone, Upload, Trash2, Plus, LogOut, Pencil, MapPin, Camera, Mail, AlertCircle } from 'lucide-react';
+import { maskPhone, maskZip, maskCPF } from '@/utils/masks';
 import Image from 'next/image';
+import MapPicker from '@/components/ui/MapPicker';
 import styles from './Profile.module.css';
 
 export default function ProfilePage() {
@@ -17,6 +18,7 @@ export default function ProfilePage() {
     const [pets, setPets] = useState<any[]>([]);
     const [showPetForm, setShowPetForm] = useState(false);
     const [formData, setFormData] = useState({
+        cpf: '',
         phone: '',
         image: '',
         address: {
@@ -27,7 +29,12 @@ export default function ProfilePage() {
             city: '',
             state: '',
             zip: '',
-        }
+        },
+        deliveryAddresses: [] as any[]
+    });
+    const [showAddressForm, setShowAddressForm] = useState(false);
+    const [addressForm, setAddressForm] = useState({
+        street: '', number: '', complement: '', neighborhood: '', city: '', state: '', zip: '', lat: '', lng: ''
     });
     const [editingPetId, setEditingPetId] = useState<string | null>(null);
     const [petForm, setPetForm] = useState({
@@ -49,9 +56,13 @@ export default function ProfilePage() {
             const profileData = await profileRes.json();
             setUserData(profileData);
             setFormData({
+                cpf: profileData.cpf ? maskCPF(profileData.cpf) : '',
                 phone: profileData.phone || '',
                 image: profileData.image || '',
-                address: profileData.address || { street: '', number: '', complement: '', neighborhood: '', city: '', state: '', zip: '' }
+                address: profileData.address || { street: '', number: '', complement: '', neighborhood: '', city: '', state: '', zip: '' },
+                deliveryAddresses: Array.isArray(profileData.deliveryAddresses) && profileData.deliveryAddresses.length > 0 
+                  ? profileData.deliveryAddresses 
+                  : (profileData.address?.street ? [profileData.address] : []),
             });
 
             const petsRes = await fetch('/api/pets');
@@ -77,6 +88,10 @@ export default function ProfilePage() {
 
     const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({ ...formData, phone: maskPhone(e.target.value) });
+    };
+
+    const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setFormData({ ...formData, cpf: maskCPF(e.target.value) });
     };
 
     const handleZipChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -125,15 +140,29 @@ export default function ProfilePage() {
         setLoading(true);
 
         try {
+            const bodyData = { 
+                ...formData, 
+                cpf: formData.cpf.replace(/\D/g, '') 
+            };
+
             const res = await fetch('/api/profile', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData),
+                body: JSON.stringify(bodyData),
             });
 
             if (res.ok) {
                 const updatedUser = await res.json();
                 setUserData(updatedUser);
+                setFormData({
+                    cpf: updatedUser.cpf ? maskCPF(updatedUser.cpf) : '',
+                    phone: updatedUser.phone || '',
+                    image: updatedUser.image || '',
+                    address: updatedUser.address || { street: '', number: '', complement: '', neighborhood: '', city: '', state: '', zip: '' },
+                    deliveryAddresses: Array.isArray(updatedUser.deliveryAddresses) && updatedUser.deliveryAddresses.length > 0 
+                      ? updatedUser.deliveryAddresses 
+                      : (updatedUser.address?.street ? [updatedUser.address] : []),
+                });
                 showToast('Informações atualizadas com sucesso!');
             } else {
                 showToast('Erro ao atualizar informações', 'error');
@@ -143,6 +172,58 @@ export default function ProfilePage() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const fetchAddressFromCoordinates = async (lat: number, lng: number) => {
+        try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+            const data = await res.json();
+            if (data.address) {
+                setAddressForm(prev => ({
+                    ...prev,
+                    street: data.address.road || data.address.pedestrian || prev.street || '',
+                    number: data.address.house_number || prev.number || '',
+                    city: data.address.city || data.address.town || data.address.village || prev.city || '',
+                    zip: data.address.postcode || prev.zip || '',
+                    lat: lat.toString(),
+                    lng: lng.toString()
+                }));
+                showToast('Endereço preenchido automaticamente!');
+            }
+        } catch (error) {
+            console.error('Error fetching address:', error);
+        }
+    };
+
+    const handleAddAddress = () => {
+        if (!addressForm.street || !addressForm.city || !addressForm.zip) {
+            showToast('Preencha os campos obrigatórios do endereço (Rua, Cidade, CEP)', 'error');
+            return;
+        }
+
+        const newAddressEntry = {
+            street: addressForm.street,
+            number: addressForm.number,
+            complement: addressForm.complement,
+            neighborhood: addressForm.neighborhood,
+            city: addressForm.city,
+            state: addressForm.state,
+            zip: addressForm.zip,
+            coordinates: {
+                type: 'Point',
+                coordinates: [parseFloat(addressForm.lng || '0'), parseFloat(addressForm.lat || '0')]
+            }
+        };
+        
+        const newAddrs = [...formData.deliveryAddresses, newAddressEntry];
+        setFormData({ ...formData, deliveryAddresses: newAddrs, address: newAddrs[0] });
+        setShowAddressForm(false);
+        setAddressForm({ street: '', number: '', complement: '', neighborhood: '', city: '', state: '', zip: '', lat: '', lng: '' });
+    };
+
+    const handleDeleteAddress = (index: number) => {
+        const newAddrs = formData.deliveryAddresses.filter((_, i) => i !== index);
+        setFormData({ ...formData, deliveryAddresses: newAddrs, address: newAddrs[0] || { street: '', number: '', complement: '', neighborhood: '', city: '', state: '', zip: '' } });
     };
 
     const handlePetImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -283,107 +364,222 @@ export default function ProfilePage() {
                 <h3 className={styles.sectionTitle}><User size={20} color="#3BB77E" /> Informações Pessoais</h3>
 
                 <form onSubmit={handleSubmit}>
-                    <div className={styles.formGroup}>
-                        <label>Telefone</label>
-                        <div style={{ position: 'relative' }}>
-                            <span style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: '#BCE3C9' }}>
-                                <Phone size={18} />
-                            </span>
-                            <input
-                                type="tel"
-                                placeholder="(00) 00000-0000"
-                                className={styles.formInput}
-                                style={{ paddingLeft: '45px' }}
-                                value={formData.phone || ''}
-                                onChange={handlePhoneChange}
-                                maxLength={15}
-                            />
-                        </div>
-                    </div>
-
-                    <h4 className={styles.sectionTitle} style={{ marginTop: '30px', fontSize: '18px' }}>
-                        <MapPin size={20} color="#3BB77E" /> Endereço de Entrega
-                    </h4>
-
-                    <div className={styles.grid3Col}>
-                        <div className={styles.formGroup}>
-                            <label>Rua</label>
-                            <input
-                                type="text"
-                                required
-                                className={styles.formInput}
-                                value={formData.address.street || ''}
-                                onChange={e => setFormData({ ...formData, address: { ...formData.address, street: e.target.value } })}
-                            />
-                        </div>
-                        <div className={styles.formGroup}>
-                            <label>Número</label>
-                            <input
-                                type="text"
-                                required
-                                className={styles.formInput}
-                                value={formData.address.number || ''}
-                                onChange={e => setFormData({ ...formData, address: { ...formData.address, number: e.target.value } })}
-                            />
-                        </div>
-                        <div className={styles.formGroup}>
-                            <label>Complemento</label>
-                            <input
-                                type="text"
-                                className={styles.formInput}
-                                value={formData.address.complement || ''}
-                                onChange={e => setFormData({ ...formData, address: { ...formData.address, complement: e.target.value } })}
-                                placeholder="Opcional"
-                            />
-                        </div>
-                    </div>
-
-                    <div className={styles.grid3Col}>
-                        <div className={styles.formGroup}>
-                            <label>Bairro</label>
-                            <input
-                                type="text"
-                                className={styles.formInput}
-                                value={formData.address.neighborhood || ''}
-                                onChange={e => setFormData({ ...formData, address: { ...formData.address, neighborhood: e.target.value } })}
-                            />
-                        </div>
-                        <div className={styles.formGroup}>
-                            <label>Cidade</label>
-                            <input
-                                type="text"
-                                required
-                                className={styles.formInput}
-                                value={formData.address.city || ''}
-                                onChange={e => setFormData({ ...formData, address: { ...formData.address, city: e.target.value } })}
-                            />
-                        </div>
-                        <div className={styles.formGroup}>
-                            <label>Estado (UF)</label>
-                            <input
-                                type="text"
-                                className={styles.formInput}
-                                maxLength={2}
-                                placeholder="CE"
-                                style={{ textTransform: 'uppercase' }}
-                                value={formData.address.state || ''}
-                                onChange={e => setFormData({ ...formData, address: { ...formData.address, state: e.target.value.toUpperCase() } })}
-                            />
-                        </div>
-                    </div>
-
                     <div className={styles.grid2Col}>
                         <div className={styles.formGroup}>
-                            <label>CEP</label>
-                            <input
-                                type="text"
-                                required
-                                className={styles.formInput}
-                                value={formData.address.zip || ''}
-                                onChange={handleZipChange}
-                                maxLength={9}
-                            />
+                            <label>CPF</label>
+                            <div style={{ position: 'relative' }}>
+                                <input
+                                    type="text"
+                                    placeholder="000.000.000-00"
+                                    className={styles.formInput}
+                                    style={{ borderColor: !formData.cpf ? '#FF4D4D' : '' }}
+                                    value={formData.cpf || ''}
+                                    onChange={handleCpfChange}
+                                    maxLength={14}
+                                />
+                            </div>
                         </div>
+
+                        <div className={styles.formGroup}>
+                            <label>Telefone</label>
+                            <div style={{ position: 'relative' }}>
+                                <span style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: '#BCE3C9' }}>
+                                    <Phone size={18} />
+                                </span>
+                                <input
+                                    type="tel"
+                                    placeholder="(00) 00000-0000"
+                                    className={styles.formInput}
+                                    style={{ paddingLeft: '45px', borderColor: !formData.phone ? '#FF4D4D' : '' }}
+                                    value={formData.phone || ''}
+                                    onChange={handlePhoneChange}
+                                    maxLength={15}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style={{ marginTop: '30px', background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid #f0f0f0', paddingBottom: '0.8rem' }}>
+                            <h4 style={{ margin: 0, color: '#333', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <MapPin size={20} color="#3BB77E" /> Meus Locais de Entrega
+                            </h4>
+                            {!showAddressForm && (
+                                <button
+                                    type="button"
+                                    onClick={() => setShowAddressForm(true)}
+                                    style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: '#3BB77E', color: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '0.9rem', transition: 'all 0.2s' }}
+                                >
+                                    <Plus size={16} /> Adicionar Endereço
+                                </button>
+                            )}
+                        </div>
+
+                        {formData.deliveryAddresses.length === 0 && !showAddressForm && (
+                            <div style={{ textAlign: 'center', padding: '2rem 1rem', background: '#f8f9fa', borderRadius: '8px', border: '2px dashed #ddd' }}>
+                                <MapPin size={40} color="#b0bec5" style={{ margin: '0 auto 1rem' }} />
+                                <p style={{ color: '#555', marginBottom: '1.2rem', fontWeight: 500 }}>
+                                    Você ainda não possui nenhum endereço para entrega salvo.
+                                </p>
+                                <button 
+                                    type="button" 
+                                    onClick={() => setShowAddressForm(true)}
+                                    style={{ background: '#253D4E', color: 'white', border: 'none', padding: '0.8rem 1.5rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '1rem', transition: 'all 0.2s' }}
+                                >
+                                    Cadastrar Meu Endereço
+                                </button>
+                            </div>
+                        )}
+                        
+                        {!showAddressForm && formData.deliveryAddresses.length > 0 && (
+                            <div style={{ display: 'grid', gap: '1rem', marginBottom: '20px' }}>
+                                {formData.deliveryAddresses.map((addr, idx) => (
+                                    <div key={idx} style={{ 
+                                        display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', padding: '1.2rem', 
+                                        border: '1px solid #E5E7EB', borderRadius: '10px', background: 'white',
+                                        transition: 'all 0.2s ease', position: 'relative'
+                                    }}>
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ fontWeight: 600, color: '#333', fontSize: '1.05rem', marginBottom: '0.2rem' }}>
+                                                {addr.street}, {addr.number}
+                                                {idx === 0 && <span style={{ marginLeft: '10px', fontSize: '0.7rem', background: '#e0f2fe', color: '#0369a1', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase', fontWeight: 700 }}>Principal</span>}
+                                            </div>
+                                            <div style={{ fontSize: '0.95rem', color: '#555', marginBottom: '0.2rem' }}>{addr.neighborhood} - {addr.city}/{addr.state}</div>
+                                            <div style={{ fontSize: '0.85rem', color: '#888' }}>CEP: {maskZip(addr.zip)} {addr.complement ? `| Cpl: ${addr.complement}` : ''}</div>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleDeleteAddress(idx)}
+                                            style={{ background: '#FEE2E2', border: 'none', color: '#EF4444', padding: '0.6rem', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                                            title="Excluir"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {showAddressForm && (
+                            <div style={{ background: '#F9FAFB', padding: '1.5rem', borderRadius: '10px', border: '1px solid #E5E7EB', marginBottom: '20px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem' }}>
+                                    <h4 style={{ margin: 0, color: '#253D4E', fontSize: '1.1rem' }}>Novo Endereço</h4>
+                                    {formData.deliveryAddresses.length > 0 && (
+                                        <button type="button" onClick={() => setShowAddressForm(false)} style={{ background: 'none', border: 'none', color: '#6B7280', fontSize: '0.9rem', cursor: 'pointer', textDecoration: 'underline' }}>
+                                            Cancelar
+                                        </button>
+                                    )}
+                                </div>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem', marginBottom: '1rem', border: 'none' }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '1rem' }}>
+                                        <div>
+                                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 500, color: '#374151' }}>Rua *</label>
+                                            <input
+                                                required
+                                                placeholder="Nome da rua"
+                                                value={addressForm.street}
+                                                onChange={e => setAddressForm({ ...addressForm, street: e.target.value })}
+                                                style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #D1D5DB', width: '100%', fontSize: '0.95rem' }}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 500, color: '#374151' }}>Número *</label>
+                                            <input
+                                                type="text"
+                                                required
+                                                value={addressForm.number}
+                                                onChange={e => setAddressForm({ ...addressForm, number: e.target.value })}
+                                                placeholder="Ex: 123"
+                                                style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #D1D5DB', width: '100%', fontSize: '0.95rem' }}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 500, color: '#374151' }}>Complemento</label>
+                                            <input
+                                                type="text"
+                                                value={addressForm.complement}
+                                                onChange={e => setAddressForm({ ...addressForm, complement: e.target.value })}
+                                                placeholder="Apto, bloco"
+                                                style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #D1D5DB', width: '100%', fontSize: '0.95rem' }}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                        <div>
+                                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 500, color: '#374151' }}>Bairro</label>
+                                            <input
+                                                value={addressForm.neighborhood}
+                                                onChange={e => setAddressForm({ ...addressForm, neighborhood: e.target.value })}
+                                                style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #D1D5DB', width: '100%', fontSize: '0.95rem' }}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 500, color: '#374151' }}>Estado (UF)</label>
+                                            <input
+                                                maxLength={2}
+                                                placeholder="UF"
+                                                style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #D1D5DB', width: '100%', fontSize: '0.95rem', textTransform: 'uppercase' }}
+                                                value={addressForm.state}
+                                                onChange={e => setAddressForm({ ...addressForm, state: e.target.value.toUpperCase() })}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                        <div>
+                                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 500, color: '#374151' }}>Cidade *</label>
+                                            <input
+                                                required
+                                                placeholder="Sua cidade"
+                                                value={addressForm.city}
+                                                onChange={e => setAddressForm({ ...addressForm, city: e.target.value })}
+                                                style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #D1D5DB', width: '100%', fontSize: '0.95rem' }}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 500, color: '#374151' }}>CEP *</label>
+                                            <input
+                                                required
+                                                placeholder="00000-000"
+                                                value={addressForm.zip}
+                                                onChange={e => setAddressForm({ ...addressForm, zip: maskZip(e.target.value) })}
+                                                style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #D1D5DB', width: '100%', fontSize: '0.95rem' }}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style={{ marginBottom: '1.5rem', background: 'white', padding: '1rem', borderRadius: '8px', border: '1px solid #E5E7EB' }}>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.8rem', fontWeight: 600, color: '#374151' }}>
+                                        <MapPin size={18} color="#3BB77E" /> Localização no Mapa (Recomendado)
+                                    </label>
+                                    <MapPicker
+                                        lat={addressForm.lat ? parseFloat(addressForm.lat) : -23.550520}
+                                        lng={addressForm.lng ? parseFloat(addressForm.lng) : -46.633308}
+                                        onLocationChange={(lat: number, lng: number) => {
+                                            setAddressForm(prev => ({
+                                                ...prev,
+                                                lat: lat.toString(),
+                                                lng: lng.toString(),
+                                            }));
+                                            fetchAddressFromCoordinates(lat, lng);
+                                        }}
+                                        height="250px"
+                                    />
+                                    <p style={{ fontSize: '0.8rem', color: '#6B7280', marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                                        <AlertCircle size={14} /> Confirme o pino exato para evitar erros em entregas parceiras.
+                                    </p>
+                                </div>
+                                
+                                <button 
+                                    type="button" 
+                                    onClick={handleAddAddress} 
+                                    style={{ background: '#253D4E', color: 'white', border: 'none', padding: '0.8rem 1.5rem', borderRadius: '8px', fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer', transition: 'background 0.2s' }}
+                                >
+                                    Adicionar à Lista
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     <button

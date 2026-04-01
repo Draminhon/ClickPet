@@ -43,12 +43,25 @@ const OrderSchema = new mongoose.Schema({
     },
     paymentMethod: {
         type: String,
-        default: 'cartao',
+        enum: ['pix', 'cartao', 'pix_cartao'],
+        default: 'pix',
     },
     paymentStatus: {
         type: String,
         enum: ['approved', 'rejected', 'pending', 'cancelled'],
-        default: 'approved',
+        default: 'pending',
+    },
+    abacatepayBillingId: {
+        type: String,
+    },
+    abacatepayBillingUrl: {
+        type: String,
+    },
+    abacatepayCustomerId: {
+        type: String,
+    },
+    paymentStartedAt: {
+        type: Date,
     },
     deliveryPersonId: {
         type: mongoose.Schema.Types.ObjectId,

@@ -105,6 +105,7 @@ export default function Register() {
                             src={src}
                             alt={`Carousel ${index + 1}`}
                             fill
+                            sizes="(max-width: 768px) 100vw, 50vw"
                             className={styles.carouselSlide}
                             priority={index === 0}
                         />
@@ -215,10 +216,6 @@ export default function Register() {
                         <button className={styles.socialButton} onClick={() => handleSocialLogin('google')}>
                             <Image src="/assets/google2.png" alt="Google" width={28} height={28} className={styles.socialIcon} />
                             <span className={styles.socialText}>Cadastre-se com Google</span>
-                        </button>
-                        <button className={styles.socialButton} onClick={() => handleSocialLogin('facebook')}>
-                            <Image src="/assets/facebook2.png" alt="Facebook" width={28} height={28} className={styles.socialIcon} />
-                            <span className={styles.socialText}>Cadastre-se com Facebook</span>
                         </button>
                     </div>
 

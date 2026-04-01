@@ -4,7 +4,6 @@ import dbConnect from "@/lib/db";
 import User from "@/models/User";
 import bcrypt from "bcryptjs";
 import GoogleProvider from "next-auth/providers/google";
-import FacebookProvider from "next-auth/providers/facebook";
 import speakeasy from "speakeasy";
 
 export const authOptions: NextAuthOptions = {
@@ -109,14 +108,10 @@ export const authOptions: NextAuthOptions = {
                 timeout: 10000,
             },
         }),
-        FacebookProvider({
-            clientId: process.env.FACEBOOK_CLIENT_ID!,
-            clientSecret: process.env.FACEBOOK_CLIENT_SECRET!,
-        }),
     ],
     callbacks: {
         async signIn({ user, account }: any) {
-            if (account.provider === "google" || account.provider === "facebook") {
+            if (account.provider === "google") {
                 try {
                     await dbConnect();
                     let dbUser = await User.findOne({ email: user.email });

@@ -171,6 +171,7 @@ export default function ProductDetailPage() {
                             src={currentImage || '/placeholder-product.png'}
                             alt={product.title}
                             fill
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 800px"
                             className={styles.mainImage}
                         />
                     </div>

@@ -122,11 +122,29 @@ export default function MapPickerClient({ lat, lng, onLocationChange, height = '
                 setGeoLoading(false);
             },
             (err) => {
-                console.error('Error getting location:', err);
-                alert('Não foi possível obter sua localização. Verifique as permissões do seu navegador.');
+                console.error('Error getting location:', {
+                    code: err.code,
+                    message: err.message
+                });
+                
+                let errorMessage = 'Não foi possível obter sua localização.';
+                
+                if (err.code === 1) { // PERMISSION_DENIED
+                    errorMessage = 'Permissão de localização negada. Verifique as configurações do seu navegador.';
+                } else if (err.code === 2) { // POSITION_UNAVAILABLE
+                    errorMessage = 'Localização indisponível. Verifique seu sinal de GPS ou rede.';
+                } else if (err.code === 3) { // TIMEOUT
+                    errorMessage = 'Tempo esgotado ao tentar obter localização.';
+                }
+                
+                alert(errorMessage);
                 setGeoLoading(false);
             },
-            { enableHighAccuracy: true }
+            { 
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            }
         );
     };
 

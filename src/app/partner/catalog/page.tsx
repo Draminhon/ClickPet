@@ -22,7 +22,7 @@ import ProductModal from '@/components/modals/ProductModal';
 import { useSession } from 'next-auth/react';
 import { useToast } from '@/context/ToastContext';
 
-export default function CatalogPage() {
+function CatalogContent() {
     const { data: session } = useSession();
     const { showToast } = useToast();
     const [products, setProducts] = useState<any[]>([]);
@@ -223,7 +223,7 @@ export default function CatalogPage() {
                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                                             {p.image ? (
                                                 <div style={{ position: 'relative', width: 32, height: 32, borderRadius: '4px', overflow: 'hidden', flexShrink: 0 }}>
-                                                    <Image src={p.image} alt={p.title} fill style={{ objectFit: 'cover' }} />
+                                                    <Image src={p.image} alt={p.title} fill sizes="32px" style={{ objectFit: 'cover' }} />
                                                 </div>
                                             ) : (
                                                 <div style={{ width: 32, height: 32, borderRadius: '4px', backgroundColor: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -342,5 +342,15 @@ export default function CatalogPage() {
                 </div>
             )}
         </div>
+    );
+}
+
+import { Suspense } from 'react';
+
+export default function CatalogPage() {
+    return (
+        <Suspense fallback={<div style={{ padding: '2rem', textAlign: 'center' }}>Carregando...</div>}>
+            <CatalogContent />
+        </Suspense>
     );
 }

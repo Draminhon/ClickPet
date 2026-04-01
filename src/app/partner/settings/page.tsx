@@ -258,6 +258,7 @@ export default function PartnerSettings() {
     const [formData, setFormData] = useState({
         // ... (state preserved)
         cnpj: '',
+        cpf: '',
         phone: '',
         minimumOrderValue: '0',
         deliveryRadius: '10',
@@ -315,19 +316,26 @@ export default function PartnerSettings() {
             .then(res => res.json())
             .then(data => {
                 const formatted = {
-                    cnpj: data.cnpj || '',
-                    phone: data.phone || '',
-                    minimumOrderValue: data.minimumOrderValue?.toString() || '0',
+                    cnpj: data.cnpj ? maskCNPJ(data.cnpj) : '',
+                    cpf: data.cpf ? maskCPF(data.cpf) : '',
+                    phone: data.phone ? maskPhone(data.phone) : '',
+                    minimumOrderValue: data.minimumOrderValue?.toFixed(2).replace('.', ',') || '0,00',
                     deliveryRadius: data.deliveryRadius?.toString() || '10',
-                    deliveryFeePerKm: data.deliveryFeePerKm?.toString() || '2',
-                    freeDeliveryMinimum: data.freeDeliveryMinimum?.toString() || '0',
+                    deliveryFeePerKm: data.deliveryFeePerKm?.toFixed(2).replace('.', ',') || '2,00',
+                    freeDeliveryMinimum: data.freeDeliveryMinimum?.toFixed(2).replace('.', ',') || '0,00',
                     workingHours: data.workingHours?.length > 0 ? data.workingHours : formData.workingHours,
                     paymentConfig: {
                         creditCard: data.paymentConfig?.creditCard ?? formData.paymentConfig.creditCard,
                         debitCard: data.paymentConfig?.debitCard ?? formData.paymentConfig.debitCard,
                         cash: data.paymentConfig?.cash ?? formData.paymentConfig.cash
                     },
-                    paymentMethodsTable: data.paymentMethodsTable || formData.paymentMethodsTable,
+                    paymentMethodsTable: data.paymentMethods?.length > 0 
+                        ? data.paymentMethods.map((m: any) => ({
+                             method: m.method,
+                             fee: (m.fee || 0).toFixed(2).replace('.', ','),
+                             term: m.term
+                          })) 
+                        : formData.paymentMethodsTable,
                     pixConfig: {
                         keyType: data.pixConfig?.keyType || formData.pixConfig.keyType,
                         key: data.pixConfig?.key || '',
@@ -340,7 +348,7 @@ export default function PartnerSettings() {
                         neighborhood: data.address?.neighborhood || '',
                         city: data.address?.city || '',
                         state: data.address?.state || '',
-                        zip: data.address?.zip || data.address?.zipCode || '',
+                        zip: data.address?.zip ? maskZip(data.address.zip) : '',
                         coordinates: {
                             lat: data.address?.coordinates?.coordinates?.[1] ?? -23.550520,
                             lng: data.address?.coordinates?.coordinates?.[0] ?? -46.633308
@@ -363,7 +371,16 @@ export default function PartnerSettings() {
         e.preventDefault();
         
         const errors: string[] = [];
-        if (!formData.cnpj || formData.cnpj.replace(/\D/g, '').length < 14) errors.push('cnpj');
+        const cleanCNPJ = formData.cnpj.replace(/\D/g, '');
+        const cleanCPF = formData.cpf.replace(/\D/g, '');
+        
+        if (!cleanCNPJ && !cleanCPF) {
+            errors.push('cpf_cnpj');
+        } else {
+            if (cleanCNPJ && cleanCNPJ.length < 14) errors.push('cnpj');
+            if (cleanCPF && cleanCPF.length < 11) errors.push('cpf');
+        }
+
         if (!formData.phone || formData.phone.length < 14) errors.push('phone');
         if (!formData.address.street) errors.push('street');
         if (!formData.address.number) errors.push('number');
@@ -387,6 +404,7 @@ export default function PartnerSettings() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     cnpj: formData.cnpj.replace(/\D/g, ''),
+                    cpf: formData.cpf.replace(/\D/g, ''),
                     phone: formData.phone,
                     minimumOrderValue: parseFloat(formData.minimumOrderValue.replace(',', '.')),
                     deliveryRadius: parseFloat(formData.deliveryRadius),
@@ -514,13 +532,33 @@ export default function PartnerSettings() {
                         error={validationErrors.includes('phone')}
                     />
 
-                    <InputContainer 
-                        label={<>CNPJ <span style={{ color: '#FF4D4D' }}>*</span></>}
-                        value={formData.cnpj}
-                        onChange={(e: any) => setFormData({ ...formData, cnpj: maskCNPJ(e.target.value) })}
-                        placeholder="00.000.000/0000-00"
-                        error={validationErrors.includes('cnpj')}
-                    />
+                    {validationErrors.includes('cpf_cnpj') && (
+                        <div style={{ color: '#FF4D4D', fontSize: '12px', marginBottom: '16px', fontWeight: 600 }}>
+                            ⚠️ VOCÊ DEVE PREENCHER OU SEU CPF OU SEU CNPJ.
+                        </div>
+                    )}
+                    <div style={{ display: 'flex', gap: '24px' }}>
+                        <div style={{ flex: 1 }}>
+                            <InputContainer 
+                                label="CPF"
+                                value={formData.cpf}
+                                onChange={(e: any) => setFormData({ ...formData, cpf: maskCPF(e.target.value) })}
+                                placeholder="000.000.000-00"
+                                error={validationErrors.includes('cpf') || validationErrors.includes('cpf_cnpj')}
+                                width="100%"
+                            />
+                        </div>
+                        <div style={{ flex: 1 }}>
+                            <InputContainer 
+                                label="CNPJ"
+                                value={formData.cnpj}
+                                onChange={(e: any) => setFormData({ ...formData, cnpj: maskCNPJ(e.target.value) })}
+                                placeholder="00.000.000/0000-00"
+                                error={validationErrors.includes('cnpj') || validationErrors.includes('cpf_cnpj')}
+                                width="100%"
+                            />
+                        </div>
+                    </div>
 
                     <InputContainer 
                         label="VALOR MÍNIMO DO PEDIDO (R$)"
@@ -1003,7 +1041,7 @@ export default function PartnerSettings() {
  
                                                 if (zip.length === 9) {
                                                     try {
-                                                        const res = await fetch(`https://viacep.com.br/ws/${zip.replace('-', '')}/json/`);
+                                                        const res = await fetch(`https://viacep.com.br/ws/${zip.replace(/\D/g, '')}/json/`);
                                                         const data = await res.json();
                                                         if (!data.erro) {
                                                             const street = data.logradouro;
@@ -1018,8 +1056,7 @@ export default function PartnerSettings() {
                                                                     street: street || prev.address.street,
                                                                     city: city || prev.address.city,
                                                                     state: state || prev.address.state,
-                                                                    neighborhood: neighborhood || prev.address.neighborhood,
-                                                                    zip: zip
+                                                                    neighborhood: neighborhood || prev.address.neighborhood
                                                                 }
                                                             }));
  
@@ -1040,9 +1077,12 @@ export default function PartnerSettings() {
                                                             } catch (geoErr) {
                                                                 console.error('Geocoding error:', geoErr);
                                                             }
+                                                        } else {
+                                                            showToast('CEP não encontrado', 'error');
                                                         }
                                                     } catch (error) {
                                                         console.error('Error fetching CEP:', error);
+                                                        showToast('Erro ao buscar CEP', 'error');
                                                     }
                                                 }
                                             }}

@@ -81,6 +81,15 @@ const SubscriptionSchema = new mongoose.Schema({
         },
         notes: String,
     }],
+    abacatepayBillingId: {
+        type: String,
+    },
+    abacatepayBillingUrl: {
+        type: String,
+    },
+    paymentStartedAt: {
+        type: Date,
+    },
 }, { timestamps: true });
 
 // Index for efficient queries

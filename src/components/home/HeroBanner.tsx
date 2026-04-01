@@ -132,6 +132,7 @@ export default function HeroBanner() {
                     src="/banner/banner_image.png"
                     alt="Banner Image"
                     fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
                     className={styles.bannerImage}
                     priority
                 />

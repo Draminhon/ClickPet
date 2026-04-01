@@ -22,9 +22,13 @@ export async function GET() {
         const partners = await User.find({ role: 'partner' }).lean();
 
         const partnerMap = new Map();
-        partners.forEach(p => {
-            partnerMap.set(p._id.toString(), p);
-            partnerMap.set(p.name, p);
+        (partners as any[]).forEach(p => {
+            if (p._id) {
+                partnerMap.set(p._id.toString(), p);
+            }
+            if (p.name) {
+                partnerMap.set(p.name, p);
+            }
         });
 
         const statsMap = new Map();

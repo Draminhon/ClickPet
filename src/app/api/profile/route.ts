@@ -49,9 +49,21 @@ export async function PUT(req: Request) {
             user.address = { ...user.address, ...body.address };
             updateData.address = body.address;
         }
+        if (body.deliveryAddresses !== undefined) {
+            user.deliveryAddresses = body.deliveryAddresses;
+            updateData.deliveryAddresses = body.deliveryAddresses;
+        }
         if (body.phone !== undefined) {
             user.phone = body.phone;
             updateData.phone = body.phone;
+        }
+        if (body.cnpj !== undefined) {
+            user.cnpj = body.cnpj;
+            updateData.cnpj = body.cnpj;
+        }
+        if (body.cpf !== undefined) {
+            user.cpf = body.cpf;
+            updateData.cpf = body.cpf;
         }
         if (body.minimumOrderValue !== undefined) {
             user.minimumOrderValue = body.minimumOrderValue;
@@ -85,9 +97,13 @@ export async function PUT(req: Request) {
             user.paymentConfig = body.paymentConfig;
             updateData.paymentConfig = body.paymentConfig;
         }
-        if (body.paymentMethods !== undefined) {
-            user.paymentMethods = body.paymentMethods;
-            updateData.paymentMethods = body.paymentMethods;
+        if (body.paymentMethodsTable !== undefined) {
+            user.paymentMethods = body.paymentMethodsTable.map((m: any) => ({
+                method: m.method,
+                fee: typeof m.fee === 'string' ? parseFloat(m.fee.replace(',', '.')) : m.fee,
+                term: m.term
+            }));
+            updateData.paymentMethods = user.paymentMethods;
         }
         if (body.pixConfig !== undefined) {
             user.pixConfig = body.pixConfig;

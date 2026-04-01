@@ -57,6 +57,25 @@ const UserSchema = new mongoose.Schema({
             },
         },
     },
+    deliveryAddresses: [{
+        street: String,
+        number: String,
+        complement: String,
+        neighborhood: String,
+        city: String,
+        state: String,
+        zip: String,
+        coordinates: {
+            type: {
+                type: String,
+                enum: ['Point'],
+                default: 'Point',
+            },
+            coordinates: {
+                type: [Number], // [longitude, latitude]
+            },
+        },
+    }],
     phone: {
         type: String,
     },

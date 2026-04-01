@@ -17,6 +17,7 @@ export default function AnimalSpecies() {
                         src="/assets/animals/chihuaha.png"
                         alt="Cachorros"
                         fill
+                        sizes="(max-width: 768px) 100vw, 430px"
                         className={styles.cardImage}
                     />
                     <span className={`${styles.cardText} ${styles.textWhite}`}>Cachorros</span>
@@ -31,6 +32,7 @@ export default function AnimalSpecies() {
                                 src="/assets/animals/indian_pig.png"
                                 alt="Diversos"
                                 fill
+                                sizes="(max-width: 768px) 100vw, 385px"
                                 className={styles.cardImage}
                             />
                             <span className={`${styles.cardText} ${styles.textWhite}`}>Diversos</span>
@@ -40,6 +42,7 @@ export default function AnimalSpecies() {
                                 src="/assets/animals/parrot.png"
                                 alt="Aves"
                                 fill
+                                sizes="(max-width: 768px) 100vw, 385px"
                                 className={styles.cardImage}
                             />
                             <span className={`${styles.cardText} ${styles.textDark}`}>Aves</span>
@@ -52,6 +55,7 @@ export default function AnimalSpecies() {
                             src="/assets/animals/cat.png"
                             alt="Gatos"
                             fill
+                            sizes="(max-width: 768px) 100vw, 820px"
                             className={styles.cardImage}
                         />
                         <span className={`${styles.cardText} ${styles.textWhite}`}>Gatos</span>

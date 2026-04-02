@@ -3,7 +3,8 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Check } from 'lucide-react';
+import { Check, AlertTriangle } from 'lucide-react';
+import { useToast } from '@/context/ToastContext';
 import styles from './Subscription.module.css';
 
 interface SubscriptionDetails {
@@ -31,8 +32,21 @@ const MONTHS_PT = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET'
 export default function PartnerSubscriptionPage() {
     const { data: session } = useSession();
     const router = useRouter();
+    const { showToast } = useToast();
     const [subscription, setSubscription] = useState<SubscriptionDetails | null>(null);
     const [loading, setLoading] = useState(true);
+
+    const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+    const [isCancelling, setIsCancelling] = useState(false);
+
+    useEffect(() => {
+        const status = new URLSearchParams(window.location.search).get('status');
+        if (status === 'success' || status === 'concluded') {
+            showToast('Assinatura processada com sucesso!', 'success');
+            // Clean URL
+            window.history.replaceState({}, '', window.location.pathname);
+        }
+    }, [showToast]);
 
     useEffect(() => {
         if (session?.user?.id) {
@@ -55,7 +69,33 @@ export default function PartnerSubscriptionPage() {
     };
 
     const handleSubscribe = (planName: string) => {
+        if (planName === 'free') {
+            setIsCancelModalOpen(true);
+            return;
+        }
         router.push(`/partner/subscription/payment?plan=${planName}`);
+    };
+
+    const handleDowngradeToFree = async () => {
+        setIsCancelling(true);
+        try {
+            const response = await fetch('/api/subscriptions/cancel', {
+                method: 'POST',
+            });
+            const data = await response.json();
+            if (response.ok) {
+                showToast(data.message, 'success');
+                setIsCancelModalOpen(false);
+                fetchSubscription();
+            } else {
+                showToast(data.message || 'Erro ao cancelar assinatura', 'error');
+            }
+        } catch (error) {
+            console.error('Error downgrading:', error);
+            showToast('Erro ao conectar com o servidor', 'error');
+        } finally {
+            setIsCancelling(false);
+        }
     };
 
     const formatRenewalDate = (dateStr: string) => {
@@ -284,6 +324,106 @@ export default function PartnerSubscriptionPage() {
                 </div>
                 <button className={styles.ctaBtn}>ENTRE EM CONTATO</button>
             </div>
+
+            {/* Downgrade Modal */}
+            {isCancelModalOpen && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 9999,
+                    animation: 'fadeIn 0.2s ease-out'
+                }}>
+                    <div style={{
+                        background: 'white',
+                        borderRadius: '16px',
+                        padding: '2rem',
+                        maxWidth: '450px',
+                        width: '90%',
+                        boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+                        textAlign: 'center',
+                        animation: 'slideUp 0.3s ease-out'
+                    }}>
+                        <div style={{
+                            width: '64px',
+                            height: '64px',
+                            borderRadius: '50%',
+                            background: '#fffbeb',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            margin: '0 auto 1.5rem auto'
+                        }}>
+                            <AlertTriangle size={32} color="#fbbf24" strokeWidth={2.5} />
+                        </div>
+                        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#1f2937', marginBottom: '1rem' }}>
+                            Confirma o Downgrade?
+                        </h2>
+                        <p style={{ color: '#4b5563', fontSize: '0.95rem', marginBottom: '1rem', lineHeight: 1.5 }}>
+                            Ao retroceder para o <strong>Plano Free</strong>, você perderá os benefícios exclusivos da sua assinatura atual imediatamente.
+                        </p>
+                        <div style={{ background: '#fef2f2', border: '1px solid #fee2e2', borderRadius: '8px', padding: '1rem', marginBottom: '2rem' }}>
+                            <p style={{ color: '#b91c1c', fontSize: '0.9rem', margin: 0, fontWeight: 500 }}>
+                                Produtos e serviços que excederem o limite do plano gratuito (10 produtos e 5 serviços) poderão ficar ocultos no seu catálogo.
+                            </p>
+                        </div>
+                        <div style={{ display: 'flex', gap: '1rem', flexDirection: 'column' }}>
+                            <button
+                                onClick={handleDowngradeToFree}
+                                disabled={isCancelling}
+                                style={{
+                                    width: '100%',
+                                    padding: '1rem',
+                                    borderRadius: '8px',
+                                    backgroundColor: '#ef4444',
+                                    color: 'white',
+                                    fontWeight: 700,
+                                    border: 'none',
+                                    cursor: isCancelling ? 'not-allowed' : 'pointer',
+                                    opacity: isCancelling ? 0.7 : 1,
+                                    transition: 'background 0.2s'
+                                }}
+                                onMouseEnter={(e) => { if (!isCancelling) e.currentTarget.style.backgroundColor = '#dc2626' }}
+                                onMouseLeave={(e) => { if (!isCancelling) e.currentTarget.style.backgroundColor = '#ef4444' }}
+                            >
+                                {isCancelling ? 'Processando...' : 'Sim, quero retroceder'}
+                            </button>
+                            <button
+                                onClick={() => setIsCancelModalOpen(false)}
+                                disabled={isCancelling}
+                                style={{
+                                    width: '100%',
+                                    padding: '1rem',
+                                    borderRadius: '8px',
+                                    backgroundColor: '#f3f4f6',
+                                    color: '#4b5563',
+                                    fontWeight: 600,
+                                    border: 'none',
+                                    cursor: isCancelling ? 'not-allowed' : 'pointer',
+                                    transition: 'background 0.2s'
+                                }}
+                                onMouseEnter={(e) => { if (!isCancelling) e.currentTarget.style.backgroundColor = '#e5e7eb' }}
+                                onMouseLeave={(e) => { if (!isCancelling) e.currentTarget.style.backgroundColor = '#f3f4f6' }}
+                            >
+                                Manter Assinatura
+                            </button>
+                        </div>
+                    </div>
+                    <style jsx>{`
+                        @keyframes fadeIn {
+                            from { opacity: 0; }
+                            to { opacity: 1; }
+                        }
+                        @keyframes slideUp {
+                            from { opacity: 0; transform: translateY(20px); }
+                            to { opacity: 1; transform: translateY(0); }
+                        }
+                    `}</style>
+                </div>
+            )}
         </div>
     );
 }

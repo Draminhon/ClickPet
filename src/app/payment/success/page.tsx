@@ -28,8 +28,7 @@ function PaymentSuccessContent() {
                 const res = await fetch(`/api/payments/check-status?${params}`);
                 const data = await res.json();
 
-                if (data.status === 'PAID' || data.status === 'COMPLETED' || data.status === 'FINISHED' ||
-                    data.paymentStatus === 'approved' || data.paymentStatus === 'active') {
+                if (data.status === 'PAID' || data.status === 'COMPLETED' || data.status === 'FINISHED') {
                     if (!isCancelled) setStatus('approved');
                     return true;
                 }
@@ -119,7 +118,7 @@ function PaymentSuccessContent() {
                             }
                         </p>
                         <button
-                            onClick={() => router.push(orderId ? '/orders' : '/partner/settings')}
+                            onClick={() => router.push(orderId ? '/orders' : '/partner/subscription')}
                             style={{
                                 width: '100%',
                                 padding: '0.9rem',

@@ -52,6 +52,10 @@ export async function GET(req: Request) {
             if (!record) {
                 return NextResponse.json({ message: 'Subscription not found' }, { status: 404 });
             }
+            // Security: only the partner owner can check their subscription
+            if (record.partnerId.toString() !== session.user.id) {
+                return NextResponse.json({ message: 'Unauthorized access to subscription' }, { status: 401 });
+            }
             billingId = record.abacatepayBillingId;
             type = 'subscription';
         }
@@ -98,9 +102,8 @@ export async function GET(req: Request) {
             } else if (type === 'subscription') {
                 const isAlreadyActive = record.status === 'active';
                 
-                // Get the intended plan from the latest 'created' history item
-                const creationLog = [...record.history].reverse().find(h => h.action === 'created' && h.newPlan);
-                const intendedPlan = creationLog ? creationLog.newPlan : record.plan;
+                // Use the safely stored pendingPlan
+                const intendedPlan = record.pendingPlan || record.plan;
                 
                 // Apply the new plan and features
                 record.plan = intendedPlan;

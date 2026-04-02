@@ -1,6 +1,46 @@
 import mongoose from 'mongoose';
 import { fieldEncryption } from 'mongoose-field-encryption';
 
+const ENC_KEY = process.env.ENCRYPTION_KEY;
+if (ENC_KEY && ENC_KEY.length !== 32) {
+    console.error(`[User Model] ENCRYPTION_KEY is ${ENC_KEY?.length || 0} chars — MUST be exactly 32!`);
+}
+
+const AddressSchema = new mongoose.Schema({
+    street: String,
+    number: String,
+    complement: String,
+    neighborhood: String,
+    city: String,
+    state: String,
+    zip: String,
+    coordinates: {
+        type: {
+            type: String,
+            enum: ['Point'],
+            default: 'Point',
+        },
+        coordinates: [Number], // [longitude, latitude]
+    },
+}, { _id: false });
+
+AddressSchema.plugin(fieldEncryption, {
+    fields: ['street', 'number', 'complement', 'neighborhood', 'city', 'state', 'zip', 'coordinates'],
+    secret: ENC_KEY || ''
+});
+
+const PixConfigSchema = new mongoose.Schema({
+    keyType: { type: String, default: 'CPF' },
+    key: { type: String, default: '' },
+    beneficiary: { type: String, default: '' },
+    dynamicPix: { type: Boolean, default: false },
+}, { _id: false });
+
+PixConfigSchema.plugin(fieldEncryption, {
+    fields: ['key', 'beneficiary', 'keyType'],
+    secret: ENC_KEY || ''
+});
+
 const UserSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -37,45 +77,8 @@ const UserSchema = new mongoose.Schema({
     cpf: {
         type: String,
     },
-    address: {
-        street: String,
-        number: String,
-        complement: String,
-        neighborhood: String,
-        city: String,
-        state: String,
-        zip: String,
-        coordinates: {
-            type: {
-                type: String,
-                enum: ['Point'],
-                default: 'Point',
-            },
-            coordinates: {
-                type: [Number], // [longitude, latitude]
-                index: '2dsphere',
-            },
-        },
-    },
-    deliveryAddresses: [{
-        street: String,
-        number: String,
-        complement: String,
-        neighborhood: String,
-        city: String,
-        state: String,
-        zip: String,
-        coordinates: {
-            type: {
-                type: String,
-                enum: ['Point'],
-                default: 'Point',
-            },
-            coordinates: {
-                type: [Number], // [longitude, latitude]
-            },
-        },
-    }],
+    address: AddressSchema,
+    deliveryAddresses: [AddressSchema],
     phone: {
         type: String,
     },
@@ -131,26 +134,11 @@ const UserSchema = new mongoose.Schema({
         fee: { type: Number, default: 0 },
         term: { type: String, default: '1 dia' },
     }],
-    pixConfig: {
-        keyType: { type: String, default: 'CPF' },
-        key: { type: String, default: '' },
-        beneficiary: { type: String, default: '' },
-        dynamicPix: { type: Boolean, default: false },
-    },
+    pixConfig: PixConfigSchema,
 }, { timestamps: true });
 
-// Encrypt sensitive fields: CNPJ/CPF, phone, address components, and 2FA secret.
-// Note: address.coordinates is NOT encrypted to preserve 2dsphere indexing.
-// CRITICAL: ENCRYPTION_KEY must be EXACTLY 32 characters for AES-256-CBC (createCipheriv).
-// If the key is not 32 chars, mongoose-field-encryption falls back to the deprecated 
-// createDecipher/createCipher, which was REMOVED in Node v22+.
-const ENC_KEY = process.env.ENCRYPTION_KEY;
-if (ENC_KEY && ENC_KEY.length !== 32) {
-    console.error(`[User Model] ENCRYPTION_KEY is ${ENC_KEY.length} chars — MUST be exactly 32! Encryption/decryption WILL fail.`);
-}
-
 UserSchema.plugin(fieldEncryption, {
-    fields: ['cnpj', 'cpf', 'phone', 'address.street', 'address.number', 'address.complement', 'address.neighborhood', 'address.city', 'address.state', 'address.zip', 'twoFactorSecret'],
+    fields: ['cnpj', 'cpf', 'phone', 'twoFactorSecret'],
     secret: ENC_KEY || ''
 });
 

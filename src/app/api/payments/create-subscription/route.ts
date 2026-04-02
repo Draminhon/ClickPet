@@ -45,13 +45,13 @@ export async function POST(req: Request) {
         // Check if subscription already exists
         let subscription = await Subscription.findOne({ partnerId: session.user.id });
 
-        // If subscription exists with a pending billing, return existing URL
-        if (subscription && subscription.abacatepayBillingId && subscription.status === 'pending') {
+        // If subscription exists with a pending billing AND the user hasn't changed their mind about the plan, return it
+        if (subscription && subscription.abacatepayBillingId && subscription.status === 'pending' && subscription.pendingPlan === plan) {
             return NextResponse.json({
                 billingId: subscription.abacatepayBillingId,
                 billingUrl: subscription.abacatepayBillingUrl,
                 subscriptionId: subscription._id,
-                message: 'Billing already exists',
+                message: 'Billing already exists for this exact plan',
             });
         }
 
@@ -124,18 +124,19 @@ export async function POST(req: Request) {
             },
         });
 
-        // Update subscription with billing info
+        // Update subscription with billing info and pending plan intent
         subscription.abacatepayBillingId = billing.id;
         subscription.abacatepayBillingUrl = billing.url;
         subscription.paymentStartedAt = new Date();
+        subscription.pendingPlan = plan;
+        subscription.pendingAmount = planFeatures.price;
         
-        // Use a history note to memorize the intent of the planned upgrade/downgrade 
-        // We will parse this back into the plan/features during checkout confirmation
+        // Use a history note to memorize the intent
         subscription.history.push({
             action: 'created',
             newPlan: plan,
             date: new Date(),
-            notes: `Cobrança gerada no AbacatePay para o plano: ${plan}`,
+            notes: `Cobrança gerada no AbacatePay para o plano: ${plan} (ID: ${billing.id})`,
         });
         await subscription.save();
 

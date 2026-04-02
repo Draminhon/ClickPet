@@ -1,0 +1,125 @@
+{
+  "_id": "69cc024433a420f0484e712e",
+  "partnerId": "69cc024433a420f0484e712c",
+  "plan": "premium",
+  "status": "active",
+  "startDate": "2026-04-02T16:41:53.782Z",
+  "endDate": "2026-05-02T16:41:53.782Z",
+  "autoRenew": false,
+  "paymentMethod": "manual",
+  "amount": 99.9,
+  "features": {
+    "maxProducts": -1,
+    "maxServices": -1,
+    "hasAnalytics": true,
+    "hasPrioritySupport": false,
+    "hasAdvancedReports": true,
+    "maxImages": 10
+  },
+  "history": [
+    {
+      "action": "created",
+      "newPlan": "basic",
+      "date": "2026-04-02T15:04:20.764Z",
+      "notes": "Cobrança gerada no AbacatePay para o plano: basic",
+      "_id": "69ce857422b995f031441e51"
+    },
+    {
+      "action": "upgraded",
+      "newPlan": "basic",
+      "date": "2026-04-02T15:04:38.553Z",
+      "notes": "Pagamento confirmado via AbacatePay (polling)",
+      "_id": "69ce858622b995f031441e67"
+    },
+    {
+      "action": "created",
+      "newPlan": "premium",
+      "date": "2026-04-02T15:08:53.192Z",
+      "notes": "Cobrança gerada no AbacatePay para o plano: premium",
+      "_id": "69ce868522b995f0314420c4"
+    },
+    {
+      "action": "upgraded",
+      "newPlan": "premium",
+      "date": "2026-04-02T15:12:36.510Z",
+      "notes": "Pagamento confirmado via AbacatePay (polling)",
+      "_id": "69ce876422b995f0314420ee"
+    },
+    {
+      "action": "created",
+      "newPlan": "enterprise",
+      "date": "2026-04-02T15:57:58.784Z",
+      "notes": "Cobrança gerada no AbacatePay para o plano: enterprise (ID: bill_JpcRfURtJeZkyAjnJZyRLZbp)",
+      "_id": "69ce920622b995f031442304"
+    },
+    {
+      "action": "upgraded",
+      "newPlan": "premium",
+      "date": "2026-04-02T15:58:12.717Z",
+      "notes": "Pagamento confirmado via AbacatePay (polling)",
+      "_id": "69ce921422b995f03144231c"
+    },
+    {
+      "action": "created",
+      "newPlan": "enterprise",
+      "date": "2026-04-02T16:22:14.867Z",
+      "notes": "Cobrança gerada no AbacatePay para o plano: enterprise (ID: bill_XzcBHnYthHMPYFXjDHbgdYbr)",
+      "_id": "69ce97b622b995f03144254a"
+    },
+    {
+      "action": "upgraded",
+      "newPlan": "premium",
+      "date": "2026-04-02T16:22:26.439Z",
+      "notes": "Pagamento confirmado via AbacatePay (polling)",
+      "_id": "69ce97c222b995f031442562"
+    },
+    {
+      "action": "created",
+      "newPlan": "enterprise",
+      "date": "2026-04-02T16:23:10.917Z",
+      "notes": "Cobrança gerada no AbacatePay para o plano: enterprise (ID: bill_qpxduUmJgxSMj14uTC6JbdPu)",
+      "_id": "69ce97ee22b995f0314426a6"
+    },
+    {
+      "action": "upgraded",
+      "newPlan": "premium",
+      "date": "2026-04-02T16:23:22.374Z",
+      "notes": "Pagamento confirmado via AbacatePay (polling)",
+      "_id": "69ce97fa22b995f0314426c0"
+    },
+    {
+      "action": "created",
+      "newPlan": "basic",
+      "date": "2026-04-02T16:23:31.060Z",
+      "notes": "Cobrança gerada no AbacatePay para o plano: basic (ID: bill_t0Wm0AruaLANBgLRQAm0ZJGa)",
+      "_id": "69ce980322b995f03144278e"
+    },
+    {
+      "action": "upgraded",
+      "newPlan": "premium",
+      "date": "2026-04-02T16:23:41.882Z",
+      "notes": "Pagamento confirmado via AbacatePay (polling)",
+      "_id": "69ce980d22b995f0314427aa"
+    },
+    {
+      "action": "created",
+      "newPlan": "enterprise",
+      "date": "2026-04-02T16:41:01.586Z",
+      "notes": "Cobrança gerada no AbacatePay para o plano: enterprise (ID: bill_eNnj0qXCypYYP12zy10cPZ2Q)",
+      "_id": "69ce9c1d22b995f0314429da"
+    },
+    {
+      "action": "upgraded",
+      "newPlan": "premium",
+      "date": "2026-04-02T16:41:53.782Z",
+      "notes": "Pagamento confirmado via AbacatePay (polling)",
+      "_id": "69ce9c5122b995f031442a0e"
+    }
+  ],
+  "createdAt": "2026-03-31T17:20:04.577Z",
+  "updatedAt": "2026-04-02T16:41:53.784Z",
+  "__v": 14,
+  "abacatepayBillingId": "bill_eNnj0qXCypYYP12zy10cPZ2Q",
+  "abacatepayBillingUrl": "https://app.abacatepay.com/pay/bill_eNnj0qXCypYYP12zy10cPZ2Q",
+  "paymentStartedAt": "2026-04-02T16:41:01.586Z"
+}

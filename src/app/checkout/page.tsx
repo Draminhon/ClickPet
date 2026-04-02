@@ -888,9 +888,12 @@ function CheckoutContent() {
                             type="button"
                             onClick={() => router.push('/profile')}
                             style={{ 
-                                width: '100%', padding: '1rem', background: '#6CC551', color: 'white', 
-                                border: 'none', borderRadius: '8px', fontWeight: 600, fontSize: '1rem', 
-                                cursor: 'pointer', transition: 'background 0.2s' 
+                                width: '100%', padding: '1.2rem', background: '#3BB77E', color: 'white', 
+                                border: 'none', borderRadius: '10px', 
+                                fontWeight: 700, fontSize: '1.1rem', 
+                                cursor: 'pointer',
+                                boxShadow: '0 4px 15px rgba(59, 183, 126, 0.3)', 
+                                transition: 'all 0.2s' 
                             }}
                         >
                             Ir para Meu Perfil

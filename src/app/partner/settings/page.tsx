@@ -258,7 +258,6 @@ export default function PartnerSettings() {
     const [formData, setFormData] = useState({
         // ... (state preserved)
         cnpj: '',
-        cpf: '',
         phone: '',
         minimumOrderValue: '0',
         deliveryRadius: '10',
@@ -317,7 +316,6 @@ export default function PartnerSettings() {
             .then(data => {
                 const formatted = {
                     cnpj: data.cnpj ? maskCNPJ(data.cnpj) : '',
-                    cpf: data.cpf ? maskCPF(data.cpf) : '',
                     phone: data.phone ? maskPhone(data.phone) : '',
                     minimumOrderValue: data.minimumOrderValue?.toFixed(2).replace('.', ',') || '0,00',
                     deliveryRadius: data.deliveryRadius?.toString() || '10',
@@ -372,13 +370,11 @@ export default function PartnerSettings() {
         
         const errors: string[] = [];
         const cleanCNPJ = formData.cnpj.replace(/\D/g, '');
-        const cleanCPF = formData.cpf.replace(/\D/g, '');
         
-        if (!cleanCNPJ && !cleanCPF) {
-            errors.push('cpf_cnpj');
-        } else {
-            if (cleanCNPJ && cleanCNPJ.length < 14) errors.push('cnpj');
-            if (cleanCPF && cleanCPF.length < 11) errors.push('cpf');
+        if (!cleanCNPJ) {
+            errors.push('cnpj');
+        } else if (cleanCNPJ.length < 14) {
+            errors.push('cnpj');
         }
 
         if (!formData.phone || formData.phone.length < 14) errors.push('phone');
@@ -404,7 +400,6 @@ export default function PartnerSettings() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     cnpj: formData.cnpj.replace(/\D/g, ''),
-                    cpf: formData.cpf.replace(/\D/g, ''),
                     phone: formData.phone,
                     minimumOrderValue: parseFloat(formData.minimumOrderValue.replace(',', '.')),
                     deliveryRadius: parseFloat(formData.deliveryRadius),
@@ -532,33 +527,13 @@ export default function PartnerSettings() {
                         error={validationErrors.includes('phone')}
                     />
 
-                    {validationErrors.includes('cpf_cnpj') && (
-                        <div style={{ color: '#FF4D4D', fontSize: '12px', marginBottom: '16px', fontWeight: 600 }}>
-                            ⚠️ VOCÊ DEVE PREENCHER OU SEU CPF OU SEU CNPJ.
-                        </div>
-                    )}
-                    <div style={{ display: 'flex', gap: '24px' }}>
-                        <div style={{ flex: 1 }}>
-                            <InputContainer 
-                                label="CPF"
-                                value={formData.cpf}
-                                onChange={(e: any) => setFormData({ ...formData, cpf: maskCPF(e.target.value) })}
-                                placeholder="000.000.000-00"
-                                error={validationErrors.includes('cpf') || validationErrors.includes('cpf_cnpj')}
-                                width="100%"
-                            />
-                        </div>
-                        <div style={{ flex: 1 }}>
-                            <InputContainer 
-                                label="CNPJ"
-                                value={formData.cnpj}
-                                onChange={(e: any) => setFormData({ ...formData, cnpj: maskCNPJ(e.target.value) })}
-                                placeholder="00.000.000/0000-00"
-                                error={validationErrors.includes('cnpj') || validationErrors.includes('cpf_cnpj')}
-                                width="100%"
-                            />
-                        </div>
-                    </div>
+                    <InputContainer 
+                        label={<>CNPJ DO PETSHOP <span style={{ color: '#FF4D4D' }}>*</span></>}
+                        value={formData.cnpj}
+                        onChange={(e: any) => setFormData({ ...formData, cnpj: maskCNPJ(e.target.value) })}
+                        placeholder="00.000.000/0000-00"
+                        error={validationErrors.includes('cnpj')}
+                    />
 
                     <InputContainer 
                         label="VALOR MÍNIMO DO PEDIDO (R$)"

@@ -52,24 +52,40 @@ export async function POST(req: Request) {
             return NextResponse.json({ message: 'User not found' }, { status: 404 });
         }
 
-        // Build AbacatePay products from order items
-        const products: AbacateProduct[] = order.items.map((item: any) => ({
-            externalId: item.productId?.toString() || item.title,
-            name: item.title,
-            description: `${item.quantity}x ${item.title}`,
-            quantity: item.quantity,
-            price: toCentavos(item.price),
-        }));
+        // Build AbacatePay products list
+        let products: AbacateProduct[] = [];
+        const totalDiscount = (order.discount || 0) + (order.pointsDiscount || 0);
 
-        // Add delivery fee as a product if applicable
-        if (order.deliveryFee > 0) {
-            products.push({
-                externalId: 'delivery-fee',
-                name: 'Taxa de Entrega',
-                description: `Entrega - ${order.distance?.toFixed(1) || '?'}km`,
+        if (totalDiscount > 0) {
+            // If there's a discount, we consolidate to a single line item to ensure the final total matches exactly.
+            // This avoids issues with gateways not supporting negative line items for coupons.
+            products = [{
+                externalId: `order-${orderId}-consolidated`,
+                name: `Pedido #${orderId.toString().slice(-6).toUpperCase()}`,
+                description: `Resumo do Pedido (Itens + Entrega - Descontos)`,
                 quantity: 1,
-                price: toCentavos(order.deliveryFee),
-            });
+                price: toCentavos(order.total),
+            }];
+        } else {
+            // Standard itemized list when no discounts are present
+            products = order.items.map((item: any) => ({
+                externalId: item.productId?.toString() || item.title,
+                name: item.title,
+                description: `${item.quantity}x ${item.title}`,
+                quantity: item.quantity,
+                price: toCentavos(item.price),
+            }));
+
+            // Add delivery fee as a separate product if applicable
+            if (order.deliveryFee > 0) {
+                products.push({
+                    externalId: 'delivery-fee',
+                    name: 'Taxa de Entrega',
+                    description: `Entrega - ${order.distance?.toFixed(1) || '?'}km`,
+                    quantity: 1,
+                    price: toCentavos(order.deliveryFee),
+                });
+            }
         }
 
         // Determine payment methods

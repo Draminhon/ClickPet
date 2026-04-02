@@ -81,6 +81,13 @@ const SubscriptionSchema = new mongoose.Schema({
         },
         notes: String,
     }],
+    pendingPlan: {
+        type: String,
+        enum: ['free', 'basic', 'premium', 'enterprise'],
+    },
+    pendingAmount: {
+        type: Number,
+    },
     abacatepayBillingId: {
         type: String,
     },

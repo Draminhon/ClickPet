@@ -3,6 +3,7 @@ import dbConnect from '@/lib/db';
 import Product from '@/models/Product';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../auth/[...nextauth]/route";
+import { sanitizeObject } from '@/lib/sanitize';
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
@@ -29,7 +30,8 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
         const { id } = await params;
         await dbConnect();
-        const body = await req.json();
+        const rawBody = await req.json();
+        const body = sanitizeObject(rawBody);
 
         // SECURITY: Whitelist allowed fields to prevent mass assignment
         const allowedFields = ['title', 'description', 'price', 'category', 'image', 'images',

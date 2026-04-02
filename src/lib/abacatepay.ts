@@ -4,6 +4,8 @@
  * All amounts are in CENTAVOS (e.g., R$ 10.00 = 1000)
  */
 
+import crypto from 'crypto';
+
 const ABACATEPAY_BASE_URL = 'https://api.abacatepay.com/v1';
 
 function getApiKey(): string {
@@ -41,7 +43,13 @@ async function apiRequest(method: string, endpoint: string, body?: any) {
         if (data.error !== 'Not found' && res.status !== 404) {
             console.error(`[AbacatePay] API Error (${method} ${endpoint}):`, data);
         }
-        throw new Error(data.error || `AbacatePay API error: ${res.status}`);
+        
+        let errorMessage = data.error || `AbacatePay API error: ${res.status}`;
+        if (errorMessage === 'Invalid taxId') {
+            errorMessage = 'CNPJ Inválido';
+        }
+        
+        throw new Error(errorMessage);
     }
 
     return data;
@@ -192,4 +200,19 @@ export function fromCentavos(centavos: number): number {
  */
 export function cleanTaxId(taxId: string): string {
     return taxId.replace(/\D/g, '');
+}
+
+/**
+ * Verify AbacatePay webhook signature.
+ * secret: ABACATEPAY_WEBHOOK_SECRET from dashboard
+ * payload: RAW stringified JSON body
+ * signature: x-abacatepay-signature header
+ */
+export function verifyWebhookSignature(payload: string, signature: string, secret: string): boolean {
+    if (!signature || !secret) return false;
+    
+    const hmac = crypto.createHmac('sha256', secret);
+    const digest = hmac.update(payload).digest('hex');
+    
+    return digest === signature;
 }

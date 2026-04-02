@@ -13,6 +13,7 @@ export async function proxy(req: NextRequest) {
         '/api/services',
         '/api/reviews',
         '/api/webhooks',
+        '/api/payments/webhook',
     ];
 
     const isPublicApiRoute = publicApiRoutes.some(route => pathname.startsWith(route));

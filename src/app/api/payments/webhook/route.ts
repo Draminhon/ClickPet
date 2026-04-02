@@ -3,6 +3,7 @@ import dbConnect from '@/lib/db';
 import Order from '@/models/Order';
 import Subscription from '@/models/Subscription';
 import notificationService from '@/lib/notification-service';
+import { verifyWebhookSignature } from '@/lib/abacatepay';
 
 /**
  * POST /api/payments/webhook
@@ -15,8 +16,22 @@ import notificationService from '@/lib/notification-service';
 export async function POST(req: Request) {
     try {
         await dbConnect();
-        const body = await req.json();
+        
+        const rawBody = await req.text();
+        const signature = req.headers.get('x-abacatepay-signature');
+        const secret = process.env.ABACATEPAY_WEBHOOK_SECRET;
 
+        // VERIFY SIGNATURE (Security Hardening)
+        if (secret) {
+            if (!signature || !verifyWebhookSignature(rawBody, signature, secret)) {
+                console.error('[Webhook] Invalid or missing signature');
+                return NextResponse.json({ message: 'Invalid signature' }, { status: 401 });
+            }
+        } else {
+            console.warn('[Webhook] ABACATEPAY_WEBHOOK_SECRET not defined. Skipping verification in development mode.');
+        }
+
+        const body = JSON.parse(rawBody);
         console.log('[Webhook] Received:', JSON.stringify(body, null, 2));
 
         const event = body.event || body.type;
@@ -66,9 +81,8 @@ export async function POST(req: Request) {
                 if (subscription) {
                     const isAlreadyActive = subscription.status === 'active';
                     
-                    // Get the intended plan from the latest 'created' history item
-                    const creationLog = [...subscription.history].reverse().find(h => h.action === 'created' && h.newPlan);
-                    const intendedPlan = creationLog ? creationLog.newPlan : subscription.plan;
+                    // Use the safely stored pendingPlan
+                    const intendedPlan = subscription.pendingPlan || subscription.plan;
                     
                     // Apply new plan and features
                     subscription.plan = intendedPlan;

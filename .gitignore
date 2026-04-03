@@ -27,6 +27,7 @@ pnpm-debug.log*
 .env*.local
 .env
 *.env
+*.env.production.txt
 
 # vercel
 .vercel

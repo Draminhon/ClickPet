@@ -24,12 +24,15 @@ export async function POST(req: Request) {
 
         // VERIFY SIGNATURE (Security Hardening)
         if (secret) {
-            if (!signature || !verifyWebhookSignature(rawBody, signature, secret)) {
-                console.error('[Webhook] Invalid or missing signature');
+            const isValid = signature && verifyWebhookSignature(rawBody, signature, secret);
+            if (!isValid) {
+                console.error('[Webhook] Signature Mismatch!');
+                console.error('- Header Signature:', signature);
+                console.error('- Secret used (first 4):', secret.substring(0, 4) + '...');
                 return NextResponse.json({ message: 'Invalid signature' }, { status: 401 });
             }
         } else {
-            console.warn('[Webhook] ABACATEPAY_WEBHOOK_SECRET not defined. Skipping verification in development mode.');
+            console.warn('[Webhook] ABACATEPAY_WEBHOOK_SECRET not defined. Skipping verification.');
         }
 
         const body = JSON.parse(rawBody);

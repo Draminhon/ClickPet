@@ -60,6 +60,11 @@ export default function PartnerSubscriptionPage() {
             if (response.ok) {
                 const data = await response.json();
                 setSubscription(data);
+                
+                // If a payment was pending and now it's active, refresh the whole session to update UI role
+                if (data.status === 'active' && subscription?.status === 'pending') {
+                    router.refresh();
+                }
             }
         } catch (error) {
             console.error('Error fetching subscription:', error);
@@ -67,6 +72,46 @@ export default function PartnerSubscriptionPage() {
             setLoading(false);
         }
     };
+
+    // POLLING FOR PAYMENT STATUS
+    useEffect(() => {
+        const status = new URLSearchParams(window.location.search).get('status');
+        const billingId = new URLSearchParams(window.location.search).get('billingId');
+
+        if (status === 'return' || billingId) {
+            setLoading(true);
+            showToast('Verificando status do pagamento...', 'info');
+
+            let attempts = 0;
+            const maxAttempts = 10;
+            const interval = setInterval(async () => {
+                attempts++;
+                const response = await fetch('/api/subscriptions/current');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.status === 'active' || data.status === 'PAID') {
+                        clearInterval(interval);
+                        setSubscription(data);
+                        setLoading(false);
+                        showToast('Pagamento confirmado! Sua assinatura está ativa.', 'success');
+                        // Clean URL and refresh session
+                        window.history.replaceState({}, '', '/partner/subscription');
+                        router.refresh();
+                        return;
+                    }
+                }
+
+                if (attempts >= maxAttempts) {
+                    clearInterval(interval);
+                    setLoading(false);
+                    showToast('O pagamento ainda está sendo processado. Isso pode levar alguns minutos.', 'info');
+                    window.history.replaceState({}, '', '/partner/subscription');
+                }
+            }, 3000);
+
+            return () => clearInterval(interval);
+        }
+    }, [showToast, router]);
 
     const handleSubscribe = (planName: string) => {
         if (planName === 'free') {

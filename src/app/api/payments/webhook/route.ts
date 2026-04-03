@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Order from '@/models/Order';
 import Subscription from '@/models/Subscription';
+import User from '@/models/User';
 import notificationService from '@/lib/notification-service';
 import { verifyWebhookSignature } from '@/lib/abacatepay';
 
@@ -101,7 +102,7 @@ export async function POST(req: Request) {
                     });
                     await subscription.save();
 
-                    console.log(`[Webhook] Subscription ${subscription._id} activated`);
+                    console.log(`[Webhook] Subscription ${subscription._id} activated for user ${subscription.partnerId}`);
 
                     // Calculate and log total time
                     const startTime = (subscription as any).paymentStartedAt || (subscription as any).createdAt;

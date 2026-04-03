@@ -96,7 +96,7 @@ export async function POST(req: Request) {
             methods.push('CARD');
         }
 
-        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+        const appUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://clickpet.shop';
 
         const rawTaxId = user.cpf || user.cnpj;
         if (!rawTaxId || rawTaxId === '000.000.000-00') {

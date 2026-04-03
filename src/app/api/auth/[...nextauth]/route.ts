@@ -194,15 +194,27 @@ export const authOptions: NextAuthOptions = {
                 }
             } else if (token.id) {
                 const now = Date.now();
+                // Refresh data if specifically requested or if it's been more than 2 minutes
                 const shouldRefreshHeavy = trigger === "update" || (now - (token.lastRefreshed || 0) > 120000);
 
                 try {
                     if (shouldRefreshHeavy) {
-                        const dbUser = await User.findById(token.id) as any;
-                        if (!dbUser || dbUser.tokenVersion !== token.tokenVersion) return {} as any;
+                        const dbUser = await User.findById(token.id).select('role tokenVersion subscriptionId address cnpj phone').lean() as any;
+                        
+                        if (!dbUser) {
+                            console.warn(`[AUTH] Session refresh failed: User ${token.id} not found in DB.`);
+                            return token; // Stay with existing token data if user disappeared (avoid immediate logout)
+                        }
 
-                        token.role = dbUser.role;
+                        // Critical check: if token version changed, the session is definitely invalid
+                        if (dbUser.tokenVersion !== undefined && token.tokenVersion !== undefined && dbUser.tokenVersion !== token.tokenVersion) {
+                             console.log(`[AUTH] Token version mismatch for ${token.id}. Expecting logout.`);
+                             return {} as any; // Trigger logout
+                        }
+
+                        token.role = dbUser.role || token.role; // Default back to token role if DB role is missing
                         token.lastRefreshed = now;
+                        
                         if (dbUser.role === 'partner') {
                             const Subscription = (await import('@/models/Subscription')).default;
                             const sub = await Subscription.findOne({ partnerId: dbUser._id }).lean() as any;
@@ -214,9 +226,11 @@ export const authOptions: NextAuthOptions = {
                             token.isProfileComplete = !!(dbUser.cnpj && dbUser.phone && a?.street && a?.number && a?.city && a?.neighborhood && (a?.zip || a?.zipCode));
                         }
                     } else {
+                        // Quick check only for token version and role persistence
                         const dbUser = await User.findById(token.id).select('tokenVersion role').lean() as any;
-                        if (!dbUser || dbUser.tokenVersion !== token.tokenVersion) return {} as any;
-                        token.role = dbUser.role;
+                        if (dbUser) {
+                            token.role = dbUser.role || token.role;
+                        }
                     }
                 } catch (e) {
                     console.error("[AUTH] JWT Refresh Error:", e);

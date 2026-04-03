@@ -1,120 +1,12 @@
 {
-  "_id": "69cea41b9d3a12d82ea444ef",
-  "name": "Junior Portela",
-  "email": "junior@gmail.com",
-  "password": "$2b$12$u945bPV84yFSIyoToZQ6UuSb2.sdoG6rnzu3oM.AeDak.4zpAvTKe",
-  "role": "partner",
-  "address": {
-    "street": "Rua Raimundo Moreira Lima",
-    "number": "322",
-    "neighborhood": "Campo",
-    "city": "Paracuru",
-    "state": "Ceará",
-    "zip": "62680-000",
-    "coordinates": {
-      "type": "Point",
-      "coordinates": [
-        -39.03,
-        -3.41
-      ]
-    }
-  },
-  "minimumOrderValue": 0,
-  "deliveryRadius": 10,
-  "deliveryFeePerKm": 2,
-  "freeDeliveryMinimum": 0,
+  "_id": "69cfdb491d76bc29498ef6b1",
+  "name": "Administrador ClickPet",
+  "email": "admin@clickpet.com",
+  "password": "$2b$12$igNeuS1KT0c9aMip0nSE8u2AHbb3EwoFZvBTauinTRz.Y05YiXLWa",
+  "role": "admin",
+  "createdAt": "2026-04-03T15:22:49.917Z",
+  "updatedAt": "2026-04-03T15:28:07.093Z",
+  "__v": 0,
   "failedLoginAttempts": 0,
-  "tokenVersion": 0,
-  "twoFactorEnabled": false,
-  "paymentConfig": {
-    "creditCard": true,
-    "debitCard": true,
-    "cash": true
-  },
-  "pixConfig": {
-    "keyType": "CPF",
-    "key": "",
-    "beneficiary": "",
-    "dynamicPix": false
-  },
-  "deliveryAddresses": [],
-  "workingHours": [
-    {
-      "day": "Segunda-feira",
-      "active": true,
-      "open": "08:00",
-      "close": "18:00",
-      "_id": "69cea42d9d3a12d82ea4450f"
-    },
-    {
-      "day": "Terça-feira",
-      "active": true,
-      "open": "08:00",
-      "close": "18:00",
-      "_id": "69cea42d9d3a12d82ea44510"
-    },
-    {
-      "day": "Quarta-feira",
-      "active": true,
-      "open": "08:00",
-      "close": "18:00",
-      "_id": "69cea42d9d3a12d82ea44511"
-    },
-    {
-      "day": "Quinta-feira",
-      "active": true,
-      "open": "08:00",
-      "close": "18:00",
-      "_id": "69cea42d9d3a12d82ea44512"
-    },
-    {
-      "day": "Sexta-feira",
-      "active": true,
-      "open": "08:00",
-      "close": "18:00",
-      "_id": "69cea42d9d3a12d82ea44513"
-    },
-    {
-      "day": "Sábado",
-      "active": true,
-      "open": "08:00",
-      "close": "12:00",
-      "_id": "69cea42d9d3a12d82ea44514"
-    },
-    {
-      "day": "Domingo",
-      "active": false,
-      "open": "08:00",
-      "close": "12:00",
-      "_id": "69cea42d9d3a12d82ea44515"
-    }
-  ],
-  "paymentMethods": [
-    {
-      "method": "CARTÃO DE CRÉDITO",
-      "fee": 2.5,
-      "term": "30 DIAS",
-      "_id": "69cea42d9d3a12d82ea44516"
-    },
-    {
-      "method": "CARTÃO DE DÉBITO",
-      "fee": 1.5,
-      "term": "1 DIA",
-      "_id": "69cea42d9d3a12d82ea44517"
-    },
-    {
-      "method": "PIX",
-      "fee": 0,
-      "term": "IMEDIATO",
-      "_id": "69cea42d9d3a12d82ea44518"
-    }
-  ],
-  "createdAt": "2026-04-02T17:15:07.588Z",
-  "updatedAt": "2026-04-02T17:15:25.032Z",
-  "__v": 1,
-  "lockUntil": null,
-  "__enc_cnpj": true,
-  "__enc_phone": true,
-  "cnpj": "5f36a6ac78b29254f563559c42f32ced:c699a05325eea974975390ccfe15cab0",
-  "phone": "7e10296a1bc751a5bce26ad1e2c1245c:6926f0661478f6d5653c96976ee77798"
+  "lockUntil": null
 }

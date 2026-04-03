@@ -35,10 +35,12 @@ export async function proxy(req: NextRequest) {
     // Protect admin routes
     if (pathname.startsWith('/admin')) {
         if (!token) {
+            console.log(`[PROXY] Access denied to ${pathname}: No token found.`);
             return NextResponse.redirect(new URL('/login?error=admin_no_token', req.url));
         }
         if (token.role !== 'admin') {
-            return NextResponse.redirect(new URL('/?error=admin_role_mismatch', req.url));
+            console.warn(`[PROXY] Role mismatch for ${token.email}: Expected admin, got ${token.role}`);
+            return NextResponse.redirect(new URL('/?error=admin_role_mismatch&actualRole=' + (token.role || 'undefined'), req.url));
         }
         return NextResponse.next();
     }
@@ -46,10 +48,12 @@ export async function proxy(req: NextRequest) {
     // Protect partner routes
     if (pathname.startsWith('/partner')) {
         if (!token) {
+            console.log(`[PROXY] Access denied to ${pathname}: No token found.`);
             return NextResponse.redirect(new URL('/login?error=partner_no_token', req.url));
         }
         if (token.role !== 'partner') {
-            return NextResponse.redirect(new URL('/?error=partner_role_mismatch', req.url));
+            console.warn(`[PROXY] Role mismatch for ${token.email}: Expected partner, got ${token.role}`);
+            return NextResponse.redirect(new URL('/?error=partner_role_mismatch&actualRole=' + (token.role || 'undefined'), req.url));
         }
 
         // Check subscription status

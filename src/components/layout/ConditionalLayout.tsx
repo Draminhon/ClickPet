@@ -9,14 +9,15 @@ export default function ConditionalLayout({ children }: { children: React.ReactN
     const pathname = usePathname();
     const isAuthPage = pathname === "/login" || pathname === "/register";
     const isPartnerPage = pathname?.startsWith("/partner");
+    const isAdminPage = pathname?.startsWith("/admin");
     const isProductPage = pathname?.startsWith("/product/");
 
     return (
         <>
-            {!isAuthPage && !isPartnerPage && <Header />}
+            {!isAuthPage && !isPartnerPage && !isAdminPage && <Header />}
             {children}
-            {!isAuthPage && !isPartnerPage && <Footer isProductPage={isProductPage} />}
-            {!isAuthPage && !isPartnerPage && <MobileNav />}
+            {!isAuthPage && !isPartnerPage && !isAdminPage && <Footer isProductPage={isProductPage} />}
+            {!isAuthPage && !isPartnerPage && !isAdminPage && <MobileNav />}
         </>
     );
 }

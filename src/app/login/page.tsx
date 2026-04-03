@@ -49,7 +49,9 @@ export default function Login() {
                 const sessionRes = await fetch('/api/auth/session');
                 const session = await sessionRes.json();
 
-                if (session?.user?.role === 'partner') {
+                if (session?.user?.role === 'admin') {
+                    router.push('/admin');
+                } else if (session?.user?.role === 'partner') {
                     router.push('/partner/dashboard');
                 } else {
                     router.push('/');

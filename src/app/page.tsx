@@ -8,6 +8,10 @@ import Product from '@/models/Product';
 import Link from 'next/link';
 
 
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "./api/auth/[...nextauth]/route";
+import { redirect } from "next/navigation";
+
 async function getOfferProducts() {
     await dbConnect();
     const products = await Product.find({ discount: { $gt: 0 } })
@@ -27,6 +31,16 @@ async function getOfferProducts() {
 }
 
 export default async function HomePage() {
+    const session = await getServerSession(authOptions);
+
+    if (session?.user?.role === 'admin') {
+        redirect('/admin');
+    }
+
+    if (session?.user?.role === 'partner') {
+        redirect('/partner/dashboard');
+    }
+
     const offerProducts = await getOfferProducts();
 
     return (

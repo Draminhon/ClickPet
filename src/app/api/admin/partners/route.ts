@@ -18,6 +18,7 @@ export async function GET(request: NextRequest) {
 
         const { searchParams } = new URL(request.url);
         const search = searchParams.get('search');
+        const plan = searchParams.get('plan');
         const page = parseInt(searchParams.get('page') || '1');
         const limit = parseInt(searchParams.get('limit') || '10');
 
@@ -32,16 +33,23 @@ export async function GET(request: NextRequest) {
             ];
         }
 
-        // Get partners
+        // Filter by subscription plan if provided
+        if (plan && plan !== 'all') {
+            const subscriptions = await Subscription.find({ plan }).select('partnerId').lean();
+            const partnerIds = subscriptions.map(s => s.partnerId);
+            query._id = { $in: partnerIds };
+        }
+
+        // Get partners - DO NOT USE .lean() here to allow automatic field decryption
         const partners = await User.find(query)
             .select('-password') // Exclude password
             .sort({ createdAt: -1 })
             .skip((page - 1) * limit)
-            .limit(limit)
-            .lean();
+            .limit(limit);
 
         // Get subscription info for each partner
-        const partnersWithSub = await Promise.all(partners.map(async (partner: any) => {
+        const partnersWithSub = await Promise.all(partners.map(async (partnerDoc: any) => {
+            const partner = partnerDoc.toObject(); // Convert to object after decryption
             const subscription = await Subscription.findOne({ partnerId: partner._id })
                 .select('plan status endDate')
                 .lean();

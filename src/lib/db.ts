@@ -30,7 +30,9 @@ async function dbConnect() {
             );
         }
         const opts = {
-            bufferCommands: false,
+            bufferCommands: true,
+            serverSelectionTimeoutMS: 30000,
+            connectTimeoutMS: 30000,
         };
 
         cached.promise = mongoose.connect(uri, opts).then((mongoose) => {

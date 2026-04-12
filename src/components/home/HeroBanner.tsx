@@ -1,141 +1,202 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
-import { ChevronDown, Search } from 'lucide-react';
+import { MapPin, Navigation, Loader2 } from 'lucide-react';
+import { useLocation } from '@/context/LocationContext';
 import styles from './HeroBanner.module.css';
 
-const TABS = ['RAÇÕES', 'UTENSILIOS', 'FARMACIA', 'BANHO & TOSA'];
-
-interface DropdownProps {
-    title: string;
-    subtitle: string;
-    options: string[];
-    onSelect: (option: string) => void;
-}
-
-const Dropdown = ({ title, subtitle, options, onSelect }: DropdownProps) => {
-    const [isOpen, setIsOpen] = useState(false);
-
-    return (
-        <div className={styles.dropdown} onClick={() => setIsOpen(!isOpen)}>
-            <div className={styles.dropdownTitle}>{title}</div>
-            <div className={styles.dropdownSubtitle}>{subtitle}</div>
-            <ChevronDown className={styles.dropdownArrow} size={24} strokeWidth={1.5} />
-
-            {isOpen && (
-                <div style={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: 0,
-                    right: 0,
-                    background: 'white',
-                    boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
-                    borderRadius: '12px',
-                    zIndex: 1000,
-                    marginTop: '10px',
-                    maxHeight: '300px',
-                    overflowY: 'auto'
-                }}>
-                    {options.map(opt => (
-                        <div
-                            key={opt}
-                            style={{ padding: '10px 20px', cursor: 'pointer', transition: 'background 0.2s' }}
-                            onMouseEnter={(e) => e.currentTarget.style.background = '#f0f0f0'}
-                            onMouseLeave={(e) => e.currentTarget.style.background = 'white'}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onSelect(opt);
-                                setIsOpen(false);
-                            }}
-                        >
-                            {opt}
-                        </div>
-                    ))}
-                </div>
-            )}
-        </div>
-    );
-};
-
 export default function HeroBanner() {
-    const [activeTab, setActiveTab] = useState('RAÇÕES');
-    const [filters, setFilters] = useState({
-        marca: 'Selecione',
-        qualidade: 'Selecione',
-        animal: 'Selecione'
-    });
+    const {
+        address,
+        isLoading,
+        setLocationFromGPS,
+        setLocationManual,
+        lat,
+        lng,
+    } = useLocation();
 
-    const handleSearch = () => {
-        if (activeTab === 'BANHO & TOSA') {
-            window.location.href = `/services?category=bath`;
+    const [isEditing, setIsEditing] = useState(false);
+    const [inputValue, setInputValue] = useState('');
+    const [suggestions, setSuggestions] = useState<any[]>([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const inputRef = useRef<HTMLInputElement>(null);
+    const debounceRef = useRef<NodeJS.Timeout | null>(null);
+    const searchBarRef = useRef<HTMLDivElement>(null);
+    const prevAddressRef = useRef(address);
+
+    // Keep local input in sync with context address when it changes (e.g. via GPS)
+    useEffect(() => {
+        if (address !== prevAddressRef.current) {
+            setInputValue(address || '');
+            prevAddressRef.current = address;
+        }
+    }, [address]);
+
+    useEffect(() => {
+        if (isEditing && inputRef.current) {
+            inputRef.current.focus();
+        }
+    }, [isEditing]);
+
+    // Close suggestions when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (searchBarRef.current && !searchBarRef.current.contains(e.target as Node)) {
+                setShowSuggestions(false);
+                if (!inputValue.trim()) {
+                    setIsEditing(false);
+                }
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [inputValue]);
+
+    const handleInputChange = (value: string) => {
+        setInputValue(value);
+
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+
+        if (value.trim().length < 3) {
+            setSuggestions([]);
+            setShowSuggestions(false);
             return;
         }
-        const query = `?cat=${activeTab.toLowerCase()}&marca=${filters.marca}&qualidade=${filters.qualidade}&animal=${filters.animal}`;
-        window.location.href = `/search${query}`;
+
+        debounceRef.current = setTimeout(async () => {
+            try {
+                const res = await fetch(
+                    `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(value)}&countrycodes=br&limit=5&accept-language=pt-BR`
+                );
+                const data = await res.json();
+                setSuggestions(data);
+                setShowSuggestions(data.length > 0);
+            } catch {
+                setSuggestions([]);
+                setShowSuggestions(false);
+            }
+        }, 400);
+    };
+
+    const handleSelectSuggestion = (suggestion: any) => {
+        const lat = parseFloat(suggestion.lat);
+        const lng = parseFloat(suggestion.lon);
+        const displayName = suggestion.display_name.split(',').slice(0, 3).join(',');
+
+        // Extract city from the result
+        const parts = suggestion.display_name.split(',').map((s: string) => s.trim());
+        const city = parts.length > 2 ? parts[2] : parts[1] || '';
+
+        setLocationManual(lat, lng, displayName, city);
+        setInputValue(displayName);
+        setShowSuggestions(false);
+        setIsEditing(false);
+    };
+
+    const handleGPSClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setLocationFromGPS();
+        setIsEditing(false);
+        setShowSuggestions(false);
+    };
+
+    const handleBarClick = () => {
+        if (!isEditing) {
+            setIsEditing(true);
+            setInputValue(address || '');
+        }
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Escape') {
+            setIsEditing(false);
+            setShowSuggestions(false);
+        }
     };
 
     return (
         <div className={styles.heroBanner}>
-            <div className={styles.leftContent}>
-                <h1 className={styles.title}>
-                    Tudo para o seu pet em um só lugar!
-                </h1>
-                <p className={styles.subtitle}>
-                    Oferecemos o <strong>melhor</strong> para seu animal de estimação, com <strong>qualidade</strong> e entrega rápida
-                </p>
-
-                <div className={styles.filterWrapper}>
-                    <div className={styles.tabs}>
-                        {TABS.map(tab => (
-                            <button
-                                key={tab}
-                                className={`${styles.tab} ${activeTab === tab ? styles.activeTab : ''}`}
-                                onClick={() => setActiveTab(tab)}
-                            >
-                                {tab}
-                            </button>
-                        ))}
-                    </div>
-
-                    <div className={styles.searchBar}>
-                        <Dropdown
-                            title="Marca"
-                            subtitle={filters.marca}
-                            options={['Royal Canin', 'Hills', 'Guabi Natural', 'Premier']}
-                            onSelect={(val) => setFilters({ ...filters, marca: val })}
-                        />
-                        <div className={styles.divider} />
-                        <Dropdown
-                            title="Qualidade"
-                            subtitle={filters.qualidade}
-                            options={['Premium', 'Super Premium', 'Standard']}
-                            onSelect={(val) => setFilters({ ...filters, qualidade: val })}
-                        />
-                        <div className={styles.divider} />
-                        <Dropdown
-                            title="Animal"
-                            subtitle={filters.animal}
-                            options={['Cães', 'Gatos', 'Aves', 'Peixes']}
-                            onSelect={(val) => setFilters({ ...filters, animal: val })}
-                        />
-
-                        <button className={styles.searchConfirm} onClick={handleSearch}>
-                            <Search className={styles.searchIcon} size={17.76} strokeWidth={3} />
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div className={styles.rightContent}>
+            {/* Background Image */}
+            <div className={styles.imageWrapper}>
                 <Image
-                    src="/banner/banner_image.png"
-                    alt="Banner Image"
+                    src="/banner/hero_pets.png"
+                    alt="ClickPet Banner"
                     fill
-                    sizes="(max-width: 768px) 100vw, 50vw"
+                    sizes="100vw"
                     className={styles.bannerImage}
                     priority
                 />
+                <div className={styles.imageOverlay} />
+            </div>
+
+            {/* Location Search Bar */}
+            <div className={styles.searchBarContainer}>
+                <div
+                    ref={searchBarRef}
+                    className={styles.searchBar}
+                    onClick={handleBarClick}
+                >
+                    {/* GPS Icon */}
+                    <div className={styles.gpsIcon}>
+                        <MapPin size={18} strokeWidth={2} color="#272727" />
+                    </div>
+
+                    {/* Divider */}
+                    <div className={styles.divider} />
+
+                    {/* Input / Placeholder */}
+                    <div className={styles.inputArea}>
+                        {isEditing ? (
+                            <input
+                                ref={inputRef}
+                                type="text"
+                                className={styles.locationInput}
+                                value={inputValue}
+                                onChange={(e) => handleInputChange(e.target.value)}
+                                onKeyDown={handleKeyDown}
+                                placeholder="Insira sua localização e número"
+                            />
+                        ) : (
+                            <span className={address ? styles.locationText : styles.placeholderText}>
+                                {address || 'Insira sua localização e número'}
+                            </span>
+                        )}
+                    </div>
+
+                    {/* GPS Button */}
+                    <button
+                        className={styles.gpsButton}
+                        onClick={handleGPSClick}
+                        title="Usar minha localização atual"
+                        disabled={isLoading}
+                    >
+                        {isLoading ? (
+                            <Loader2 size={18} className={styles.spinner} />
+                        ) : (
+                            <Navigation size={18} strokeWidth={2} />
+                        )}
+                    </button>
+
+                    {/* Suggestions Dropdown */}
+                    {showSuggestions && (
+                        <div className={styles.suggestionsDropdown}>
+                            {suggestions.map((s, i) => (
+                                <button
+                                    key={i}
+                                    className={styles.suggestionItem}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleSelectSuggestion(s);
+                                    }}
+                                >
+                                    <MapPin size={14} color="#878787" />
+                                    <span>{s.display_name}</span>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

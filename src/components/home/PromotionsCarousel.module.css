@@ -1,0 +1,101 @@
+.sectionContainer {
+    width: 100%;
+    margin-bottom: 40px;
+    padding-left: 80px;
+}
+
+@media (max-width: 1200px) {
+    .sectionContainer {
+        padding: 0 40px;
+    }
+}
+
+@media (max-width: 768px) {
+    .sectionContainer {
+        padding: 0 20px;
+    }
+}
+
+.carouselWrapper {
+    width: 100%;
+    overflow-x: auto;
+    position: relative;
+    border-radius: 16px;
+    padding: 10px 0;
+    /* Hide scrollbar */
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+}
+
+.carouselWrapper::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+}
+
+.carouselTrack {
+    display: flex;
+    gap: 20px;
+    width: max-content;
+    /* Animation removed - now handled by JS */
+}
+
+.carouselTrack:hover {
+    animation-play-state: paused;
+}
+
+.promoContainer {
+    min-width: 500px;
+    height: 200px;
+    border-radius: 16px; /* Corrected to 16px */
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    background-color: #f5f5f5;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    flex-shrink: 0;
+}
+
+.promoContainer:hover {
+    transform: scale(1.02);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.promoImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 60%);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-left: 60px;
+    color: white;
+}
+
+.promoTag {
+    background-color: #ED802A;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 100px;
+    font-size: 14px;
+    font-weight: 700;
+    width: fit-content;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    font-family: 'Baloo 2', sans-serif;
+}
+
+.promoTitle {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1.2;
+    max-width: 250px;
+}

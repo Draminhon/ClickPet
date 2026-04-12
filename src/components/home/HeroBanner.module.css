@@ -1,216 +1,255 @@
 .heroBanner {
-    width: 1300px;
-    height: 633px;
-    background-color: #3BB77E;
-    border-radius: 50px;
-    margin: 40px auto;
-    display: flex;
-    align-items: center;
-    padding: 0 80px;
     position: relative;
+    width: 100%;
+    height: 350px;
+    overflow: hidden;
 }
 
-.leftContent {
-    flex: 1;
-    z-index: 2;
-}
-
-.title {
-    font-size: 56px;
-    font-weight: bold;
-    color: #253D4E;
-    margin-bottom: 40px;
-    line-height: 1.2;
-    max-width: 600px;
-}
-
-.subtitle {
-    font-size: 22px;
-    color: #253D4E;
-    margin-bottom: 40px;
-    line-height: 1.5;
-    max-width: 500px;
-}
-
-.subtitle bold {
-    font-weight: bold;
-}
-
-.filterWrapper {
-    margin-top: 40px;
-}
-
-.tabs {
-    display: flex;
-    gap: 15px;
-}
-
-.tab {
-    width: 114px;
-    height: 47px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    background: transparent;
-    border: none;
-    font-size: 14px;
-    color: rgba(51, 51, 51, 0.6);
-    transition: all 0.3s;
-    font-weight: 600;
-}
-
-.activeTab {
-    background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(10px);
-    border-radius: 20px 20px 0 0;
-    color: #333333;
-    font-weight: 600;
-}
-
-.searchBar {
-    width: 918px;
-    height: 101px;
-    background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(10px);
-    border-radius: 0 20px 20px 20px;
-    display: flex;
-    align-items: center;
-    padding: 0 30px;
-}
-
-.dropdown {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 0 20px;
-    cursor: pointer;
-    position: relative;
-    height: 100%;
-}
-
-.dropdownTitle {
-    font-size: 18px;
-    font-weight: 600;
-    color: #110229;
-    margin-bottom: 4px;
-}
-
-.dropdownSubtitle {
-    font-size: 16px;
-    font-weight: 400;
-    color: #8F90A6;
-}
-
-.dropdownArrow {
-    position: absolute;
-    right: 20px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #8F90A6;
-}
-
-.divider {
-    width: 2px;
-    height: 45.26px;
-    background-color: #DCDCEB;
-}
-
-.searchConfirm {
-    width: 54px;
-    height: 54px;
-    background-color: #1DAEFF;
-    border-radius: 15px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-left: 20px;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.searchConfirm:hover {
-    background-color: #1a9ce4;
-    transform: scale(1.05);
-}
-
-.searchIcon {
-    color: white;
-}
-
-.rightContent {
+.imageWrapper {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
     z-index: 1;
-    pointer-events: none;
 }
 
 .bannerImage {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    display: block;
-    border-radius: 50px;
+    object-position: center;
 }
 
-@media (max-width: 1400px) {
+.imageOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0) 0%,
+        rgba(0, 0, 0, 0.05) 50%,
+        rgba(0, 0, 0, 0.25) 100%
+    );
+    z-index: 2;
+}
+
+/* ---- Search Bar Container ---- */
+.searchBarContainer {
+    position: absolute;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    width: 100%;
+    max-width: 700px;
+    padding: 0 20px;
+}
+
+.searchBar {
+    width: 100%;
+    height: 56px;
+    background-color: #FFFFFF;
+    border: 1px solid #DDE1E6;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    cursor: text;
+    position: relative;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    transition: box-shadow 0.2s;
+}
+
+.searchBar:hover {
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.16);
+}
+
+/* ---- GPS Icon ---- */
+.gpsIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 20px;
+    height: 22px;
+}
+
+/* ---- Divider ---- */
+.divider {
+    width: 1px;
+    height: 14px;
+    background-color: #DDE1E6;
+    margin: 0 14px;
+    flex-shrink: 0;
+}
+
+/* ---- Input Area ---- */
+.inputArea {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.placeholderText {
+    font-size: 18px;
+    font-weight: 400;
+    color: #878787;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.locationText {
+    font-size: 18px;
+    font-weight: 500;
+    color: #272727;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.locationInput {
+    width: 100%;
+    border: none;
+    outline: none;
+    font-size: 18px;
+    font-weight: 400;
+    color: #272727;
+    background: transparent;
+    font-family: inherit;
+}
+
+.locationInput::placeholder {
+    color: #878787;
+    font-weight: 400;
+}
+
+/* ---- GPS Button ---- */
+.gpsButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: none;
+    background-color: rgba(52, 199, 89, 0.1);
+    border-radius: 8px;
+    color: rgba(52, 199, 89, 1);
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-left: 8px;
+    transition: background-color 0.2s, transform 0.15s;
+}
+
+.gpsButton:hover {
+    background-color: rgba(52, 199, 89, 0.2);
+    transform: scale(1.05);
+}
+
+.gpsButton:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* ---- Suggestions Dropdown ---- */
+.suggestionsDropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    background: #FFFFFF;
+    border: 1px solid #DDE1E6;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    z-index: 100;
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+.suggestionItem {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 14px 16px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 14px;
+    color: #272727;
+    text-align: left;
+    transition: background-color 0.15s;
+    font-family: inherit;
+}
+
+.suggestionItem:hover {
+    background-color: #F5F7FA;
+}
+
+.suggestionItem span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.suggestionItem + .suggestionItem {
+    border-top: 1px solid #F0F2F5;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
     .heroBanner {
-        width: 95%;
-        padding: 0 50px;
+        height: 280px;
+    }
+
+    .searchBarContainer {
+        bottom: 20px;
+        max-width: 100%;
+        padding: 0 16px;
     }
 
     .searchBar {
-        width: 100%;
-        max-width: 800px;
+        height: 50px;
+    }
+
+    .placeholderText,
+    .locationText,
+    .locationInput {
+        font-size: 15px;
     }
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 480px) {
     .heroBanner {
-        height: auto;
-        flex-direction: column;
-        padding: 40px;
-        text-align: center;
+        height: 240px;
     }
 
-    .leftContent {
-        margin-bottom: 40px;
-    }
-
-    .title {
-        font-size: 40px;
-        max-width: 100%;
-    }
-
-    .subtitle {
-        max-width: 100%;
+    .searchBarContainer {
+        bottom: 16px;
     }
 
     .searchBar {
-        flex-direction: column;
-        height: auto;
-        padding: 20px;
-        border-radius: 20px;
+        height: 46px;
+        padding: 0 12px;
     }
 
-    .dropdown {
-        width: 100%;
-        padding: 15px 0;
-        border-bottom: 1px solid #eee;
-    }
-
-    .divider {
-        display: none;
-    }
-
-    .searchConfirm {
-        margin-top: 20px;
-        margin-left: 0;
-        width: 100%;
+    .placeholderText,
+    .locationText,
+    .locationInput {
+        font-size: 14px;
     }
 }

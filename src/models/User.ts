@@ -135,6 +135,10 @@ const UserSchema = new mongoose.Schema({
         term: { type: String, default: '1 dia' },
     }],
     pixConfig: PixConfigSchema,
+    specialization: {
+        type: String,
+        default: '',
+    },
 }, { timestamps: true });
 
 UserSchema.plugin(fieldEncryption, {

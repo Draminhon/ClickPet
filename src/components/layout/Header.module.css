@@ -1,10 +1,12 @@
 .header {
     background-color: var(--white);
-    box-shadow: var(--shadow-sm);
     position: sticky;
     top: 0;
     z-index: 100;
-    padding: 16px 0;
+    padding: 0 80px;
+    height: 72px;
+    display: flex;
+    align-items: center;
     width: 100%;
 }
 
@@ -12,79 +14,65 @@
     display: flex;
     align-items: center;
     width: 100%;
-    max-width: 100%;
-    padding: 0;
+    justify-content: space-between;
 }
 
 .logo {
-    font-size: 34px;
-    font-weight: bold;
-    color: rgba(51, 51, 51, 1);
-    margin-left: 80px;
-    margin-right: 48px;
+    font-size: 36px;
+    font-weight: 800;
+    color: #272727;
     white-space: nowrap;
-}
-
-.nav {
-    display: flex;
-    gap: 24px;
-    align-items: center;
-}
-
-.navLink {
     text-decoration: none;
-    color: rgba(51, 51, 51, 1);
-    font-size: 16px;
-    font-weight: 400;
-}
-
-.navLinkActive {
-    font-weight: bold;
-}
-
-.searchWrapper {
-    margin-left: 48px;
-    margin-right: 48px;
-}
-
-.searchContainer {
-    width: 612px;
-    height: 46px;
-    background-color: rgba(242, 244, 248, 1);
-    border-radius: 20px;
-    display: flex;
-    align-items: center;
-    padding: 0 16px;
-}
-
-.searchIcon {
-    color: rgba(51, 51, 51, 1);
-    width: 20px;
-    height: 20px;
-    margin-right: 12px;
-}
-
-.searchInput {
-    background: transparent;
-    border: none;
-    outline: none;
-    width: 100%;
-    font-size: 14px;
-    color: rgba(51, 51, 51, 1);
-}
-
-.searchInput::placeholder {
-    color: rgba(51, 51, 51, 0.4);
+    letter-spacing: -0.5px;
 }
 
 .headerActions {
     display: flex;
     align-items: center;
-    gap: 24px;
-    margin-left: auto;
-    margin-right: 80px;
+    gap: 16px;
 }
 
+/* ---- Not Logged In Buttons ---- */
+.createAccountBtn {
+    font-size: 18px;
+    font-weight: 500;
+    color: #272727;
+    text-decoration: none;
+    background: none;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    white-space: nowrap;
+}
+
+.createAccountBtn:hover {
+    opacity: 0.7;
+}
+
+.enterBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 140px;
+    height: 48px;
+    background-color: rgba(52, 199, 89, 1);
+    border-radius: 8px;
+    color: #FFFFFF;
+    font-size: 18px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background-color 0.2s, transform 0.15s;
+    white-space: nowrap;
+    margin-left: 20px;
+}
+
+.enterBtn:hover {
+    background-color: rgba(42, 175, 75, 1);
+    transform: translateY(-1px);
+}
+
+/* ---- Logged In Actions ---- */
 .notificationWrapper {
     position: relative;
     cursor: pointer;
@@ -92,10 +80,15 @@
     align-items: center;
 }
 
-.notificationIcon {
-    color: #000;
+.actionIcon {
+    color: #272727;
     width: 24px;
     height: 24px;
+    transition: color 0.2s;
+}
+
+.actionIcon:hover {
+    color: rgba(52, 199, 89, 1);
 }
 
 .cartWrapper {
@@ -105,17 +98,11 @@
     align-items: center;
 }
 
-.cartIcon {
-    color: #000;
-    width: 24px;
-    height: 24px;
-}
-
 .badge {
     position: absolute;
     top: -4px;
     right: -4px;
-    background-color: red;
+    background-color: #FF3B30;
     color: white;
     font-size: 10px;
     font-weight: bold;
@@ -129,21 +116,26 @@
 }
 
 .profileCircle {
-    width: 48px;
-    height: 48px;
+    width: 40px;
+    height: 40px;
     background-color: rgba(226, 232, 240, 1);
-    /* CoolGray/10 approx */
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    overflow: hidden;
+    transition: box-shadow 0.2s;
+}
+
+.profileCircle:hover {
+    box-shadow: 0 0 0 2px rgba(52, 199, 89, 0.4);
 }
 
 .profileIcon {
-    color: gray;
-    width: 24px;
-    height: 24px;
+    color: #666;
+    width: 22px;
+    height: 22px;
 }
 
 .headerAvatar {
@@ -153,86 +145,31 @@
     object-fit: cover;
 }
 
+/* ---- Responsive ---- */
 @media (max-width: 1200px) {
-    .headerContent {
-        justify-content: space-around;
+    .header {
+        padding: 0 40px;
+    }
+}
+
+@media (max-width: 768px) {
+    .header {
         padding: 0 20px;
+        height: 60px;
     }
 
     .logo {
-        margin-left: 20px;
+        font-size: 28px;
     }
 
-    .profileCircle {
-        margin-right: 20px;
-    }
-}
-
-@media (max-width: 1024px) {
-    .searchContainer {
-        width: 300px;
+    .createAccountBtn {
+        font-size: 14px;
     }
 
-    .nav {
-        gap: 12px;
-    }
-}
-
-.authDropdown {
-    position: absolute;
-    top: calc(100% + 10px);
-    right: 80px;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    width: 200px;
-    padding: 16px;
-    z-index: 1000;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    border: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.authDropdownTitle {
-    font-size: 14px;
-    font-weight: 600;
-    color: rgba(51, 51, 51, 0.6);
-    margin-bottom: 4px;
-}
-
-.authButton {
-    display: block;
-    width: 100%;
-    padding: 10px;
-    text-align: center;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    text-decoration: none;
-    transition: all 0.2s;
-}
-
-.loginBtn {
-    background-color: rgba(51, 51, 51, 1);
-    color: white;
-}
-
-.loginBtn:hover {
-    background-color: rgba(0, 0, 0, 1);
-}
-
-.registerBtn {
-    background-color: rgba(242, 244, 248, 1);
-    color: rgba(51, 51, 51, 1);
-}
-
-.registerBtn:hover {
-    background-color: rgba(226, 232, 240, 1);
-}
-
-@media (max-width: 1200px) {
-    .authDropdown {
-        right: 20px;
+    .enterBtn {
+        width: 100px;
+        height: 40px;
+        font-size: 14px;
+        margin-left: 12px;
     }
 }

@@ -1,49 +1,46 @@
 "use client";
 
 import Link from 'next/link';
-import { Youtube, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
 import styles from './Footer.module.css';
 
-interface FooterProps {
-    isProductPage?: boolean;
-}
-
-export default function Footer({ isProductPage = false }: FooterProps) {
+export default function Footer() {
     return (
         <footer className={styles.footer}>
-            <div className={`${styles.topRow} ${isProductPage ? styles.productPageTopRow : ''}`}>
-                {/* Left side: Nav links in 243x48 box */}
-                <div className={styles.navLinksBox}>
-                    <Link href="/" className={styles.navLink}>Início</Link>
-                    <Link href="/suporte" className={styles.navLink}>Suporte</Link>
-                    <Link href="/sobre" className={styles.navLink}>Sobre</Link>
-                </div>
-
-                {/* Right side: Social Icons */}
-                <div className={styles.socialIcons}>
-                    <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className={styles.socialIcon}>
-                        <Youtube size={20} />
-                    </a>
-                    <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className={styles.socialIcon}>
-                        <Facebook size={20} />
-                    </a>
-                    <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className={styles.socialIcon}>
-                        <Twitter size={20} />
-                    </a>
-                    <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className={styles.socialIcon}>
-                        <Instagram size={20} />
-                    </a>
-                    <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className={styles.socialIcon}>
-                        <Linkedin size={20} />
-                    </a>
+            <div className={styles.topRow}>
+                <div className={styles.logo}>ClickPet.</div>
+                
+                <div className={styles.linksContainer}>
+                    <div className={styles.linkGroup}>
+                        <span className={styles.linkTitle}>Instituição</span>
+                        <Link href="/sobre" className={styles.linkText}>Sobre nós</Link>
+                    </div>
+                    
+                    <div className={styles.linkGroup}>
+                        <span className={styles.linkTitle}>Descubra</span>
+                        <Link href="/register/partner" className={styles.linkText}>Cadastre sua empresa</Link>
+                    </div>
+                    
+                    <div className={styles.linkGroup}>
+                        <span className={styles.linkTitle}>Parcerias</span>
+                        <Link href="/partners" className={styles.linkText}>Quero ser parceiro</Link>
+                    </div>
                 </div>
             </div>
 
             <hr className={styles.divider} />
 
-            <p className={styles.copyright}>
-                ClickPet @ 2026. Todos os direitos reservados.
-            </p>
+            <div className={styles.bottomRow}>
+                <div className={styles.legalColLeft}>
+                    <span className={styles.legalText}>© Copyright 2026 - ClickPet - Todos os direitos reservados</span>
+                    <span className={styles.legalText}>CNPJ: 0.000.000/0000-00</span>
+                </div>
+                
+                <div className={styles.legalColRight}>
+                    <Link href="/termos" className={styles.legalText}>Termos de uso e política de privacidade</Link>
+                    <Link href="/seguranca" className={styles.legalText}>Segurança</Link>
+                    <Link href="/conduta" className={styles.legalText}>Código de Conduta</Link>
+                </div>
+            </div>
         </footer>
     );
 }

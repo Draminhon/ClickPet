@@ -1,12 +1,17 @@
 import type { Metadata } from "next";
-import { Sora } from "next/font/google";
+import { Baloo_2 } from "next/font/google";
 import "./globals.css";
 import ConditionalLayout from "@/components/layout/ConditionalLayout";
 import { CartProvider } from "@/context/CartContext";
 import { ToastProvider } from "@/context/ToastContext";
+import { LocationProvider } from "@/context/LocationContext";
 import AuthProvider from "@/context/AuthProvider";
 
-const sora = Sora({ subsets: ["latin"] });
+const baloo2 = Baloo_2({
+    subsets: ["latin"],
+    weight: ["400", "500", "600", "700", "800"],
+    display: "swap",
+});
 
 export const metadata: Metadata = {
     title: "ClickPet - Delivery para Petshops",
@@ -20,13 +25,15 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="pt-BR">
-            <body className={sora.className}>
+            <body className={baloo2.className}>
                 <AuthProvider>
                     <ToastProvider>
                         <CartProvider>
-                            <ConditionalLayout>
-                                {children}
-                            </ConditionalLayout>
+                            <LocationProvider>
+                                <ConditionalLayout>
+                                    {children}
+                                </ConditionalLayout>
+                            </LocationProvider>
                         </CartProvider>
                     </ToastProvider>
                 </AuthProvider>

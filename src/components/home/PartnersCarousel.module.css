@@ -1,0 +1,128 @@
+.sectionContainer {
+    width: 100%;
+    max-width: 1810px;
+    /* 1200 padding + 80 left */
+    margin: 40px 0;
+    padding-left: 80px;
+}
+
+@media (max-width: 1200px) {
+    .sectionContainer {
+        padding-left: 40px;
+    }
+}
+
+@media (max-width: 768px) {
+    .sectionContainer {
+        padding-left: 20px;
+    }
+}
+
+.title {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 600;
+    font-size: 24px;
+    color: #272727;
+    margin-bottom: 24px;
+    text-align: left;
+}
+
+.carouselWrapper {
+    width: 100%;
+    overflow-x: auto;
+    position: relative;
+    padding: 10px 0;
+    /* Hide scrollbar */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+}
+
+.carouselWrapper::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari and Opera */
+}
+
+.carouselTrack {
+    display: flex;
+    gap: 20px;
+    width: max-content;
+    /* Animation removed - now handled by JS for better wheel interaction */
+}
+
+/* No hover pause needed in CSS - handled in JS */
+
+
+
+.itemContainer {
+    width: 276px;
+    height: 70px;
+    background-color: #FFFFFF;
+    border: 1px solid #DDE1E6;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    flex-shrink: 0;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.itemContainer:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.logoContainer {
+    width: 50px;
+    height: 50px;
+    border-radius: 4px;
+    overflow: hidden;
+    flex-shrink: 0;
+    margin-right: 12px;
+}
+
+.logo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.infoColumn {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex: 1;
+    min-width: 0;
+}
+
+.nameRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.name {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    color: #272727;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.specialization {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    color: #878787;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.checkIcon {
+    color: #ED802A;
+    flex-shrink: 0;
+}

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
-import { Search, ShoppingCart, User, MapPin, Heart, Bell, Edit2, X, Package } from 'lucide-react';
+import { ShoppingCart, User, Bell, X } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useSession } from 'next-auth/react';
 import { useToast } from '@/context/ToastContext';
@@ -17,23 +17,10 @@ export default function Header() {
     const { showToast } = useToast();
     const router = useRouter();
     const pathname = usePathname();
-    const [searchQuery, setSearchQuery] = useState('');
     const [showAddressModal, setShowAddressModal] = useState(false);
-    const [showAuthDropdown, setShowAuthDropdown] = useState(false);
     const [userAddress, setUserAddress] = useState<any>(null);
     const [userImage, setUserImage] = useState<string | null>(null);
 
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            const target = event.target as HTMLElement;
-            if (showAuthDropdown && !target.closest(`.${styles.profileCircle}`)) {
-                setShowAuthDropdown(false);
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [showAuthDropdown]);
     const [addressForm, setAddressForm] = useState({
         street: '',
         number: '',
@@ -60,7 +47,7 @@ export default function Header() {
                     setAddressForm({
                         street: data.address.street || '',
                         number: data.address.number || '',
-                        complement: data.address.complement || '', // Set complement from fetched data
+                        complement: data.address.complement || '',
                         city: data.address.city || '',
                         zip: data.address.zip || '',
                         lat: data.address.coordinates?.coordinates?.[1]?.toString() || '',
@@ -131,104 +118,63 @@ export default function Header() {
         return session.user.role === 'partner' ? '/partner/dashboard' : '/profile';
     };
 
-    const handleSearch = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (searchQuery.trim()) {
-            router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
-        }
-    };
-
-    const getAddressDisplay = () => {
-        if (!userAddress || !userAddress.street) return 'Adicionar endereço';
-        return `${userAddress.street}, ${userAddress.number || 's/n'}`;
-    };
-
     return (
         <>
             <header className={styles.header}>
                 <div className={styles.headerContent}>
+                    {/* Logo */}
                     <Link href="/" className={styles.logo}>
-                        CLICK PET
+                        ClickPet.
                     </Link>
 
-                    <nav className={styles.nav}>
-                        <Link href="/" className={`${styles.navLink} ${pathname === '/' ? styles.navLinkActive : ''}`}>
-                            Início
-                        </Link>
-                        <Link href="/services" className={`${styles.navLink} ${pathname === '/services' ? styles.navLinkActive : ''}`}>
-                            Serviços
-                        </Link>
-                        <Link href="/suporte" className={`${styles.navLink} ${pathname === '/suporte' ? styles.navLinkActive : ''}`}>
-                            Suporte
-                        </Link>
-                        <Link href="/sobre" className={`${styles.navLink} ${pathname === '/sobre' ? styles.navLinkActive : ''}`}>
-                            Sobre
-                        </Link>
-                    </nav>
-
-                    <div className={styles.searchWrapper}>
-                        <form onSubmit={handleSearch} className={styles.searchContainer}>
-                            <Search className={styles.searchIcon} size={20} />
-                            <input
-                                type="text"
-                                placeholder="Pesquise aqui"
-                                className={styles.searchInput}
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                        </form>
-                    </div>
-
+                    {/* Right Actions */}
                     <div className={styles.headerActions}>
-                        {session && (
-                            <div className={styles.notificationWrapper}>
-                                <Bell className={styles.notificationIcon} size={24} />
-                            </div>
-                        )}
-                        {session && (
-                            <Link href="/cart" className={styles.cartWrapper}>
-                                <ShoppingCart className={styles.cartIcon} size={24} />
-                                {count > 0 && (
-                                    <span className={styles.badge}>{count}</span>
-                                )}
-                            </Link>
-                        )}
-
-                        <div
-                            className={styles.profileCircle}
-                            onClick={() => {
-                                if (!session?.user?.email) {
-                                    setShowAuthDropdown(!showAuthDropdown);
-                                } else {
-                                    router.push(getProfileLink());
-                                }
-                            }}
-                            style={{ cursor: 'pointer' }}
-                        >
-                            {session && userImage ? (
-                                <Image
-                                    src={userImage}
-                                    alt="Profile"
-                                    width={48}
-                                    height={48}
-                                    className={styles.headerAvatar}
-                                />
-                            ) : (
-                                <User className={styles.profileIcon} size={24} />
-                            )}
-
-                            {!session && showAuthDropdown && (
-                                <div className={styles.authDropdown} onClick={(e) => e.stopPropagation()}>
-                                    <div className={styles.authDropdownTitle}>Bem-vindo!</div>
-                                    <Link href="/login" className={`${styles.authButton} ${styles.loginBtn}`}>
-                                        Entrar
-                                    </Link>
-                                    <Link href="/register" className={`${styles.authButton} ${styles.registerBtn}`}>
-                                        Criar Conta
+                        {session ? (
+                            <>
+                                {/* Logged in: notifications, cart, profile */}
+                                <div className={styles.notificationWrapper}>
+                                    <Link href="/notifications">
+                                        <Bell className={styles.actionIcon} size={24} />
                                     </Link>
                                 </div>
-                            )}
-                        </div>
+
+                                <Link href="/cart" className={styles.cartWrapper}>
+                                    <ShoppingCart className={styles.actionIcon} size={24} />
+                                    {count > 0 && (
+                                        <span className={styles.badge}>{count}</span>
+                                    )}
+                                </Link>
+
+                                <div
+                                    className={styles.profileCircle}
+                                    onClick={() => router.push(getProfileLink())}
+                                    style={{ cursor: 'pointer' }}
+                                >
+                                    {userImage ? (
+                                        <Image
+                                            src={userImage}
+                                            alt="Profile"
+                                            width={40}
+                                            height={40}
+                                            className={styles.headerAvatar}
+                                        />
+                                    ) : (
+                                        <User className={styles.profileIcon} size={22} />
+                                    )}
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                {/* Not logged in: Criar Conta + Entrar */}
+                                <Link href="/register" className={styles.createAccountBtn}>
+                                    Criar Conta
+                                </Link>
+
+                                <Link href="/login" className={styles.enterBtn}>
+                                    Entrar
+                                </Link>
+                            </>
+                        )}
                     </div>
                 </div>
             </header>

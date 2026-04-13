@@ -1,18 +1,5 @@
 .sectionContainer {
     width: 100%;
-    padding-left: 80px;
-}
-
-@media (max-width: 1200px) {
-    .sectionContainer {
-        padding: 0 40px;
-    }
-}
-
-@media (max-width: 768px) {
-    .sectionContainer {
-        padding: 0 20px;
-    }
 }
 
 .carouselWrapper {
@@ -20,7 +7,7 @@
     overflow-x: auto;
     position: relative;
     border-radius: 16px;
-    padding: 10px 0;
+    padding: 10px 0 20px 0;
     /* Hide scrollbar */
     -ms-overflow-style: none; /* IE and Edge */
     scrollbar-width: none; /* Firefox */
@@ -34,17 +21,12 @@
     display: flex;
     gap: 32px;
     width: max-content;
-    /* Animation removed - now handled by JS */
-}
-
-.carouselTrack:hover {
-    animation-play-state: paused;
 }
 
 .promoContainer {
-    min-width: 500px;
-    height: 200px;
-    border-radius: 16px; /* Corrected to 16px */
+    min-width: 380px;
+    height: 150px;
+    border-radius: 16px;
     overflow: hidden;
     position: relative;
     cursor: pointer;
@@ -59,8 +41,6 @@
 }
 
 .promoImage {
-    width: 100%;
-    height: 100%;
     object-fit: cover;
 }
 
@@ -70,31 +50,35 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(90deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 60%);
+    background: linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0.1) 0%,
+        rgba(0, 0, 0, 0.6) 100%
+    );
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    padding-left: 60px;
-    color: white;
+    justify-content: flex-end;
+    padding: 24px;
 }
 
-.promoTag {
-    background-color: #ED802A;
+.tag {
+    align-self: flex-start;
+    background-color: var(--primary-color, #34C759);
     color: white;
-    padding: 4px 12px;
-    border-radius: 100px;
-    font-size: 14px;
-    font-weight: 700;
-    width: fit-content;
-    margin-bottom: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 4px;
+    margin-bottom: 8px;
     text-transform: uppercase;
-    font-family: 'Baloo 2', sans-serif;
+    letter-spacing: 0.5px;
 }
 
-.promoTitle {
+.title {
+    color: #FFFFFF;
     font-family: 'Baloo 2', sans-serif;
-    font-size: 28px;
-    font-weight: 800;
+    font-weight: 600;
+    font-size: 20px;
+    margin: 0;
     line-height: 1.2;
-    max-width: 250px;
 }

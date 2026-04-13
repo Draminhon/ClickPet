@@ -1,0 +1,222 @@
+.container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 0 20px;
+    font-family: 'Inter', sans-serif;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+}
+
+.headerLeft {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.pageTitle {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 32px;
+    font-weight: 800;
+    color: #272727;
+    margin: 0;
+}
+
+.badge {
+    background-color: #FF3B30;
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: 'Baloo 2', sans-serif;
+    padding: 2px 10px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.markAllBtn {
+    background: none;
+    border: none;
+    color: rgba(52, 199, 89, 1);
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: background-color 0.2s;
+}
+
+.markAllBtn:hover {
+    background-color: rgba(52, 199, 89, 0.1);
+}
+
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 20px;
+    background-color: #FFFFFF;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    text-align: center;
+}
+
+.emptyIcon {
+    width: 80px;
+    height: 80px;
+    background-color: #F5F5F5;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+    color: #A0A0A0;
+}
+
+.emptyTitle {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: #272727;
+    margin: 0 0 8px 0;
+}
+
+.emptyText {
+    font-size: 16px;
+    color: #878787;
+    margin: 0;
+    max-width: 300px;
+}
+
+.notificationsList {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.notificationCard {
+    display: flex;
+    gap: 16px;
+    padding: 20px;
+    background-color: #FFFFFF;
+    border-radius: 16px;
+    border: 1px solid #EBEBEB;
+    transition: all 0.2s ease;
+    cursor: default;
+    position: relative;
+    overflow: hidden;
+}
+
+.notificationCard.clickable {
+    cursor: pointer;
+}
+
+.notificationCard.clickable:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+    border-color: #DDE1E6;
+}
+
+.notificationCard.unread {
+    background-color: #F2FCF5;
+    border-color: rgba(52, 199, 89, 0.3);
+}
+
+.iconWrapper {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 24px;
+}
+
+.iconWrapper.order {
+    background-color: rgba(52, 199, 89, 0.15);
+    color: rgba(52, 199, 89, 1);
+}
+
+.iconWrapper.promo {
+    background-color: rgba(236, 128, 43, 0.15);
+    color: #EC802B;
+}
+
+.iconWrapper.system {
+    background-color: #F5F5F5;
+    color: #666666;
+}
+
+.contentWrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.cardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.title {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: #272727;
+    margin: 0;
+}
+
+.time {
+    font-size: 12px;
+    color: #A0A0A0;
+    font-weight: 500;
+}
+
+.message {
+    font-size: 15px;
+    color: #555555;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.markReadBtn {
+    background: none;
+    border: none;
+    color: rgba(52, 199, 89, 1);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+    margin-top: 8px;
+    align-self: flex-start;
+}
+
+.markReadBtn:hover {
+    background-color: rgba(52, 199, 89, 0.1);
+}
+
+.unreadDot {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 10px;
+    height: 10px;
+    background-color: rgba(52, 199, 89, 1);
+    border-radius: 50%;
+}

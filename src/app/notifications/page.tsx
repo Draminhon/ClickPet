@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { Bell, Check, CheckCheck } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
+import styles from './Notifications.module.css';
+
 export default function NotificationsPage() {
     const router = useRouter();
     const [notifications, setNotifications] = useState<any[]>([]);
@@ -25,36 +27,28 @@ export default function NotificationsPage() {
     };
 
     const handleMarkAsRead = async (notificationId: string) => {
-        // Optimistic update
         setNotifications(prev => prev.map(n =>
             n._id === notificationId ? { ...n, read: true } : n
         ));
         setUnreadCount(prev => Math.max(0, prev - 1));
 
         try {
-            await fetch(`/api/notifications?id=${notificationId}`, {
-                method: 'PUT',
-            });
+            await fetch(`/api/notifications?id=${notificationId}`, { method: 'PUT' });
             fetchNotifications();
         } catch (error) {
-            console.error('Error marking notification as read:', error);
-            fetchNotifications(); // Revert/Sync on error
+            fetchNotifications();
         }
     };
 
     const handleMarkAllAsRead = async () => {
-        // Optimistic update
         setNotifications(prev => prev.map(n => ({ ...n, read: true })));
         setUnreadCount(0);
 
         try {
-            await fetch('/api/notifications', {
-                method: 'PUT',
-            });
+            await fetch('/api/notifications', { method: 'PUT' });
             fetchNotifications();
         } catch (error) {
-            console.error('Error marking all as read:', error);
-            fetchNotifications(); // Revert/Sync on error
+            fetchNotifications();
         }
     };
 
@@ -67,140 +61,87 @@ export default function NotificationsPage() {
         }
     };
 
-    const getTypeColor = (type: string) => {
-        const colors: Record<string, string> = {
-            order: '#6CC551',
-            message: '#007bff',
-            appointment: '#FFC107',
-            system: '#6c757d',
-        };
-        return colors[type] || '#6c757d';
-    };
-
     const getTypeIcon = (type: string) => {
-        const icons: Record<string, string> = {
+        const typeMap: Record<string, string> = {
             order: '📦',
             message: '💬',
             appointment: '📅',
+            promotion: '🎉',
             system: '🔔',
         };
-        return icons[type] || '🔔';
+        return typeMap[type] || '🔔';
+    };
+
+    const getTypeClass = (type: string) => {
+        if (['order', 'appointment'].includes(type)) return styles.order;
+        if (['message', 'promotion'].includes(type)) return styles.promo;
+        return styles.system;
     };
 
     if (loading) {
-        return <div className="container" style={{ padding: '2rem 0', textAlign: 'center' }}>Carregando...</div>;
+        return <div className={styles.container} style={{ textAlign: 'center', paddingTop: '100px' }}>Carregando...</div>;
     }
 
     return (
-        <div className="container" style={{ padding: '2rem 0', maxWidth: '800px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Bell size={28} />
-                    <h1 className="section-title" style={{ margin: 0 }}>Notificações</h1>
-                    {unreadCount > 0 && (
-                        <span style={{
-                            background: '#dc3545',
-                            color: 'white',
-                            borderRadius: '50%',
-                            width: '24px',
-                            height: '24px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '0.8rem',
-                            fontWeight: 700,
-                        }}>
-                            {unreadCount}
-                        </span>
-                    )}
+        <div className={styles.container}>
+            <div className={styles.header}>
+                <div className={styles.headerLeft}>
+                    <Bell color="#272727" size={32} strokeWidth={2.5} />
+                    <h1 className={styles.pageTitle}>Notificações</h1>
+                    {unreadCount > 0 && <span className={styles.badge}>{unreadCount}</span>}
                 </div>
 
                 {unreadCount > 0 && (
-                    <button
-                        onClick={handleMarkAllAsRead}
-                        style={{
-                            padding: '0.6rem 1rem',
-                            background: '#6CC551',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '8px',
-                            cursor: 'pointer',
-                            fontWeight: 600,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                        }}
-                    >
-                        <CheckCheck size={18} />
+                    <button onClick={handleMarkAllAsRead} className={styles.markAllBtn}>
+                        <CheckCheck size={20} />
                         Marcar todas como lidas
                     </button>
                 )}
             </div>
 
             {notifications.length === 0 ? (
-                <div style={{ background: 'white', padding: '3rem', borderRadius: '12px', textAlign: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-                    <Bell size={48} color="#ccc" style={{ marginBottom: '1rem' }} />
-                    <p style={{ color: '#666' }}>Você não tem notificações</p>
+                <div className={styles.emptyState}>
+                    <div className={styles.emptyIcon}>
+                        <Bell size={40} strokeWidth={2} />
+                    </div>
+                    <h2 className={styles.emptyTitle}>Nenhuma notificação</h2>
+                    <p className={styles.emptyText}>Você não tem novas notificações no momento. Avisaremos quando houver novidades!</p>
                 </div>
             ) : (
-                <div style={{ display: 'grid', gap: '0.5rem' }}>
+                <div className={styles.notificationsList}>
                     {notifications.map(notification => (
                         <div
                             key={notification._id}
                             onClick={() => handleNotificationClick(notification)}
-                            style={{
-                                background: notification.read ? 'white' : '#f0f8ff',
-                                padding: '1rem',
-                                borderRadius: '8px',
-                                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                                cursor: notification.link ? 'pointer' : 'default',
-                                borderLeft: `4px solid ${getTypeColor(notification.type)}`,
-                                display: 'flex',
-                                gap: '1rem',
-                                alignItems: 'start',
-                                transition: 'all 0.2s',
-                            }}
-                            onMouseEnter={e => {
-                                if (notification.link) {
-                                    e.currentTarget.style.transform = 'translateX(4px)';
-                                }
-                            }}
-                            onMouseLeave={e => {
-                                e.currentTarget.style.transform = 'translateX(0)';
-                            }}
+                            className={`${styles.notificationCard} ${notification.link ? styles.clickable : ''} ${!notification.read ? styles.unread : ''}`}
                         >
-                            <span style={{ fontSize: '1.5rem' }}>{getTypeIcon(notification.type)}</span>
+                            {!notification.read && <div className={styles.unreadDot} />}
+                            
+                            <div className={`${styles.iconWrapper} ${getTypeClass(notification.type)}`}>
+                                {getTypeIcon(notification.type)}
+                            </div>
 
-                            <div style={{ flex: 1 }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.3rem' }}>
-                                    <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: 0 }}>
-                                        {notification.title}
-                                    </h3>
-                                    {!notification.read && (
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleMarkAsRead(notification._id);
-                                            }}
-                                            style={{
-                                                background: 'none',
-                                                border: 'none',
-                                                cursor: 'pointer',
-                                                color: '#6CC551',
-                                            }}
-                                        >
-                                            <Check size={20} />
-                                        </button>
-                                    )}
+                            <div className={styles.contentWrapper}>
+                                <div className={styles.cardHeader}>
+                                    <h3 className={styles.title}>{notification.title}</h3>
+                                    <span className={styles.time}>
+                                        {new Date(notification.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                    </span>
                                 </div>
-
-                                <p style={{ margin: 0, color: '#666', fontSize: '0.9rem', marginBottom: '0.5rem' }}>
-                                    {notification.message}
-                                </p>
-
-                                <p style={{ margin: 0, fontSize: '0.75rem', color: '#999' }}>
-                                    {new Date(notification.createdAt).toLocaleString('pt-BR')}
-                                </p>
+                                <p className={styles.message}>{notification.message}</p>
+                                
+                                {!notification.read && !notification.link && (
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleMarkAsRead(notification._id);
+                                        }}
+                                        className={styles.markReadBtn}
+                                        title="Marcar como lida"
+                                    >
+                                        <Check size={18} strokeWidth={3} />
+                                    </button>
+                                )}
                             </div>
                         </div>
                     ))}

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
-import { MapPin, Navigation, Loader2 } from 'lucide-react';
+import { MapPin, Navigation, Loader2, X } from 'lucide-react';
 import { useLocation } from '@/context/LocationContext';
 import styles from './HeroBanner.module.css';
 
@@ -14,6 +14,7 @@ export default function HeroBanner() {
         setLocationManual,
         lat,
         lng,
+        clearLocation
     } = useLocation();
 
     const [isEditing, setIsEditing] = useState(false);
@@ -101,6 +102,18 @@ export default function HeroBanner() {
         setShowSuggestions(false);
     };
 
+    const handleClearClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        clearLocation();
+        setInputValue('');
+        setSuggestions([]);
+        setShowSuggestions(false);
+        setIsEditing(true);
+        if (inputRef.current) {
+            inputRef.current.focus();
+        }
+    };
+
     const handleBarClick = () => {
         if (!isEditing) {
             setIsEditing(true);
@@ -163,6 +176,17 @@ export default function HeroBanner() {
                             </span>
                         )}
                     </div>
+
+                    {/* Clear Button */}
+                    {(inputValue || address) && (
+                        <button
+                            className={styles.clearButton}
+                            onClick={handleClearClick}
+                            title="Limpar localização"
+                        >
+                            <X size={16} color="#878787" />
+                        </button>
+                    )}
 
                     {/* GPS Button */}
                     <button

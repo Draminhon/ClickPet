@@ -1,0 +1,305 @@
+.container {
+    width: 100%;
+    padding-right: 80px;
+    display: flex;
+    flex-direction: column;
+    margin-top: 40px;
+    padding-bottom: 80px;
+}
+
+.title {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 600;
+    /* SemiBold */
+    font-size: 24px;
+    color: #272727;
+    margin: 0 0 24px 0;
+    text-align: left;
+}
+
+.filtersRow {
+    display: flex;
+    flex-direction: row;
+    gap: 16px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    /* space for scroll bar if compressed */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    /* IE and Edge */
+}
+
+.filtersRow::-webkit-scrollbar {
+    display: none;
+}
+
+.chip {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    width: 121px;
+    /* fixed size explicitly requested */
+    min-width: 121px;
+    height: 42px;
+    border-radius: 8px;
+    border: 1px solid #DDE1E6;
+    background-color: #FFFFFF;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    gap: 6px;
+    user-select: none;
+}
+
+.chip:hover {
+    background-color: #F8F9FA;
+}
+
+.chipActive {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    width: 121px;
+    min-width: 121px;
+    height: 42px;
+    border-radius: 8px;
+    border: 1px solid #34C759;
+    background-color: #34C759;
+    /* 52,199,89,100% */
+    cursor: pointer;
+    transition: all 0.2s ease;
+    gap: 6px;
+    user-select: none;
+}
+
+.chipText {
+    font-family: inherit;
+    font-weight: 400;
+    /* Regular */
+    font-size: 14px;
+    /* Scaled down slightly to fit 121px box if needed, or 16px as requested */
+    color: #272727;
+    white-space: nowrap;
+}
+
+.chipTextActive {
+    font-family: inherit;
+    font-weight: 500;
+    /* Medium */
+    font-size: 14px;
+    color: #FFFFFF;
+    white-space: nowrap;
+}
+
+.icon {
+    width: 16px;
+    height: 16px;
+    color: #272727;
+    stroke-width: 2;
+    /* width 2 as requested */
+}
+
+.iconActive {
+    width: 16px;
+    height: 16px;
+    color: #FFFFFF;
+    stroke-width: 2;
+}
+
+/* Base Dropdown positioning */
+.dropdownWrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdownMenu {
+    position: absolute;
+    top: 50px;
+    left: 0;
+    background-color: white;
+    border: 1px solid #DDE1E6;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+    min-width: 200px;
+    display: flex;
+    flex-direction: column;
+    padding: 8px 0;
+}
+
+.dropdownItem {
+    padding: 10px 16px;
+    font-size: 14px;
+    color: #272727;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    background: transparent;
+    border: none;
+    text-align: left;
+    width: 100%;
+}
+
+.dropdownItem:hover {
+    background-color: #F8F9FA;
+}
+
+/* Grid Layout */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-top: 32px;
+}
+
+@media (max-width: 1200px) {
+    .grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Card */
+.card {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    height: 134px;
+    border-radius: 16px;
+    border: 1px solid #DDE1E6;
+    background-color: #FFFFFF;
+    padding: 12px;
+    gap: 16px;
+    text-decoration: none;
+    transition: background-color 0.2s;
+}
+
+.card:hover {
+    background-color: #F8F9FA;
+}
+
+.imageWrapper {
+    width: 110px;
+    height: 110px;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    background-color: #F5F5F5;
+    flex-shrink: 0;
+}
+
+.shopImage {
+    object-fit: cover;
+}
+
+.detailsColumn {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex: 1;
+    min-width: 0;
+    padding: 4px 0;
+}
+
+.nameRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.shopName {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    color: #272727;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.badge {
+    color: #EC802B;
+    /* orange verification */
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.infoLine {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+    font-size: 14px;
+    color: #878787;
+    margin-top: -2px;
+}
+
+.bullet {
+    color: #DDE1E6;
+    font-size: 10px;
+}
+
+.ratingLine {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 500;
+    font-size: 14px;
+    color: #878787;
+}
+
+.starIcon {
+    color: #FFD700;
+}
+
+.statusLine {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+    font-size: 14px;
+    color: #878787;
+}
+
+.statusOpen {
+    color: #EC802B;
+    /* ED802A / EC802B */
+}
+
+.statusClosed {
+    color: #878787;
+}
+
+/* View More Button */
+.viewMoreWrapper {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-top: 40px;
+}
+
+.viewMoreButton {
+    width: 383px;
+    height: 42px;
+    border-radius: 4px;
+    background-color: #EC802B;
+    border: none;
+    color: #FFFFFF;
+    font-family: inherit;
+    font-weight: 700;
+    /* Bold */
+    font-size: 16px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.viewMoreButton:hover {
+    opacity: 0.9;
+}

@@ -1,8 +1,6 @@
 .sectionContainer {
     width: 100%;
     max-width: 1810px;
-    /* 1200 padding + 80 left */
-    margin: 40px 0;
     padding-left: 80px;
 }
 
@@ -46,7 +44,7 @@
 
 .carouselTrack {
     display: flex;
-    gap: 20px;
+    gap: 32px;
     width: max-content;
     /* Animation removed - now handled by JS for better wheel interaction */
 }

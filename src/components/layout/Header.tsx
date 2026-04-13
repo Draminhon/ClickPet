@@ -4,10 +4,11 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
-import { ShoppingCart, User, Bell, X } from 'lucide-react';
+import { ShoppingCart, User, Bell, X, MapPin, ChevronDown } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useSession } from 'next-auth/react';
 import { useToast } from '@/context/ToastContext';
+import { useLocation } from '@/context/LocationContext';
 import MapPicker from '@/components/ui/MapPicker';
 import styles from './Header.module.css';
 
@@ -17,7 +18,10 @@ export default function Header() {
     const { showToast } = useToast();
     const router = useRouter();
     const pathname = usePathname();
+    const { address, setLocationFromGPS } = useLocation();
+    
     const [showAddressModal, setShowAddressModal] = useState(false);
+    const [showLocationDropdown, setShowLocationDropdown] = useState(false);
     const [userAddress, setUserAddress] = useState<any>(null);
     const [userImage, setUserImage] = useState<string | null>(null);
 
@@ -127,19 +131,55 @@ export default function Header() {
                         ClickPet.
                     </Link>
 
+                    {/* Center: Location (Only when logged in) */}
+                    {session && (
+                        <div 
+                            className={styles.locationGroup} 
+                            onClick={() => setShowLocationDropdown(!showLocationDropdown)}
+                        >
+                            <MapPin color="#EC802B" size={18} strokeWidth={2.5} />
+                            <div className={styles.verticalDivider} />
+                            <span className={styles.locationText}>
+                                {address || "Adicionar localização"}
+                            </span>
+                            <ChevronDown color="#272727" size={16} strokeWidth={2} style={{ width: '6px', height: '6px', transform: 'scale(2.5)' }} />
+
+                            {showLocationDropdown && (
+                                <div className={styles.dropdownMenu} onClick={(e) => e.stopPropagation()}>
+                                    <button 
+                                        className={styles.dropdownItem}
+                                        onClick={() => {
+                                            setLocationFromGPS();
+                                            setShowLocationDropdown(false);
+                                        }}
+                                    >
+                                        📍 Usar localização atual
+                                    </button>
+                                    <button 
+                                        className={styles.dropdownItem}
+                                        onClick={() => {
+                                            setShowAddressModal(true);
+                                            setShowLocationDropdown(false);
+                                        }}
+                                    >
+                                        ➕ Editar/Adicionar endereço
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     {/* Right Actions */}
                     <div className={styles.headerActions}>
                         {session ? (
                             <>
                                 {/* Logged in: notifications, cart, profile */}
-                                <div className={styles.notificationWrapper}>
-                                    <Link href="/notifications">
-                                        <Bell className={styles.actionIcon} size={24} />
-                                    </Link>
-                                </div>
+                                <Link href="/notifications" className={styles.notificationWrapper}>
+                                    <Bell className={styles.notificationIcon} size={24} />
+                                </Link>
 
                                 <Link href="/cart" className={styles.cartWrapper}>
-                                    <ShoppingCart className={styles.actionIcon} size={24} />
+                                    <ShoppingCart className={styles.cartIcon} size={24} />
                                     {count > 0 && (
                                         <span className={styles.badge}>{count}</span>
                                     )}

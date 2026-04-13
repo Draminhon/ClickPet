@@ -10,7 +10,7 @@ export async function GET(req: Request) {
         const { searchParams } = new URL(req.url);
         const lat = parseFloat(searchParams.get('lat') || '');
         const lng = parseFloat(searchParams.get('lng') || '');
-        const radius = parseFloat(searchParams.get('radius') || '15');
+        let radius = parseFloat(searchParams.get('radius') || '15');
         const category = searchParams.get('category');
 
         if (isNaN(lat) || isNaN(lng)) {
@@ -19,9 +19,14 @@ export async function GET(req: Request) {
                 { status: 400 }
             );
         }
+        
+        // SECURITY PATCH: Clamp maximum distance search bounds to limit server overhead
+        if (radius > 50) radius = 50;
 
-        // Fetch all partners with addresses
-        const partners = await User.find({ role: 'partner' }).lean();
+        // Fetch active partners with a capped iteration limit to prevent memory crash DoS
+        // Note: we CANNOT use .lean() here because mongoose-field-encryption requires hydration to decrypt the coordinates!
+        const partners = await User.find({ role: 'partner', status: { $ne: 'suspended' } })
+            .limit(500);
 
         // Filter partners within radius using Haversine
         const nearbyPartners: any[] = [];
@@ -47,6 +52,7 @@ export async function GET(req: Request) {
                     _id: String(partner._id),
                     name: partner.name,
                     shopLogo: partner.shopLogo || null,
+                    specialization: partner.specialization || '',
                     distance,
                     deliveryFee,
                     deliveryRadius: partner.deliveryRadius || 10,

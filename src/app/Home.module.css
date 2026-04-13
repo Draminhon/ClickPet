@@ -1,3 +1,10 @@
+.homeContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 64px;
+    padding-bottom: 64px;
+}
+
 .heroSection {
     background: linear-gradient(135deg, #6CC551 0%, #5AB03F 100%);
     color: white;
@@ -177,7 +184,7 @@
 
 .juntosSection {
     width: 100%;
-    padding: 80px 80px;
+    padding: 0 80px;
     display: flex;
     justify-content: space-between;
     align-items: flex-end;

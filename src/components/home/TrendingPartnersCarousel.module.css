@@ -1,0 +1,132 @@
+.carouselContainer {
+    width: 95%;
+    margin: 24px 0 40px;
+}
+
+.carouselTrack {
+    display: flex;
+    overflow-x: auto;
+    gap: 32px;
+    /* Espaçamento idêntico ao carrossel padrão */
+    padding-bottom: 16px;
+    scrollbar-width: thin;
+    scrollbar-color: #DDE1E6 transparent;
+}
+
+.carouselTrack::-webkit-scrollbar {
+    height: 6px;
+}
+
+.carouselTrack::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.carouselTrack::-webkit-scrollbar-thumb {
+    background-color: #DDE1E6;
+    border-radius: 10px;
+}
+
+.card {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    min-width: 380px;
+    width: 380px;
+    height: 104px;
+    border-radius: 16px;
+    background-color: #FFFFFF;
+    border: 1px solid #DDE1E6;
+    padding: 12px;
+    gap: 12px;
+    text-decoration: none;
+    transition: background-color 0.2s;
+}
+
+.card:hover {
+    background-color: #F8F9FA;
+}
+
+.imageWrapper {
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+    position: relative;
+    background-color: #F5F5F5;
+}
+
+.shopImage {
+    object-fit: cover;
+}
+
+.detailsColumn {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex: 1;
+    min-width: 0;
+    /* allows text truncation */
+    gap: 2px;
+}
+
+.nameRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.shopName {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 600;
+    /* SemiBold */
+    font-size: 16px;
+    color: #272727;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.badge {
+    color: #ED802A;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.infoRow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.infoText {
+    font-family: inherit;
+    font-weight: 500;
+    /* Medium */
+    font-size: 14px;
+    color: #878787;
+    white-space: nowrap;
+}
+
+.bullet {
+    color: #DEE2E6;
+    font-size: 10px;
+}
+
+.statusOpen {
+    font-family: inherit;
+    font-weight: 400;
+    /* Regular */
+    font-size: 14px;
+    color: #ED802A;
+}
+
+.statusClosed {
+    font-family: inherit;
+    font-weight: 400;
+    /* Regular */
+    font-size: 14px;
+    color: #878787;
+}

@@ -13,11 +13,13 @@ export default function ConditionalLayout({ children }: { children: React.ReactN
     const isProductPage = pathname?.startsWith("/product/");
 
     return (
-        <>
+        <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
             {!isAuthPage && !isPartnerPage && !isAdminPage && <Header />}
-            {children}
+            <main style={{ flex: 1 }}>
+                {children}
+            </main>
             {!isAuthPage && !isPartnerPage && !isAdminPage && <Footer isProductPage={isProductPage} />}
             {!isAuthPage && !isPartnerPage && !isAdminPage && <MobileNav />}
-        </>
+        </div>
     );
 }

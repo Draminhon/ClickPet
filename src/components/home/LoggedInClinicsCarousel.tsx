@@ -92,7 +92,7 @@ export default function LoggedInClinicsCarousel({ clinics }: LoggedInClinicsCaro
                     const clinicType = getClinicType(clinic._id);
 
                     return (
-                        <Link href={`/partner/${clinic._id}`} key={`${clinic._id}-${index}`} className={styles.card}>
+                        <Link href={`/loja/${clinic._id}`} key={`${clinic._id}-${index}`} className={styles.card}>
                             {/* Fotografia da loja */}
                             <div className={styles.imageWrapper}>
                                 <Image 

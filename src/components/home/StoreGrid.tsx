@@ -151,7 +151,7 @@ export default function StoreGrid({ partners }: StoreGridProps) {
                     const specificInfoString = isClinic ? 'Especializado' : '20-30 min';
 
                     return (
-                        <Link href={`/partner/${partner._id}`} key={partner._id} className={styles.card}>
+                        <Link href={`/loja/${partner._id}`} key={partner._id} className={styles.card}>
                             <div className={styles.imageWrapper}>
                                 <Image 
                                     src={partner.shopLogo || 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?w=100&h=100&fit=crop'} 

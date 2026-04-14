@@ -103,7 +103,7 @@ export default function TrendingPartnersCarousel({ partners }: TrendingPartnersC
                     const isOpen = partner.isOpen !== undefined ? partner.isOpen : getIsOpen(partner._id);
 
                     return (
-                        <Link href={`/partner/${partner._id}`} key={`${partner._id}-${index}`} className={styles.card}>
+                        <Link href={`/loja/${partner._id}`} key={`${partner._id}-${index}`} className={styles.card}>
                             {/* Fotografia da loja */}
                             <div className={styles.imageWrapper}>
                                 <Image 

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { BadgeCheck } from 'lucide-react';
 import styles from './TrendingPartnersCarousel.module.css';
+import { isShopOpen } from '@/utils/shopUtils';
 
 interface Partner {
     _id: string;
@@ -12,6 +13,7 @@ interface Partner {
     shopLogo: string;
     specialization?: string;
     distance?: number;
+    workingHours?: any[];
 }
 
 interface LoggedInClinicsCarouselProps {
@@ -70,12 +72,6 @@ export default function LoggedInClinicsCarousel({ clinics }: LoggedInClinicsCaro
     // Extended array for seamless loop
     const extendedClinics = [...baseClinics, ...baseClinics, ...baseClinics, ...baseClinics];
 
-    // Helper fake string "Especializado" or "Tradicional"
-    const getClinicType = (id: string) => {
-        const sum = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-        return sum % 3 === 0 ? 'Especializado' : 'Tradicional';
-    };
-
     return (
         <section 
             className={styles.carouselContainer}
@@ -89,7 +85,7 @@ export default function LoggedInClinicsCarousel({ clinics }: LoggedInClinicsCaro
                         ? `${clinic.distance.toFixed(1)} km` 
                         : 'Calculando...';
                     
-                    const clinicType = getClinicType(clinic._id);
+                    const isOpen = clinic.workingHours ? isShopOpen(clinic.workingHours) : false;
 
                     return (
                         <Link href={`/loja/${clinic._id}`} key={`${clinic._id}-${index}`} className={styles.card}>
@@ -118,7 +114,9 @@ export default function LoggedInClinicsCarousel({ clinics }: LoggedInClinicsCaro
                                 </div>
 
                                 <div className={styles.infoRow}>
-                                    <span className={styles.statusOpen}>{clinicType}</span>
+                                    <span className={isOpen ? styles.statusOpen : styles.statusClosed}>
+                                        {isOpen ? 'Loja aberta' : 'Loja fechada'}
+                                    </span>
                                 </div>
                             </div>
                         </Link>

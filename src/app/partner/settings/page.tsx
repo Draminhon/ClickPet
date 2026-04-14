@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useToast } from '@/context/ToastContext';
-import { Minus, Plus, ChevronUp, ChevronDown, QrCode } from 'lucide-react';
+import { Minus, Plus, ChevronUp, ChevronDown, QrCode, Upload } from 'lucide-react';
 import { maskPhone, maskPrice, maskCPF, maskCNPJ, maskZip } from '@/utils/masks';
 import MapPicker from '@/components/ui/MapPicker';
 
@@ -255,10 +255,14 @@ export default function PartnerSettings() {
     const [showKeyTypeDropdown, setShowKeyTypeDropdown] = useState(false);
     const [showWelcomeModal, setShowWelcomeModal] = useState(false);
     const [validationErrors, setValidationErrors] = useState<string[]>([]);
+    const [hasLoaded, setHasLoaded] = useState(false);
     const [formData, setFormData] = useState({
         // ... (state preserved)
         cnpj: '',
         phone: '',
+        specialization: '',
+        shopLogo: '',
+        bannerImage: '',
         minimumOrderValue: '0',
         deliveryRadius: '10',
         deliveryFeePerKm: '2',
@@ -311,12 +315,17 @@ export default function PartnerSettings() {
             }
         }
 
+        if (hasLoaded) return;
+
         fetch('/api/profile')
             .then(res => res.json())
             .then(data => {
                 const formatted = {
                     cnpj: data.cnpj ? maskCNPJ(data.cnpj) : '',
                     phone: data.phone ? maskPhone(data.phone) : '',
+                    specialization: data.specialization || '',
+                    shopLogo: data.shopLogo || '',
+                    bannerImage: data.bannerImage || '',
                     minimumOrderValue: data.minimumOrderValue?.toFixed(2).replace('.', ',') || '0,00',
                     deliveryRadius: data.deliveryRadius?.toString() || '10',
                     deliveryFeePerKm: data.deliveryFeePerKm?.toFixed(2).replace('.', ',') || '2,00',
@@ -355,13 +364,49 @@ export default function PartnerSettings() {
                 };
                 setInitialData(formatted);
                 setFormData(formatted);
+                setHasLoaded(true);
             });
-    }, [session]);
+    }, [session, hasLoaded]);
+
+    // Draft persistence
+    useEffect(() => {
+        if (!hasLoaded) return;
+        const draft = localStorage.getItem('partner_settings_draft');
+        if (draft) {
+            try {
+                const parsed = JSON.parse(draft);
+                // Only load draft if it's more recent than the database load or if we want to restore incomplete work
+                // For simplicity, we'll ask later or just merge. Let's just save for now.
+            } catch (e) {}
+        }
+    }, [hasLoaded]);
+
+    useEffect(() => {
+        if (hasLoaded) {
+            localStorage.setItem('partner_settings_draft', JSON.stringify(formData));
+        }
+    }, [formData, hasLoaded]);
 
     const handleDiscard = () => {
         if (initialData) {
             setFormData(initialData);
             showToast('Alterações descartadas');
+        }
+    };
+
+    const handleLocalImageChange = (e: React.ChangeEvent<HTMLInputElement>, field: 'shopLogo' | 'bannerImage') => {
+        const file = e.target.files?.[0];
+        if (file) {
+            if (file.size > 1024 * 1024) { // 1MB limit
+                showToast('A imagem deve ter no máximo 1MB', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setFormData({ ...formData, [field]: reader.result as string });
+            };
+            reader.readAsDataURL(file);
         }
     };
 
@@ -378,6 +423,7 @@ export default function PartnerSettings() {
         }
 
         if (!formData.phone || formData.phone.length < 14) errors.push('phone');
+        if (!formData.specialization) errors.push('specialization');
         if (!formData.address.street) errors.push('street');
         if (!formData.address.number) errors.push('number');
         if (!formData.address.city) errors.push('city');
@@ -401,6 +447,9 @@ export default function PartnerSettings() {
                 body: JSON.stringify({
                     cnpj: formData.cnpj.replace(/\D/g, ''),
                     phone: formData.phone,
+                    specialization: formData.specialization,
+                    shopLogo: formData.shopLogo,
+                    bannerImage: formData.bannerImage,
                     minimumOrderValue: parseFloat(formData.minimumOrderValue.replace(',', '.')),
                     deliveryRadius: parseFloat(formData.deliveryRadius),
                     deliveryFeePerKm: parseFloat(formData.deliveryFeePerKm.replace(',', '.')),
@@ -421,6 +470,7 @@ export default function PartnerSettings() {
 
             if (res.ok) {
                 showToast('Informações atualizadas com sucesso!');
+                localStorage.removeItem('partner_settings_draft');
                 setInitialData(formData);
                 await update();
             } else {
@@ -514,6 +564,70 @@ export default function PartnerSettings() {
                 </div>
             </div>
 
+            <div style={{ marginBottom: '64px' }}>
+                <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#253D4E', marginBottom: '32px' }}>IDENTIDADE VISUAL</h2>
+                <div style={{ display: 'flex', gap: '48px', alignItems: 'flex-start' }}>
+                    {/* Logo Upload */}
+                    <div>
+                        <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#757575', marginBottom: '12px' }}>FOTO DE PERFIL (200X200)</label>
+                        <label style={{
+                            width: '150px',
+                            height: '150px',
+                            border: '2px dashed #D1D9E2',
+                            borderRadius: '12px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            overflow: 'hidden',
+                            position: 'relative',
+                            backgroundColor: '#F9FBFD'
+                        }}>
+                            {formData.shopLogo ? (
+                                <img src={formData.shopLogo} alt="Logo Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ) : (
+                                <>
+                                    <Upload size={24} color="#757575" />
+                                    <span style={{ fontSize: '11px', color: '#757575', marginTop: '8px', fontWeight: 500 }}>UPLOAD LOGO</span>
+                                </>
+                            )}
+                            <input type="file" accept="image/*" onChange={(e) => handleLocalImageChange(e, 'shopLogo')} style={{ display: 'none' }} />
+                        </label>
+                    </div>
+
+                    {/* Banner Upload */}
+                    <div style={{ flex: 1 }}>
+                        <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#757575', marginBottom: '12px' }}>BANNER DA VITRINE (1920X300)</label>
+                        <label style={{
+                            width: '100%',
+                            height: '150px',
+                            border: '2px dashed #D1D9E2',
+                            borderRadius: '12px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            overflow: 'hidden',
+                            position: 'relative',
+                            backgroundColor: '#F9FBFD'
+                        }}>
+                            {formData.bannerImage ? (
+                                <img src={formData.bannerImage} alt="Banner Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ) : (
+                                <>
+                                    <Upload size={24} color="#757575" />
+                                    <span style={{ fontSize: '11px', color: '#757575', marginTop: '8px', fontWeight: 500 }}>UPLOAD BANNER</span>
+                                </>
+                            )}
+                            <input type="file" accept="image/*" onChange={(e) => handleLocalImageChange(e, 'bannerImage')} style={{ display: 'none' }} />
+                        </label>
+                        <p style={{ fontSize: '11px', color: '#999', marginTop: '8px' }}>Padrão wide recomendado para melhor visualização em computadores.</p>
+                    </div>
+                </div>
+            </div>
+
             <div style={{ display: 'flex', gap: '64px', marginBottom: '64px' }}>
                 {/* Left Column: Business Info */}
                 <div style={{ flex: 1 }}>
@@ -528,7 +642,15 @@ export default function PartnerSettings() {
                     />
 
                     <InputContainer 
-                        label={<>CNPJ DO PETSHOP <span style={{ color: '#FF4D4D' }}>*</span></>}
+                        label={<>ESPECIFICAÇÃO DA LOJA <span style={{ color: '#FF4D4D' }}>*</span></>}
+                        value={formData.specialization}
+                        onChange={(e: any) => setFormData({ ...formData, specialization: e.target.value })}
+                        placeholder="Ex: Casa da Ração, Petshop, Aquarismo, etc."
+                        error={validationErrors.includes('specialization')}
+                    />
+
+                    <InputContainer 
+                        label={<>CNPJ DA LOJA <span style={{ color: '#FF4D4D' }}>*</span></>}
                         value={formData.cnpj}
                         onChange={(e: any) => setFormData({ ...formData, cnpj: maskCNPJ(e.target.value) })}
                         placeholder="00.000.000/0000-00"

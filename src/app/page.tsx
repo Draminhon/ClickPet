@@ -99,7 +99,7 @@ async function getFeaturedPartners(isClinic = false) {
     }
 
     const partners = await User.find(query)
-        .select('name shopLogo specialization')
+        .select('name shopLogo specialization workingHours')
         .limit(15)
         .lean();
 

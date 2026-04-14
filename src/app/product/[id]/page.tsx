@@ -137,6 +137,8 @@ export default function ProductDetailPage() {
 
     const currentPrice = product.price * (1 - product.discount / 100);
     const allImages = [product.image, ...(product.images || [])].filter(img => img);
+    const safeRating = product.rating ?? 0;
+    const safeSalesCount = product.salesCount ?? 0;
 
     const handleAddToCart = () => {
         if (!product) return;
@@ -205,14 +207,14 @@ export default function ProductDetailPage() {
                                 <Star
                                     key={i}
                                     size={17.04}
-                                    fill={i < Math.floor(product.rating) ? "#E3A653" : "none"}
-                                    stroke={i < Math.floor(product.rating) ? "none" : "#E3A653"}
+                                    fill={i < Math.floor(safeRating) ? "#E3A653" : "none"}
+                                    stroke={i < Math.floor(safeRating) ? "none" : "#E3A653"}
                                 />
                             ))}
                         </div>
-                        <span className={styles.ratingValue}>{product.rating.toFixed(1)}</span>
+                        <span className={styles.ratingValue}>{safeRating.toFixed(1)}</span>
                         <span className={styles.bullet}>•</span>
-                        <span className={styles.reviewsCount}>{product.salesCount} Avaliações</span>
+                        <span className={styles.reviewsCount}>{safeSalesCount} Avaliações</span>
                     </div>
 
                     <div className={styles.price}>
@@ -322,14 +324,14 @@ export default function ProductDetailPage() {
                             <div>
                                 <h3 style={{ marginBottom: '5px', fontSize: '24px', fontWeight: 700 }}>Comentários Recentes</h3>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <div style={{ fontSize: '32px', fontWeight: 700 }}>{product.rating.toFixed(1)}</div>
+                                    <div style={{ fontSize: '32px', fontWeight: 700 }}>{safeRating.toFixed(1)}</div>
                                     <div>
                                         <div style={{ display: 'flex' }}>
                                             {[...Array(5)].map((_, i) => (
-                                                <Star key={i} size={18} fill={i < Math.floor(product.rating) ? "#E3A653" : "none"} stroke="#E3A653" />
+                                                <Star key={i} size={18} fill={i < Math.floor(safeRating) ? "#E3A653" : "none"} stroke="#E3A653" />
                                             ))}
                                         </div>
-                                        <div style={{ fontSize: '14px', color: '#666' }}>Baseado em {product.salesCount} avaliações</div>
+                                        <div style={{ fontSize: '14px', color: '#666' }}>Baseado em {safeSalesCount} avaliações</div>
                                     </div>
                                 </div>
                             </div>

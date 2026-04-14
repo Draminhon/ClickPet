@@ -135,19 +135,19 @@ export default function Register() {
                             className={`${styles.roleBtn} ${role === 'partner' ? styles.active : ''}`}
                             onClick={() => setRole('partner')}
                         >
-                            Sou Petshop
+                            Sou Loja
                         </button>
                     </div>
 
                     <form className={styles.form} onSubmit={handleSubmit}>
                         <div className={styles.inputGroup}>
                             <label className={styles.inputLabel}>
-                                {role === 'partner' ? 'Nome do Petshop' : 'Nome Completo'}
+                                {role === 'partner' ? 'Nome da Loja' : 'Nome Completo'}
                             </label>
                             <input
                                 name="name"
                                 type="text"
-                                placeholder={role === 'partner' ? 'Meu Petshop' : 'Seu nome'}
+                                placeholder={role === 'partner' ? 'Minha Loja' : 'Seu nome'}
                                 className={styles.input}
                                 value={formData.name}
                                 onChange={handleChange}

@@ -58,6 +58,7 @@ export async function GET(req: Request) {
                     deliveryRadius: partner.deliveryRadius || 10,
                     minimumOrderValue: partner.minimumOrderValue || 0,
                     freeDeliveryMinimum: partner.freeDeliveryMinimum || 0,
+                    workingHours: partner.workingHours || [],
                 });
             }
         }

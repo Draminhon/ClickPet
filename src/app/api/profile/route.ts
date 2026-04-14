@@ -89,6 +89,10 @@ export async function PUT(req: Request) {
             user.shopLogo = body.shopLogo;
             updateData.shopLogo = body.shopLogo;
         }
+        if (body.bannerImage !== undefined) {
+            user.bannerImage = body.bannerImage;
+            updateData.bannerImage = body.bannerImage;
+        }
         if (body.workingHours !== undefined) {
             user.workingHours = body.workingHours;
             updateData.workingHours = body.workingHours;
@@ -108,6 +112,10 @@ export async function PUT(req: Request) {
         if (body.pixConfig !== undefined) {
             user.pixConfig = body.pixConfig;
             updateData.pixConfig = body.pixConfig;
+        }
+        if (body.specialization !== undefined) {
+            user.specialization = body.specialization;
+            updateData.specialization = body.specialization;
         }
 
         await user.save();

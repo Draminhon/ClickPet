@@ -33,7 +33,6 @@
 
 .topSection,
 .bottomSection {
-    flex: 1;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -48,7 +47,7 @@
 
 .topSection {
     justify-content: flex-end;
-    padding-bottom: 24px;
+    padding-bottom: 16px;
 }
 
 .title {
@@ -173,8 +172,8 @@
     display: flex;
     align-items: center;
     text-align: center;
-    margin: 12px 0 8px 0;
-    width: 100%;
+    margin: 12px 0;
+    width: 388px;
 }
 
 .divider {
@@ -186,7 +185,7 @@
 .dividerText {
     margin: 0 8px;
     font-weight: 400;
-    font-size: 13px;
+    font-size: 16px;
     color: rgba(37, 61, 78, 1);
 }
 

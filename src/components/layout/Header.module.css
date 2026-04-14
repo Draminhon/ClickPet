@@ -144,6 +144,44 @@
     box-shadow: 0 0 0 2px rgba(52, 199, 89, 0.4);
 }
 
+.profileMenuWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
+.profileDropdown {
+    position: absolute;
+    top: 50px; /* Reduced gap to ensure overlap with wrapper */
+    right: 0;
+    background: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    padding: 8px 0;
+    min-width: 180px;
+    display: flex;
+    flex-direction: column;
+    z-index: 101;
+    border: 1px solid #eee;
+    animation: fadeIn 0.2s ease-out;
+}
+
+/* Invisible bridge to keep the hover active while moving the mouse from circle to menu */
+.profileDropdown::before {
+    content: '';
+    position: absolute;
+    top: -15px;
+    left: 0;
+    width: 100%;
+    height: 15px;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 .profileIcon {
     color: rgba(52, 199, 89, 1);
     width: 22px;
@@ -209,7 +247,7 @@
 
 .dropdownItem {
     padding: 12px 16px;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 500;
     color: #272727;
     border: none;
@@ -218,6 +256,19 @@
     cursor: pointer;
     transition: background-color 0.2s;
     font-family: 'Baloo 2', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.dropdownDivider {
+    height: 1px;
+    background-color: #eee;
+    margin: 4px 0;
+}
+
+.logoutItem {
+    color: #FF3B30;
 }
 
 .dropdownItem:hover {

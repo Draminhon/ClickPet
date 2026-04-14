@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { BadgeCheck } from 'lucide-react';
 import styles from './TrendingPartnersCarousel.module.css';
+import { isShopOpen } from '@/utils/shopUtils';
 
 interface Partner {
     _id: string;
@@ -12,6 +13,7 @@ interface Partner {
     shopLogo: string;
     specialization?: string;
     distance?: number;
+    workingHours?: any[];
     // Mock attributes for UI representation since they are not fully developed in DB yet
     averageResponseTime?: string;
     isOpen?: boolean;
@@ -80,12 +82,6 @@ export default function TrendingPartnersCarousel({ partners }: TrendingPartnersC
         return `${mins}-${mins + 10} min`;
     };
 
-    // Helper to generate random Open/Closed state
-    const getIsOpen = (id: string) => {
-        const sum = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-        return sum % 4 !== 0; // 75% chance of being open
-    };
-
     return (
         <section 
             className={styles.carouselContainer}
@@ -100,7 +96,9 @@ export default function TrendingPartnersCarousel({ partners }: TrendingPartnersC
                         : 'Calculando...';
                     
                     const responseTime = partner.averageResponseTime || getRandomTime(partner._id);
-                    const isOpen = partner.isOpen !== undefined ? partner.isOpen : getIsOpen(partner._id);
+                    
+                    // Real status check
+                    const isOpen = partner.workingHours ? isShopOpen(partner.workingHours) : false;
 
                     return (
                         <Link href={`/loja/${partner._id}`} key={`${partner._id}-${index}`} className={styles.card}>

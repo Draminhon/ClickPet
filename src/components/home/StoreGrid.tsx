@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { BadgeCheck, Star, ChevronDown } from 'lucide-react';
 import styles from './StoreGrid.module.css';
+import { isShopOpen } from '@/utils/shopUtils';
 
 interface Partner {
     _id: string;
@@ -12,6 +13,7 @@ interface Partner {
     shopLogo: string;
     specialization?: string;
     distance?: number;
+    workingHours?: any[];
     isOpen?: boolean;
 }
 
@@ -61,10 +63,7 @@ export default function StoreGrid({ partners }: StoreGridProps) {
         return { rating: rating.toFixed(1), reviews };
     };
 
-    const getOpenState = (id: string) => {
-        const sum = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-        return sum % 4 !== 0; 
-    };
+
 
     const toggleDropdown = (name: string) => {
         if (openDropdown === name) setOpenDropdown(null);
@@ -146,7 +145,7 @@ export default function StoreGrid({ partners }: StoreGridProps) {
                         : 'Calculando...';
                     
                     const { rating, reviews } = getRatingData(partner._id);
-                    const isOpen = getOpenState(partner._id);
+                    const isOpen = partner.workingHours ? isShopOpen(partner.workingHours) : false;
                     const isClinic = shopType.match(/Veterinária|Hospital|Clínica/i) !== null;
                     const specificInfoString = isClinic ? 'Especializado' : '20-30 min';
 

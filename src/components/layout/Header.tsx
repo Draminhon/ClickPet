@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
-import { ShoppingCart, User, Bell, X, MapPin, ChevronDown } from 'lucide-react';
+import { ShoppingCart, User, Bell, X, MapPin, ChevronDown, Package, UserCircle, LogOut } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { useToast } from '@/context/ToastContext';
 import { useLocation } from '@/context/LocationContext';
 import MapPicker from '@/components/ui/MapPicker';
@@ -22,6 +22,7 @@ export default function Header() {
     
     const [showAddressModal, setShowAddressModal] = useState(false);
     const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+    const [showProfileDropdown, setShowProfileDropdown] = useState(false);
     const [userAddress, setUserAddress] = useState<any>(null);
     const [userImage, setUserImage] = useState<string | null>(null);
 
@@ -185,21 +186,63 @@ export default function Header() {
                                     )}
                                 </Link>
 
-                                <div
-                                    className={styles.profileCircle}
-                                    onClick={() => router.push(getProfileLink())}
-                                    style={{ cursor: 'pointer' }}
+                                <div 
+                                    className={styles.profileMenuWrapper}
+                                    onMouseEnter={() => setShowProfileDropdown(true)}
+                                    onMouseLeave={() => setShowProfileDropdown(false)}
                                 >
-                                    {userImage ? (
-                                        <Image
-                                            src={userImage}
-                                            alt="Profile"
-                                            width={40}
-                                            height={40}
-                                            className={styles.headerAvatar}
-                                        />
-                                    ) : (
-                                        <User className={styles.profileIcon} size={22} />
+                                    <div
+                                        className={styles.profileCircle}
+                                        onClick={() => router.push(getProfileLink())}
+                                        style={{ cursor: 'pointer' }}
+                                    >
+                                        {userImage ? (
+                                            <Image
+                                                src={userImage}
+                                                alt="Profile"
+                                                width={40}
+                                                height={40}
+                                                className={styles.headerAvatar}
+                                            />
+                                        ) : (
+                                            <User className={styles.profileIcon} size={22} />
+                                        )}
+                                    </div>
+
+                                    {showProfileDropdown && (
+                                        <div className={styles.profileDropdown}>
+                                            <button 
+                                                className={styles.dropdownItem}
+                                                onClick={() => {
+                                                    router.push(getProfileLink());
+                                                    setShowProfileDropdown(false);
+                                                }}
+                                            >
+                                                <UserCircle size={18} color="#272727" />
+                                                Ver Perfil
+                                            </button>
+                                            <button 
+                                                className={styles.dropdownItem}
+                                                onClick={() => {
+                                                    router.push('/orders');
+                                                    setShowProfileDropdown(false);
+                                                }}
+                                            >
+                                                <Package size={18} color="#272727" />
+                                                Meus Pedidos
+                                            </button>
+                                            <div className={styles.dropdownDivider} />
+                                            <button 
+                                                className={`${styles.dropdownItem} ${styles.logoutItem}`}
+                                                onClick={() => {
+                                                    signOut({ callbackUrl: '/' });
+                                                    setShowProfileDropdown(false);
+                                                }}
+                                            >
+                                                <LogOut size={18} color="#FF3B30" />
+                                                Sair
+                                            </button>
+                                        </div>
                                     )}
                                 </div>
                             </>

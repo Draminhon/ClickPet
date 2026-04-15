@@ -12,17 +12,17 @@ export default function Footer() {
                 <div className={styles.linksContainer}>
                     <div className={styles.linkGroup}>
                         <span className={styles.linkTitle}>Instituição</span>
-                        <Link href="/sobre" className={styles.linkText}>Sobre nós</Link>
+                        <Link href="/about" className={styles.linkText}>Sobre nós</Link>
                     </div>
                     
                     <div className={styles.linkGroup}>
                         <span className={styles.linkTitle}>Descubra</span>
-                        <Link href="/register/partner" className={styles.linkText}>Cadastre sua empresa</Link>
+                        <Link href="/partner-about" className={styles.linkText}>Cadastre sua empresa</Link>
                     </div>
                     
                     <div className={styles.linkGroup}>
                         <span className={styles.linkTitle}>Parcerias</span>
-                        <Link href="/partners" className={styles.linkText}>Quero ser parceiro</Link>
+                        <Link href="/register?role=partner" className={styles.linkText}>Quero ser parceiro</Link>
                     </div>
                 </div>
             </div>

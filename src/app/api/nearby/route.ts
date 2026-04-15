@@ -3,10 +3,23 @@ import dbConnect from '@/lib/db';
 import User from '@/models/User';
 import Product from '@/models/Product';
 import { calculateDistance, calculateDeliveryFee } from '@/lib/distance';
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { MOCK_PARTNERS, MOCK_CLINICS } from '@/mock/partners';
 
 export async function GET(req: Request) {
     try {
         await dbConnect();
+        console.log('[API/NEARBY] DB Connected');
+        let session;
+        try {
+            session = await getServerSession(authOptions);
+            console.log('[API/NEARBY] Session:', !!session);
+        } catch (authError) {
+            console.warn('[API/NEARBY] Auth session check failed, proceeding as guest:', authError);
+            session = null;
+        }
+
         const { searchParams } = new URL(req.url);
         const lat = parseFloat(searchParams.get('lat') || '');
         const lng = parseFloat(searchParams.get('lng') || '');
@@ -20,18 +33,20 @@ export async function GET(req: Request) {
             );
         }
         
-        // SECURITY PATCH: Clamp maximum distance search bounds to limit server overhead
         if (radius > 50) radius = 50;
 
-        // Fetch active partners with a capped iteration limit to prevent memory crash DoS
-        // Note: we CANNOT use .lean() here because mongoose-field-encryption requires hydration to decrypt the coordinates!
-        const partners = await User.find({ role: 'partner', status: { $ne: 'suspended' } })
+        // Fetch real partners
+        const realPartners = await User.find({ role: 'partner', status: { $ne: 'suspended' } })
             .limit(500);
 
-        // Filter partners within radius using Haversine
+        // Conditional data: Guests get mocks too
+        const allPartnersToProcess: any[] = session 
+            ? realPartners 
+            : [...realPartners, ...MOCK_PARTNERS, ...MOCK_CLINICS];
+
         const nearbyPartners: any[] = [];
 
-        for (const partner of partners) {
+        for (const partner of allPartnersToProcess) {
             const coords = partner.address?.coordinates?.coordinates;
             if (!coords || coords.length !== 2) continue;
 
@@ -63,25 +78,26 @@ export async function GET(req: Request) {
             }
         }
 
-        // Sort by distance
         nearbyPartners.sort((a, b) => a.distance - b.distance);
 
-        // Fetch products for nearby partners
-        const partnerIds = nearbyPartners.map(p => p._id);
+        const realPartnerIds = realPartners.map(p => String(p._id));
+        const nearbyRealIds = nearbyPartners.filter(p => realPartnerIds.includes(p._id)).map(p => p._id);
 
         let productQuery: any = {
-            partnerId: { $in: partnerIds },
+            partnerId: { $in: nearbyRealIds },
             isActive: true,
         };
         if (category) {
             productQuery.category = category;
         }
 
-        const products = await Product.find(productQuery)
-            .populate('partnerId', 'name shopLogo')
-            .sort({ salesCount: -1 })
-            .limit(50)
-            .lean();
+        const products = nearbyRealIds.length > 0 
+            ? await Product.find(productQuery)
+                .populate('partnerId', 'name shopLogo')
+                .sort({ salesCount: -1 })
+                .limit(50)
+                .lean()
+            : [];
 
         const serializedProducts = products.map((p: any) => ({
             _id: String(p._id),
@@ -104,7 +120,6 @@ export async function GET(req: Request) {
             } : null,
         }));
 
-        // Count products per partner
         const productCounts: Record<string, number> = {};
         for (const p of products) {
             const pid = (p as any).partnerId?._id?.toString();
@@ -118,12 +133,12 @@ export async function GET(req: Request) {
             productCount: productCounts[ps._id] || 0,
         }));
 
-        return NextResponse.json({
+        return NextResponse.json(JSON.parse(JSON.stringify({
             petshops: petshopsWithCounts,
             products: serializedProducts,
             totalPetshops: petshopsWithCounts.length,
             totalProducts: serializedProducts.length,
-        });
+        })));
     } catch (error: any) {
         console.error('Nearby API error:', error);
         return NextResponse.json({ message: error.message }, { status: 500 });

@@ -3,7 +3,12 @@
 import { useState, useEffect } from 'react';
 import PartnersCarousel from '@/components/home/PartnersCarousel';
 import PromotionsCarousel from '@/components/home/PromotionsCarousel';
+import TrendingPartnersCarousel from '@/components/home/TrendingPartnersCarousel';
+import LoggedInPromotionsCarousel from '@/components/home/LoggedInPromotionsCarousel';
+import LoggedInClinicsCarousel from '@/components/home/LoggedInClinicsCarousel';
+import StoreGrid from '@/components/home/StoreGrid';
 import { useLocation } from '@/context/LocationContext';
+import styles from './Home.module.css';
 
 interface DynamicHomeContentProps {
     defaultPartners: any[];
@@ -13,7 +18,6 @@ interface DynamicHomeContentProps {
 export default function DynamicHomeContent({ defaultPartners, defaultClinics }: DynamicHomeContentProps) {
     const { lat, lng } = useLocation();
     const [nearbyPartners, setNearbyPartners] = useState<any[]>(defaultPartners);
-    const [nearbyClinics, setNearbyClinics] = useState<any[]>(defaultClinics);
     const [isFiltering, setIsFiltering] = useState(false);
 
     useEffect(() => {
@@ -21,41 +25,23 @@ export default function DynamicHomeContent({ defaultPartners, defaultClinics }: 
 
         const fetchNearbyItems = async () => {
             if (!lat || !lng) {
-                // If location is cleared or missing, revert to defaults
                 setNearbyPartners(defaultPartners);
-                setNearbyClinics(defaultClinics);
                 return;
             }
 
             setIsFiltering(true);
             try {
-                // Radius in km. In a real app, this might be configurable, but we'll use 15 for now.
                 const res = await fetch(`/api/nearby?lat=${lat}&lng=${lng}&radius=15`);
-                if (!res.ok) throw new Error('Falha ao buscar lojas parceiras próximas');
+                if (!res.ok) {
+                    const errorData = await res.json().catch(() => ({}));
+                    console.error('[GUEST/HOME] Nearby API error body:', errorData);
+                    throw new Error(errorData.message || 'Falha ao buscar lojas parceiras próximas');
+                }
                 
                 const data = await res.json();
                 
                 if (isMounted) {
-                    const fetchedPartners = data.petshops || [];
-                    
-                    // Split the results based on their specialization string (simulating database categories)
-                    // We assume anything with 'Clínica', 'Hospital', 'Veterinári' goes to clinics.
-                    const isClinicRegex = /Veterinári|Hospital|Clínica/i;
-                    
-                    // Wait, the nearby API returns the partner object, but we need to make sure we parse 
-                    // the specialization if it exists, or fetch it.
-                    // Because /api/nearby doesn't return specialization right now, we might just have to 
-                    // render a unified Partner list if we're localized, or ignore the specialization.
-                    // For now, let's just display all nearby shops in the first carousel
-                    // and keep the clinics carousel static, or hide it if no clinics nearby.
-                    
-                    // Because we want symmetry:
-                    const shops = fetchedPartners;
-                    setNearbyPartners(shops);
-                    
-                    // If no clinics are returned with distance, we might just leave the second carousel empty 
-                    // or populate it explicitly.
-                    setNearbyClinics([]); 
+                    setNearbyPartners(data.petshops || []);
                     setIsFiltering(false);
                 }
             } catch (error) {
@@ -69,27 +55,55 @@ export default function DynamicHomeContent({ defaultPartners, defaultClinics }: 
         return () => {
             isMounted = false;
         };
-    }, [lat, lng, defaultPartners, defaultClinics]);
+    }, [lat, lng, defaultPartners]);
 
-    // Format title dynamically based on location status
-    const partnersTitle = lat && lng && !isFiltering ? "Petshops perto de você" : "Lojas parceiras em destaque";
-
-    return (
-        <>
-            <PartnersCarousel 
-                partners={nearbyPartners.length > 0 ? nearbyPartners : defaultPartners} 
-                title={partnersTitle}
-            />
-
-            <PromotionsCarousel />
-
-            {/* Only show clinics carousel if we have them in the context, or if we reverted to defaults */}
-            {(nearbyClinics.length > 0 || (!lat && !lng)) && (
+    // Scenario A: No location set - Show simple Landing Page
+    if (!lat || !lng) {
+        return (
+            <>
                 <PartnersCarousel 
-                    partners={nearbyClinics} 
+                    partners={defaultPartners} 
+                    title="Conheça alguns de nossos parceiros" 
+                />
+                <PromotionsCarousel />
+                <PartnersCarousel 
+                    partners={defaultClinics} 
                     title="Clínicas veterinárias parceiras" 
                 />
+            </>
+        );
+    }
+
+    // Scenario B: Location set - Show Zé Delivery / iFood style storefront
+    const petshopsOnly = nearbyPartners.filter(p => !p.specialization?.match(/Veterinária|Hospital|Clínica/i));
+    const clinicsOnly = nearbyPartners.filter(p => p.specialization?.match(/Veterinária|Hospital|Clínica/i));
+
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', width: '100%', paddingLeft: '80px', marginTop: '40px' }}>
+            
+            {petshopsOnly.length > 0 && (
+                <>
+                    <h2 style={{ fontFamily: "'Baloo 2', sans-serif", fontWeight: 600, fontSize: '24px', color: '#272727', margin: '0' }}>
+                        Lojas em alta na sua região
+                    </h2>
+                    <TrendingPartnersCarousel partners={petshopsOnly} />
+                </>
             )}
-        </>
+
+            <div style={{ marginTop: petshopsOnly.length > 0 ? '48px' : '0' }}>
+                <LoggedInPromotionsCarousel />
+            </div>
+
+            {clinicsOnly.length > 0 && (
+                <div style={{ marginTop: '48px' }}>
+                    <h2 style={{ fontFamily: "'Baloo 2', sans-serif", fontWeight: 600, fontSize: '24px', color: '#272727', margin: '0' }}>
+                        Clínicas próximas a você
+                    </h2>
+                    <LoggedInClinicsCarousel clinics={clinicsOnly} />
+                </div>
+            )}
+
+            <StoreGrid partners={nearbyPartners} />
+        </div>
     );
 }

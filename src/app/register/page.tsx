@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { signIn } from 'next-auth/react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import styles from './Register.module.css';
 
@@ -15,10 +15,19 @@ const carouselImages = [
     '/assets/login-carosel/login_carosel3.jpg'
 ];
 
-export default function Register() {
+function RegisterContent() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { showToast } = useToast();
     const [role, setRole] = useState<'customer' | 'partner'>('customer');
+    
+    useEffect(() => {
+        const roleParam = searchParams.get('role');
+        if (roleParam === 'partner') {
+            setRole('partner');
+        }
+    }, [searchParams]);
+
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -225,5 +234,13 @@ export default function Register() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function Register() {
+    return (
+        <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: '#3BB77E' }}>Carregando...</div>}>
+            <RegisterContent />
+        </Suspense>
     );
 }

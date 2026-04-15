@@ -63,15 +63,6 @@ export default function LoggedInClinicsCarousel({ clinics }: LoggedInClinicsCaro
 
     if (!clinics || clinics.length === 0) return null;
 
-    // Garante que a matriz base tenha pelo menos 10 itens clonando os 2 disponíveis, evitando que telas ultrawide atinjam o final do scroll antes do reset matemático.
-    let baseClinics = [...clinics];
-    while (baseClinics.length < 10) {
-        baseClinics = [...baseClinics, ...clinics];
-    }
-
-    // Extended array for seamless loop
-    const extendedClinics = [...baseClinics, ...baseClinics, ...baseClinics, ...baseClinics];
-
     return (
         <section 
             className={styles.carouselContainer}
@@ -79,7 +70,7 @@ export default function LoggedInClinicsCarousel({ clinics }: LoggedInClinicsCaro
             onMouseLeave={() => setIsPaused(false)}
         >
             <div className={styles.carouselTrack} ref={scrollRef}>
-                {extendedClinics.map((clinic, index) => {
+                {clinics.map((clinic, index) => {
                     const shopType = clinic.specialization || 'Clínica Veterinária';
                     const distanceStr = clinic.distance !== undefined 
                         ? `${clinic.distance.toFixed(1)} km` 

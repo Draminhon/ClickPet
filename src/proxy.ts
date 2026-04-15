@@ -14,6 +14,7 @@ export async function proxy(req: NextRequest) {
         '/api/reviews',
         '/api/webhooks',
         '/api/payments/webhook',
+        '/api/nearby',
     ];
 
     const isPublicApiRoute = publicApiRoutes.some(route => pathname.startsWith(route));

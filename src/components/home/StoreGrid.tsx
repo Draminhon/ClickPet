@@ -55,13 +55,6 @@ export default function StoreGrid({ partners }: StoreGridProps) {
         }
     };
 
-    // Math Mocks for UI Layout
-    const getRatingData = (id: string) => {
-        const sum = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-        const rating = (sum % 2) + 3.8; // between 3.8 and 4.8
-        const reviews = (sum % 150) + 12; 
-        return { rating: rating.toFixed(1), reviews };
-    };
 
 
 
@@ -144,10 +137,10 @@ export default function StoreGrid({ partners }: StoreGridProps) {
                         ? `${partner.distance.toFixed(1)} km` 
                         : 'Calculando...';
                     
-                    const { rating, reviews } = getRatingData(partner._id);
+                    const { rating, reviews } = { rating: '0.0', reviews: 0 };
                     const isOpen = partner.workingHours ? isShopOpen(partner.workingHours) : false;
                     const isClinic = shopType.match(/Veterinária|Hospital|Clínica/i) !== null;
-                    const specificInfoString = isClinic ? 'Especializado' : '20-30 min';
+                    const specificInfoString = isClinic ? 'Especializado' : '30-45 min';
 
                     return (
                         <Link href={`/loja/${partner._id}`} key={partner._id} className={styles.card}>

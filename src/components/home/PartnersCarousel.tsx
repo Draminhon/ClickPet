@@ -66,9 +66,6 @@ export default function PartnersCarousel({
         return null;
     }
 
-    // Extended array for seamless loop
-    const extendedPartners = [...partners, ...partners, ...partners, ...partners];
-
     return (
         <section className={styles.sectionContainer}>
             <h2 className={styles.title}>{title}</h2>
@@ -80,7 +77,7 @@ export default function PartnersCarousel({
                 onMouseLeave={() => setIsPaused(false)}
             >
                 <div className={styles.carouselTrack}>
-                    {extendedPartners.map((partner, index) => (
+                    {partners.map((partner, index) => (
                         <div key={`${partner._id}-${index}`} className={styles.itemContainer}>
                             <div className={styles.logoContainer}>
                                 <Image

@@ -67,21 +67,6 @@ export default function TrendingPartnersCarousel({ partners }: TrendingPartnersC
 
     if (!partners || partners.length === 0) return null;
 
-    let basePartners = [...partners];
-    while (basePartners.length < 10) {
-        basePartners = [...basePartners, ...partners];
-    }
-
-    // Extended array for seamless loop
-    const extendedPartners = [...basePartners, ...basePartners, ...basePartners, ...basePartners];
-
-    // Helper to generate a random time strictly for mock data visualization
-    const getRandomTime = (id: string) => {
-        const sum = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-        const mins = (sum % 20) + 10; // Between 10 and 29
-        return `${mins}-${mins + 10} min`;
-    };
-
     return (
         <section 
             className={styles.carouselContainer}
@@ -89,13 +74,13 @@ export default function TrendingPartnersCarousel({ partners }: TrendingPartnersC
             onMouseLeave={() => setIsPaused(false)}
         >
             <div className={styles.carouselTrack} ref={scrollRef}>
-                {extendedPartners.map((partner, index) => {
+                {partners.map((partner, index) => {
                     const shopType = partner.specialization || 'Petshop';
                     const distanceStr = partner.distance !== undefined 
                         ? `${partner.distance.toFixed(1)} km` 
                         : 'Calculando...';
                     
-                    const responseTime = partner.averageResponseTime || getRandomTime(partner._id);
+                    const responseTime = partner.averageResponseTime || '30-60 min';
                     
                     // Real status check
                     const isOpen = partner.workingHours ? isShopOpen(partner.workingHours) : false;

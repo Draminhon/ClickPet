@@ -3,13 +3,14 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
-import { Star, ChevronUp, ChevronDown, Info, Truck, User } from 'lucide-react';
+import { Star, ChevronUp, ChevronDown, Info, Truck, User, X, AlertCircle } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/context/ToastContext';
+import { useSession } from 'next-auth/react';
 import OffersCarousel from '@/components/home/OffersCarousel';
 import Footer from '@/components/layout/Footer';
+import Link from 'next/link';
 import styles from './ProductDetail.module.css';
-
 interface Product {
     _id: string;
     title: string;
@@ -41,6 +42,7 @@ interface Review {
 
 export default function ProductDetailPage() {
     const { id } = useParams();
+    const { data: session } = useSession();
     const [product, setProduct] = useState<Product | null>(null);
     const [loading, setLoading] = useState(true);
     const [currentImage, setCurrentImage] = useState('');
@@ -49,6 +51,7 @@ export default function ProductDetailPage() {
     const [activeTab, setActiveTab] = useState('info');
     const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
     const [showReviewForm, setShowReviewForm] = useState(false);
+    const [showAuthModal, setShowAuthModal] = useState(false);
     const [newReview, setNewReview] = useState({ rating: 5, comment: '' });
 
     const [reviews, setReviews] = useState<Review[]>([]);
@@ -142,6 +145,13 @@ export default function ProductDetailPage() {
 
     const handleAddToCart = () => {
         if (!product) return;
+
+        // AUTH CHECK FOR GUESTS
+        if (!session) {
+            setShowAuthModal(true);
+            return;
+        }
+
         // partnerId may be populated (object) or a raw string
         const pid = typeof product.partnerId === 'object' 
             ? product.partnerId?._id?.toString() || product.partnerId?.toString()
@@ -276,6 +286,35 @@ export default function ProductDetailPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Auth Modal Overlay */}
+            {showAuthModal && (
+                <div className={styles.authModalOverlay} onClick={() => setShowAuthModal(false)}>
+                    <div className={styles.authModalCard} onClick={(e) => e.stopPropagation()}>
+                        <button className={styles.closeBtn} onClick={() => setShowAuthModal(false)}>
+                            <X size={24} />
+                        </button>
+
+                        <div className={styles.authModalIcon}>
+                            <AlertCircle size={64} strokeWidth={1.5} />
+                        </div>
+
+                        <h2 className={styles.authModalTitle}>Atenção!</h2>
+                        <p className={styles.authModalText}>
+                            Você precisa ter uma conta ativa e estar logado para adicionar itens ao carrinho e continuar com sua compra.
+                        </p>
+
+                        <div className={styles.authModalButtons}>
+                            <Link href={`/login?callbackUrl=/product/${id}`} className={styles.loginBtn}>
+                                Entrar Agora
+                            </Link>
+                            <Link href={`/register?callbackUrl=/product/${id}`} className={styles.registerBtn}>
+                                Não tem uma conta ainda? Cadastre-se
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div className={styles.tabsRow}>
                 <button

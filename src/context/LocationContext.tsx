@@ -36,7 +36,7 @@ const LocationContext = createContext<LocationContextType>({
 });
 
 export function LocationProvider({ children }: { children: ReactNode }) {
-    const { data: session } = useSession();
+    const { data: session, status } = useSession();
     const { showToast } = useToast();
     const [location, setLocation] = useState<LocationState>(defaultState);
 
@@ -56,6 +56,19 @@ export function LocationProvider({ children }: { children: ReactNode }) {
             // Ignore parse errors
         }
     }, []);
+
+    // Clear location if not logged in
+    useEffect(() => {
+        if (status === "unauthenticated") {
+            try {
+                localStorage.removeItem("clickpet_location");
+                // Reset state to default empty address
+                setLocation(defaultState);
+            } catch {
+                // Ignore storage errors
+            }
+        }
+    }, [status]);
 
     // Load from profile if logged in and no location set
     useEffect(() => {

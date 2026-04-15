@@ -1,0 +1,141 @@
+.pageWrapper {
+    min-height: 100vh;
+    background-color: #fff;
+}
+
+.main {
+    padding-top: 20px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.heroSection {
+    background: linear-gradient(135deg, #F0FFF4 0%, #E6FFFA 100%);
+    padding: 100px 0;
+    text-align: center;
+}
+
+.heroTitle {
+    font-size: 56px;
+    color: #253D4E;
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 24px;
+}
+
+.heroTitle span {
+    color: #3BB77E;
+}
+
+.heroSubtitle {
+    font-size: 20px;
+    color: #4B5563;
+    max-width: 800px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+.contentSection {
+    padding: 80px 0;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: center;
+    margin-bottom: 80px;
+}
+
+.textContent h2 {
+    font-size: 32px;
+    color: #253D4E;
+    margin-bottom: 20px;
+}
+
+.textContent p {
+    font-size: 18px;
+    color: #4B5563;
+    line-height: 1.7;
+    margin-bottom: 20px;
+}
+
+.imageFrame {
+    position: relative;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+.aboutImage {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.valuesGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+    margin-top: 60px;
+}
+
+.valueCard {
+    background: #F7F8FA;
+    padding: 40px;
+    border-radius: 20px;
+    text-align: center;
+    transition: transform 0.3s, background 0.3s;
+}
+
+.valueCard:hover {
+    transform: translateY(-10px);
+    background: #fff;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+.iconBox {
+    width: 64px;
+    height: 64px;
+    background: #3BB77E;
+    color: white;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+}
+
+.valueCard h3 {
+    font-size: 20px;
+    color: #253D4E;
+    margin-bottom: 12px;
+}
+
+.valueCard p {
+    color: #7E7E7E;
+    line-height: 1.5;
+}
+
+@media (max-width: 968px) {
+    .heroTitle {
+        font-size: 40px;
+    }
+
+    .grid {
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+
+    .valuesGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .imageContent {
+        order: -1;
+    }
+}

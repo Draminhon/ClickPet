@@ -1,0 +1,66 @@
+.pageWrapper {
+    min-height: 100vh;
+    background-color: #f8fafc;
+    padding: 80px 20px;
+}
+
+.main {
+    max-width: 800px;
+    margin: 0 auto;
+    background: #ffffff;
+    padding: 60px;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.title {
+    font-size: 2.5rem;
+    color: #1e293b;
+    margin-bottom: 2rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.lastUpdated {
+    font-size: 0.875rem;
+    color: #64748b;
+    margin-bottom: 3rem;
+    display: block;
+}
+
+.content h2 {
+    font-size: 1.5rem;
+    color: #334155;
+    margin: 2.5rem 0 1rem;
+    font-weight: 600;
+}
+
+.content p {
+    font-size: 1.125rem;
+    color: #475569;
+    line-height: 1.75;
+    margin-bottom: 1.5rem;
+}
+
+.content ul {
+    margin-bottom: 1.5rem;
+    padding-left: 1.5rem;
+}
+
+.content li {
+    font-size: 1.125rem;
+    color: #475569;
+    line-height: 1.75;
+    margin-bottom: 0.75rem;
+    list-style-type: disc;
+}
+
+@media (max-width: 640px) {
+    .main {
+        padding: 30px 20px;
+    }
+
+    .title {
+        font-size: 1.875rem;
+    }
+}

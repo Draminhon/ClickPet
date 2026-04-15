@@ -8,7 +8,7 @@ import Footer from "./Footer";
 export default function ConditionalLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const isAuthPage = pathname === "/login" || pathname === "/register";
-    const isPartnerPage = pathname?.startsWith("/partner") && pathname !== "/partner-about";
+    const isPartnerPage = (pathname?.startsWith("/partner") && pathname !== "/partner-about") || pathname?.startsWith("/vet");
     const isAdminPage = pathname?.startsWith("/admin");
     const isProductPage = pathname?.startsWith("/product/");
 
@@ -18,7 +18,7 @@ export default function ConditionalLayout({ children }: { children: React.ReactN
             <main style={{ flex: 1 }}>
                 {children}
             </main>
-            {!isAuthPage && !isPartnerPage && !isAdminPage && <Footer isProductPage={isProductPage} />}
+            {!isAuthPage && !isPartnerPage && !isAdminPage && <Footer />}
             {!isAuthPage && !isPartnerPage && !isAdminPage && <MobileNav />}
         </div>
     );

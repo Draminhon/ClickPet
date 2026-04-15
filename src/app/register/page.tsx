@@ -5,9 +5,9 @@ import { signIn } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
-import styles from './Register.module.css';
-
 import { useToast } from '@/context/ToastContext';
+import { Eye, EyeOff } from 'lucide-react';
+import styles from './Register.module.css';
 
 const carouselImages = [
     '/assets/login-carosel/login_carosel1.png',
@@ -19,12 +19,14 @@ function RegisterContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { showToast } = useToast();
-    const [role, setRole] = useState<'customer' | 'partner'>('customer');
+    const [role, setRole] = useState<'customer' | 'partner' | 'veterinarian'>('customer');
     
     useEffect(() => {
         const roleParam = searchParams.get('role');
         if (roleParam === 'partner') {
             setRole('partner');
+        } else if (roleParam === 'veterinarian') {
+            setRole('veterinarian');
         }
     }, [searchParams]);
 
@@ -37,6 +39,8 @@ function RegisterContent() {
     });
     const [loading, setLoading] = useState(false);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -83,9 +87,9 @@ function RegisterContent() {
         }
     };
     const handleSocialLogin = (provider: string) => {
-        if (role === 'partner') {
+        if (role === 'partner' || role === 'veterinarian') {
             // Set intent cookie for 10 minutes so the server can pick it up during OAuth callback
-            document.cookie = `clickpet_register_intent=partner; path=/; max-age=600; SameSite=Lax`;
+            document.cookie = `clickpet_register_intent=${role}; path=/; max-age=600; SameSite=Lax`;
         } else {
             // Clear any potential leftover cookie
             document.cookie = `clickpet_register_intent=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
@@ -144,19 +148,26 @@ function RegisterContent() {
                             className={`${styles.roleBtn} ${role === 'partner' ? styles.active : ''}`}
                             onClick={() => setRole('partner')}
                         >
-                            Sou Loja
+                            Sou Parceiro
+                        </button>
+                        <button
+                            type="button"
+                            className={`${styles.roleBtn} ${role === 'veterinarian' ? styles.active : ''}`}
+                            onClick={() => setRole('veterinarian')}
+                        >
+                            Sou Veterinário
                         </button>
                     </div>
 
                     <form className={styles.form} onSubmit={handleSubmit}>
                         <div className={styles.inputGroup}>
                             <label className={styles.inputLabel}>
-                                {role === 'partner' ? 'Nome da Loja' : 'Nome Completo'}
+                                {role === 'partner' ? 'Nome do Parceiro/Empresa' : role === 'veterinarian' ? 'Nome do Veterinário/Clínica' : 'Nome Completo'}
                             </label>
                             <input
                                 name="name"
                                 type="text"
-                                placeholder={role === 'partner' ? 'Minha Loja' : 'Seu nome'}
+                                placeholder={role === 'partner' ? 'Minha Empresa' : role === 'veterinarian' ? 'Dr(a). Seu Nome' : 'Seu nome'}
                                 className={styles.input}
                                 value={formData.name}
                                 onChange={handleChange}
@@ -180,27 +191,47 @@ function RegisterContent() {
                         <div style={{ display: 'flex', gap: '12px' }}>
                             <div className={styles.inputGroup} style={{ flex: 1 }}>
                                 <label className={styles.inputLabel}>Senha</label>
-                                <input
-                                    name="password"
-                                    type="password"
-                                    placeholder="••••••••"
-                                    className={styles.input}
-                                    value={formData.password}
-                                    onChange={handleChange}
-                                    required
-                                />
+                                <div className={styles.passwordWrapper}>
+                                    <input
+                                        name="password"
+                                        type={showPassword ? "text" : "password"}
+                                        placeholder="••••••••"
+                                        className={styles.input}
+                                        value={formData.password}
+                                        onChange={handleChange}
+                                        required
+                                    />
+                                    <button
+                                        type="button"
+                                        className={styles.toggleButton}
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        aria-label={showPassword ? "Esconder senha" : "Mostrar senha"}
+                                    >
+                                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
+                                </div>
                             </div>
                             <div className={styles.inputGroup} style={{ flex: 1 }}>
                                 <label className={styles.inputLabel}>Confirmar</label>
-                                <input
-                                    name="confirmPassword"
-                                    type="password"
-                                    placeholder="••••••••"
-                                    className={styles.input}
-                                    value={formData.confirmPassword}
-                                    onChange={handleChange}
-                                    required
-                                />
+                                <div className={styles.passwordWrapper}>
+                                    <input
+                                        name="confirmPassword"
+                                        type={showConfirmPassword ? "text" : "password"}
+                                        placeholder="••••••••"
+                                        className={styles.input}
+                                        value={formData.confirmPassword}
+                                        onChange={handleChange}
+                                        required
+                                    />
+                                    <button
+                                        type="button"
+                                        className={styles.toggleButton}
+                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                        aria-label={showConfirmPassword ? "Esconder senha" : "Mostrar senha"}
+                                    >
+                                        {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
+                                </div>
                             </div>
                         </div>
 

@@ -36,9 +36,10 @@ export default function Footer() {
                 </div>
                 
                 <div className={styles.legalColRight}>
-                    <Link href="/termos" className={styles.legalText}>Termos de uso e política de privacidade</Link>
-                    <Link href="/seguranca" className={styles.legalText}>Segurança</Link>
-                    <Link href="/conduta" className={styles.legalText}>Código de Conduta</Link>
+                    <Link href="/terms" className={styles.legalText}>Termos de uso</Link>
+                    <Link href="/privacy" className={styles.legalText}>Política de Privacidade</Link>
+                    <Link href="/security" className={styles.legalText}>Segurança</Link>
+                    <Link href="/conduct" className={styles.legalText}>Código de Conduta</Link>
                 </div>
             </div>
         </footer>

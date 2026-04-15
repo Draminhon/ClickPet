@@ -1,0 +1,37 @@
+.container {
+    padding: 40px 80px;
+    min-height: 80vh;
+}
+
+.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 100px 0;
+    font-size: 18px;
+    color: #7E7E7E;
+    font-family: 'Baloo 2', sans-serif;
+}
+
+.empty {
+    text-align: center;
+    padding: 100px 0;
+    font-family: 'Baloo 2', sans-serif;
+}
+
+.empty h2 {
+    font-size: 32px;
+    color: #253D4E;
+    margin-bottom: 16px;
+}
+
+.empty p {
+    font-size: 18px;
+    color: #7E7E7E;
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 20px;
+    }
+}

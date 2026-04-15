@@ -25,57 +25,79 @@ export async function GET(req: Request) {
         const lng = parseFloat(searchParams.get('lng') || '');
         let radius = parseFloat(searchParams.get('radius') || '15');
         const category = searchParams.get('category');
+        const role = searchParams.get('role') || 'partner';
 
-        if (isNaN(lat) || isNaN(lng)) {
-            return NextResponse.json(
-                { message: 'lat and lng are required' },
-                { status: 400 }
-            );
-        }
+        const hasLocation = !isNaN(lat) && !isNaN(lng);
         
         if (radius > 50) radius = 50;
 
-        // Fetch real partners
-        const realPartners = await User.find({ role: 'partner', status: { $ne: 'suspended' } })
-            .limit(500);
+        // Fetch real partners/vets
+        const findQuery: any = { status: { $ne: 'suspended' } };
+        
+        if (role !== 'any') {
+            if (role === 'partner') {
+                findQuery.role = { $in: ['partner', 'veterinarian'] };
+            } else {
+                findQuery.role = role;
+            }
+        }
 
-        // Conditional data: Guests get mocks too
-        const allPartnersToProcess: any[] = session 
-            ? realPartners 
-            : [...realPartners, ...MOCK_PARTNERS, ...MOCK_CLINICS];
+        const realPartners = await User.find(findQuery).limit(500);
+
+        // Include mocks for logged-in users too if they are role 'partner' or if real results are low
+        const shouldIncludeMocks = !session || (realPartners.length < 5);
+        
+        const allPartnersToProcess: any[] = shouldIncludeMocks
+            ? [...realPartners, ...MOCK_PARTNERS, ...MOCK_CLINICS]
+            : realPartners;
 
         const nearbyPartners: any[] = [];
 
         for (const partner of allPartnersToProcess) {
             const coords = partner.address?.coordinates?.coordinates;
-            if (!coords || coords.length !== 2) continue;
+            
+            let distance = null;
+            let deliveryFee = 0;
 
-            const [partnerLng, partnerLat] = coords;
-            if (isNaN(partnerLat) || isNaN(partnerLng)) continue;
+            if (hasLocation && coords && coords.length === 2) {
+                const [partnerLng, partnerLat] = coords;
+                if (!isNaN(partnerLat) && !isNaN(partnerLng)) {
+                    distance = calculateDistance(lat, lng, partnerLat, partnerLng);
+                    
+                    if (distance <= radius) {
+                        deliveryFee = calculateDeliveryFee(
+                            distance,
+                            partner.deliveryFeePerKm || 2,
+                            0,
+                            partner.freeDeliveryMinimum || 0
+                        );
+                    } else {
+                        // Too far away, skip this one if we have a search radius
+                        continue;
+                    }
+                }
+            }
 
-            const distance = calculateDistance(lat, lng, partnerLat, partnerLng);
-
-            if (distance <= radius) {
-                const deliveryFee = calculateDeliveryFee(
-                    distance,
-                    partner.deliveryFeePerKm || 2,
-                    0,
-                    partner.freeDeliveryMinimum || 0
-                );
-
-                nearbyPartners.push({
-                    _id: String(partner._id),
-                    name: partner.name,
-                    shopLogo: partner.shopLogo || null,
+            // If we have no location, or it's within radius (or we don't care about radius if no location)
+            nearbyPartners.push({
+                _id: String(partner._id),
+                name: partner.name,
+                shopLogo: partner.shopLogo || partner.image || null,
+                    bannerImage: partner.bannerImage || null,
                     specialization: partner.specialization || '',
+                    bio: partner.bio || '',
+                    whatsapp: partner.whatsapp || partner.phone || '',
+                    crmv: partner.crmv || '',
                     distance,
                     deliveryFee,
                     deliveryRadius: partner.deliveryRadius || 10,
                     minimumOrderValue: partner.minimumOrderValue || 0,
                     freeDeliveryMinimum: partner.freeDeliveryMinimum || 0,
                     workingHours: partner.workingHours || [],
+                    role: partner.role || 'partner',
+                    rating: partner.rating || 0,
+                    reviewCount: partner.reviewCount || 0,
                 });
-            }
         }
 
         nearbyPartners.sort((a, b) => a.distance - b.distance);

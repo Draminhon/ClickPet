@@ -94,11 +94,36 @@
     background-color: rgba(247, 251, 255, 1);
     border: 1px solid rgba(212, 215, 227, 1);
     border-radius: 12px;
-    padding: 10px 16px;
+    padding: 10px 48px 10px 16px; /* Increased right padding for icon */
     font-size: 16px;
     font-weight: 400;
     color: rgba(37, 61, 78, 1);
     outline: none;
+}
+
+.passwordWrapper {
+    position: relative;
+    width: 388px;
+}
+
+.toggleButton {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: rgba(136, 151, 173, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    transition: color 0.2s;
+}
+
+.toggleButton:hover {
+    color: rgba(59, 183, 126, 1);
 }
 
 .input::placeholder {

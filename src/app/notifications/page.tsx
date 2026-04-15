@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Bell, Check, CheckCheck } from 'lucide-react';
+import { Bell, Check, CheckCheck, Package, MessageSquare, Calendar, Tag } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 import styles from './Notifications.module.css';
@@ -20,10 +20,11 @@ export default function NotificationsPage() {
         fetch(`/api/notifications?t=${Date.now()}`)
             .then(res => res.json())
             .then(data => {
-                setNotifications(data.notifications);
-                setUnreadCount(data.unreadCount);
+                setNotifications(data.notifications || []);
+                setUnreadCount(data.unreadCount || 0);
                 setLoading(false);
-            });
+            })
+            .catch(() => setLoading(false));
     };
 
     const handleMarkAsRead = async (notificationId: string) => {
@@ -62,14 +63,14 @@ export default function NotificationsPage() {
     };
 
     const getTypeIcon = (type: string) => {
-        const typeMap: Record<string, string> = {
-            order: '📦',
-            message: '💬',
-            appointment: '📅',
-            promotion: '🎉',
-            system: '🔔',
+        const typeMap: Record<string, any> = {
+            order: <Package size={24} />,
+            message: <MessageSquare size={24} />,
+            appointment: <Calendar size={24} />,
+            promotion: <Tag size={24} />,
+            system: <Bell size={24} />,
         };
-        return typeMap[type] || '🔔';
+        return typeMap[type] || <Bell size={24} />;
     };
 
     const getTypeClass = (type: string) => {

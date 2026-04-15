@@ -67,7 +67,7 @@ const UserSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ['customer', 'partner', 'admin'],
+        enum: ['customer', 'partner', 'veterinarian', 'admin'],
         default: 'customer',
     },
     subscriptionId: {
@@ -142,10 +142,30 @@ const UserSchema = new mongoose.Schema({
         type: String,
         default: '',
     },
+    bio: {
+        type: String,
+        default: '',
+    },
+    whatsapp: {
+        type: String,
+        default: '',
+    },
+    crmv: {
+        type: String,
+        default: '',
+    },
+    rating: {
+        type: Number,
+        default: 0,
+    },
+    reviewCount: {
+        type: Number,
+        default: 0,
+    },
 }, { timestamps: true });
 
 UserSchema.plugin(fieldEncryption, {
-    fields: ['cnpj', 'cpf', 'phone', 'twoFactorSecret'],
+    fields: ['cnpj', 'cpf', 'phone', 'whatsapp', 'twoFactorSecret'],
     secret: ENC_KEY || ''
 });
 

@@ -65,8 +65,10 @@ export async function POST(req: Request) {
 
         const hashedPassword = await bcrypt.hash(password, 12);
 
-        // Security: Only allow 'customer' and 'partner' to be created via public registration
-        const finalRole = (role === 'partner') ? 'partner' : 'customer';
+        // Security: Allow customer, partner, and veterinarian to be created via public registration
+        let finalRole: 'customer' | 'partner' | 'veterinarian' = 'customer';
+        if (role === 'partner') finalRole = 'partner';
+        else if (role === 'veterinarian') finalRole = 'veterinarian';
 
         const userData: any = {
             name: sanitizedName,
@@ -79,8 +81,8 @@ export async function POST(req: Request) {
 
         const user = await User.create(userData);
 
-        // If partner, create an automatic free active subscription
-        if (finalRole === 'partner') {
+        // If partner or veterinarian, create an automatic free active subscription
+        if (finalRole === 'partner' || finalRole === 'veterinarian') {
             const startDate = new Date();
             const endDate = new Date();
             endDate.setFullYear(startDate.getFullYear() + 50); // Free plan is "permanent"
@@ -98,6 +100,7 @@ export async function POST(req: Request) {
 
         return NextResponse.json({ message: 'Usuário criado com sucesso!' }, { status: 201 });
     } catch (error: any) {
+        console.error('[REGISTER] Error:', error.message, error.errors || '');
         return NextResponse.json(
             { message: 'Erro ao criar usuário.' },
             { status: 500 }

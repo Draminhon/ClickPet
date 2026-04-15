@@ -506,7 +506,7 @@
 
 .authModalIcon {
     margin-bottom: 20px;
-    color: #EC802B;
+    color: #3BB77E;
     display: flex;
     justify-content: center;
 }
@@ -534,7 +534,7 @@
 .loginBtn {
     width: 100%;
     height: 52px;
-    background: #EC802B !important;
+    background: #3BB77E !important;
     color: white !important;
     border: none;
     border-radius: 12px;
@@ -551,8 +551,8 @@
     width: 100%;
     height: 52px;
     background: white !important;
-    color: #EC802B !important;
-    border: 2px solid #EC802B;
+    color: #3BB77E !important;
+    border: 2px solid #3BB77E;
     border-radius: 12px;
     font-size: 16px;
     font-weight: 600;

@@ -76,7 +76,7 @@ export default function TrendingPartnersCarousel({ partners }: TrendingPartnersC
             <div className={styles.carouselTrack} ref={scrollRef}>
                 {partners.map((partner, index) => {
                     const shopType = partner.specialization || 'Petshop';
-                    const distanceStr = partner.distance !== undefined 
+                    const distanceStr = partner.distance != null 
                         ? `${partner.distance.toFixed(1)} km` 
                         : 'Calculando...';
                     
@@ -102,7 +102,7 @@ export default function TrendingPartnersCarousel({ partners }: TrendingPartnersC
                             <div className={styles.detailsColumn}>
                                 <div className={styles.nameRow}>
                                     <h3 className={styles.shopName}>{partner.name}</h3>
-                                    <BadgeCheck className={styles.badge} size={22} fill="currentColor" color="white" />
+                                    <BadgeCheck className={styles.badge} size={28} fill="currentColor" color="white" />
                                 </div>
 
                                 <div className={styles.infoRow}>

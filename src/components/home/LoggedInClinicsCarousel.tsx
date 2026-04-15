@@ -72,14 +72,14 @@ export default function LoggedInClinicsCarousel({ clinics }: LoggedInClinicsCaro
             <div className={styles.carouselTrack} ref={scrollRef}>
                 {clinics.map((clinic, index) => {
                     const shopType = clinic.specialization || 'Clínica Veterinária';
-                    const distanceStr = clinic.distance !== undefined 
+                    const distanceStr = clinic.distance != null 
                         ? `${clinic.distance.toFixed(1)} km` 
                         : 'Calculando...';
                     
                     const isOpen = clinic.workingHours ? isShopOpen(clinic.workingHours) : false;
 
                     return (
-                        <Link href={`/loja/${clinic._id}`} key={`${clinic._id}-${index}`} className={styles.card}>
+                        <Link href={`/clinica/${clinic._id}`} key={`${clinic._id}-${index}`} className={styles.card}>
                             {/* Fotografia da loja */}
                             <div className={styles.imageWrapper}>
                                 <Image 

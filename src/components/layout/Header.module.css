@@ -275,6 +275,181 @@
     background-color: #f5f5f5;
 }
 
+/* Advanced Location Dropdown Styles */
+.locationDropdown {
+    position: absolute;
+    top: 52px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+    border-radius: 20px;
+    padding: 20px 0;
+    min-width: 340px;
+    display: flex;
+    flex-direction: column;
+    z-index: 101;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translate(-50%, -10px); }
+    to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.dropdownSection {
+    padding: 0 20px;
+}
+
+.sectionTitle {
+    font-size: 11px;
+    font-weight: 700;
+    color: #99A1AF;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+    margin-top: 16px;
+    display: block;
+}
+
+.sectionTitle:first-child {
+    margin-top: 0;
+}
+
+.addressList {
+    max-height: 280px;
+    overflow-y: auto;
+    margin-bottom: 8px;
+}
+
+.addressItem {
+    width: 100%;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: none;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    border-radius: 12px;
+    margin: 0 8px;
+    width: calc(100% - 16px);
+}
+
+.addressItem:hover {
+    background-color: #F7FBFF;
+}
+
+.activeAddressItem {
+    background-color: rgba(59, 183, 126, 0.08);
+}
+
+.addressIconWrapper {
+    width: 32px;
+    height: 32px;
+    background: #f5f5f5;
+    border-radius: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+}
+
+.activeAddressItem .addressIconWrapper {
+    background: #3BB77E;
+    color: white;
+}
+
+.addressInfo {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.addressStreet {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: #253D4E;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.addressCity {
+    font-size: 12px;
+    color: #7E7E7E;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.addressActions {
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.addressItem:hover .addressActions {
+    opacity: 1;
+}
+
+.iconBtn {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    transition: all 0.2s;
+    color: #253D4E;
+}
+
+.editBtn:hover {
+    background: #E8F5E9;
+    color: #3BB77E;
+}
+
+.deleteBtn:hover {
+    background: #FFEBEE;
+    color: #FF3B30;
+}
+
+.actionItem {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    color: #253D4E;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    border: none;
+    background: transparent;
+    width: 100%;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-family: 'Baloo 2', sans-serif;
+}
+
+.actionItem:hover {
+    background: #f5f5f5;
+}
+
+.actionIcon {
+    color: #3BB77E;
+}
+
 /* ---- Responsive ---- */
 @media (max-width: 1200px) {
     .header {

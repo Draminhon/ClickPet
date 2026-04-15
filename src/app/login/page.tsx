@@ -6,6 +6,7 @@ import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useToast } from '@/context/ToastContext';
+import { Eye, EyeOff } from 'lucide-react';
 import styles from './login.module.css';
 
 const carouselImages = [
@@ -18,6 +19,7 @@ export default function Login() {
     const router = useRouter();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const { showToast } = useToast();
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -53,6 +55,8 @@ export default function Login() {
                     router.push('/admin');
                 } else if (session?.user?.role === 'partner') {
                     router.push('/partner/dashboard');
+                } else if (session?.user?.role === 'veterinarian') {
+                    router.push('/vet/dashboard');
                 } else {
                     router.push('/');
                 }
@@ -114,14 +118,24 @@ export default function Login() {
 
                         <div className={styles.inputGroup}>
                             <div className={styles.inputLabel}>Senha</div>
-                            <input
-                                type="password"
-                                placeholder="Sua senha"
-                                className={styles.input}
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                            />
+                            <div className={styles.passwordWrapper}>
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    placeholder="Sua senha"
+                                    className={styles.input}
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    className={styles.toggleButton}
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    aria-label={showPassword ? "Esconder senha" : "Mostrar senha"}
+                                >
+                                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                </button>
+                            </div>
                         </div>
 
                         <button type="submit" className={styles.continueButton} disabled={loading}>

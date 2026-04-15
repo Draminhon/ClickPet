@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Review from '@/models/Review';
+import Product from '@/models/Product';
+import User from '@/models/User';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]/route";
 import { sanitizeObject } from '@/lib/sanitize';
@@ -31,6 +33,26 @@ export async function POST(req: Request) {
             ...sanitizedBody,
             userId: session.user.id,
         });
+
+        // Recalculate and persist rating on Product
+        if (body.productId) {
+            const productReviews = await Review.find({ productId: body.productId });
+            const avg = productReviews.reduce((sum, r) => sum + r.rating, 0) / productReviews.length;
+            await Product.findByIdAndUpdate(body.productId, {
+                rating: Math.round(avg * 10) / 10,
+                reviewCount: productReviews.length,
+            });
+        }
+
+        // Recalculate and persist rating on Partner (User)
+        if (body.partnerId) {
+            const partnerReviews = await Review.find({ partnerId: body.partnerId });
+            const avg = partnerReviews.reduce((sum, r) => sum + r.rating, 0) / partnerReviews.length;
+            await User.findByIdAndUpdate(body.partnerId, {
+                rating: Math.round(avg * 10) / 10,
+                reviewCount: partnerReviews.length,
+            });
+        }
 
         return NextResponse.json(review, { status: 201 });
     } catch (error: any) {

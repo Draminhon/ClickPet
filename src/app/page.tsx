@@ -16,23 +16,25 @@ import { MOCK_PARTNERS, MOCK_CLINICS } from '@/mock/partners';
 async function getFeaturedPartners(isClinic = false) {
     await dbConnect();
     
+    // Professionals/Partners with logos
     const query: any = {
-        role: 'partner',
         shopLogo: { $exists: true, $nin: [null, ''] }
     };
 
     if (isClinic) {
+        // Now clinics should primarily have the veterinarian role
+        query.role = { $in: ['veterinarian', 'partner'] };
         query.specialization = { $regex: /Veterinária|Hospital|Clínica/i };
     } else {
+        query.role = 'partner';
         query.specialization = { $not: { $regex: /Veterinária|Hospital|Clínica/i } };
     }
 
     const partners = await User.find(query)
-        .select('name shopLogo specialization workingHours')
+        .select('name shopLogo specialization workingHours role')
         .limit(30)
         .lean();
 
-    // Deep serialization
     return JSON.parse(JSON.stringify(partners));
 }
 
@@ -52,9 +54,9 @@ export default async function HomePage() {
         getFeaturedPartners(true)
     ]);
 
-    // Conditional data based on session
-    const featuredPartners = session ? dbPartners : [...dbPartners, ...MOCK_PARTNERS];
-    const veterinaryClinics = session ? dbClinics : [...dbClinics, ...MOCK_CLINICS];
+    // Show mocks for logged-in users if data is scarce to prevent empty carousels
+    const featuredPartners = (session && dbPartners.length >= 4) ? dbPartners : [...dbPartners, ...MOCK_PARTNERS];
+    const veterinaryClinics = (session && dbClinics.length >= 4) ? dbClinics : [...dbClinics, ...MOCK_CLINICS];
 
     return (
         <div className={styles.homeContainer}>

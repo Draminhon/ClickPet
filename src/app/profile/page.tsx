@@ -60,9 +60,7 @@ export default function ProfilePage() {
                 phone: profileData.phone || '',
                 image: profileData.image || '',
                 address: profileData.address || { street: '', number: '', complement: '', neighborhood: '', city: '', state: '', zip: '' },
-                deliveryAddresses: Array.isArray(profileData.deliveryAddresses) && profileData.deliveryAddresses.length > 0 
-                  ? profileData.deliveryAddresses 
-                  : (profileData.address?.street ? [profileData.address] : []),
+                deliveryAddresses: Array.isArray(profileData.deliveryAddresses) ? profileData.deliveryAddresses : [],
             });
 
             const petsRes = await fetch('/api/pets');
@@ -159,9 +157,7 @@ export default function ProfilePage() {
                     phone: updatedUser.phone || '',
                     image: updatedUser.image || '',
                     address: updatedUser.address || { street: '', number: '', complement: '', neighborhood: '', city: '', state: '', zip: '' },
-                    deliveryAddresses: Array.isArray(updatedUser.deliveryAddresses) && updatedUser.deliveryAddresses.length > 0 
-                      ? updatedUser.deliveryAddresses 
-                      : (updatedUser.address?.street ? [updatedUser.address] : []),
+                    deliveryAddresses: Array.isArray(updatedUser.deliveryAddresses) ? updatedUser.deliveryAddresses : [],
                 });
                 showToast('Informações atualizadas com sucesso!');
             } else {
@@ -215,8 +211,15 @@ export default function ProfilePage() {
             }
         };
         
-        const newAddrs = [...formData.deliveryAddresses, newAddressEntry];
-        setFormData({ ...formData, deliveryAddresses: newAddrs, address: newAddrs[0] });
+        if (!formData.address.street) {
+            // If NO primary address, first one becomes primary
+            setFormData({ ...formData, address: newAddressEntry });
+        } else {
+            // Otherwise add to secondary list
+            const newAddrs = [...formData.deliveryAddresses, newAddressEntry];
+            setFormData({ ...formData, deliveryAddresses: newAddrs });
+        }
+        
         setShowAddressForm(false);
         setAddressForm({ street: '', number: '', complement: '', neighborhood: '', city: '', state: '', zip: '', lat: '', lng: '' });
     };
@@ -415,7 +418,7 @@ export default function ProfilePage() {
                             )}
                         </div>
 
-                        {formData.deliveryAddresses.length === 0 && !showAddressForm && (
+                        {formData.deliveryAddresses.length === 0 && !formData.address?.street && !showAddressForm && (
                             <div style={{ textAlign: 'center', padding: '2rem 1rem', background: '#f8f9fa', borderRadius: '8px', border: '2px dashed #ddd' }}>
                                 <MapPin size={40} color="#b0bec5" style={{ margin: '0 auto 1rem' }} />
                                 <p style={{ color: '#555', marginBottom: '1.2rem', fontWeight: 500 }}>
@@ -431,8 +434,27 @@ export default function ProfilePage() {
                             </div>
                         )}
                         
-                        {!showAddressForm && formData.deliveryAddresses.length > 0 && (
+                        {!showAddressForm && (
                             <div style={{ display: 'grid', gap: '1rem', marginBottom: '20px' }}>
+                                {/* Primary Address */}
+                                {formData.address?.street && (
+                                    <div style={{ 
+                                        display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', padding: '1.2rem', 
+                                        border: '1px solid #3BB77E', borderRadius: '10px', background: '#F8FFF9',
+                                        transition: 'all 0.2s ease', position: 'relative'
+                                    }}>
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ fontWeight: 600, color: '#333', fontSize: '1.05rem', marginBottom: '0.2rem' }}>
+                                                {formData.address.street}, {formData.address.number}
+                                                <span style={{ marginLeft: '10px', fontSize: '0.7rem', background: '#3BB77E', color: 'white', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase', fontWeight: 700 }}>Principal</span>
+                                            </div>
+                                            <div style={{ fontSize: '0.95rem', color: '#555', marginBottom: '0.2rem' }}>{formData.address.neighborhood} - {formData.address.city}/{formData.address.state}</div>
+                                            <div style={{ fontSize: '0.85rem', color: '#888' }}>CEP: {maskZip(formData.address.zip)} {formData.address.complement ? `| Cpl: ${formData.address.complement}` : ''}</div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Delivery Addresses */}
                                 {formData.deliveryAddresses.map((addr, idx) => (
                                     <div key={idx} style={{ 
                                         display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', padding: '1.2rem', 
@@ -442,7 +464,6 @@ export default function ProfilePage() {
                                         <div style={{ flex: 1 }}>
                                             <div style={{ fontWeight: 600, color: '#333', fontSize: '1.05rem', marginBottom: '0.2rem' }}>
                                                 {addr.street}, {addr.number}
-                                                {idx === 0 && <span style={{ marginLeft: '10px', fontSize: '0.7rem', background: '#e0f2fe', color: '#0369a1', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase', fontWeight: 700 }}>Principal</span>}
                                             </div>
                                             <div style={{ fontSize: '0.95rem', color: '#555', marginBottom: '0.2rem' }}>{addr.neighborhood} - {addr.city}/{addr.state}</div>
                                             <div style={{ fontSize: '0.85rem', color: '#888' }}>CEP: {maskZip(addr.zip)} {addr.complement ? `| Cpl: ${addr.complement}` : ''}</div>

@@ -115,6 +115,9 @@ export default function ProductDetailPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     productId: id,
+                    partnerId: typeof product.partnerId === 'object'
+                        ? product.partnerId?._id?.toString()
+                        : product.partnerId?.toString(),
                     rating: newReview.rating,
                     comment: newReview.comment
                 })
@@ -224,7 +227,7 @@ export default function ProductDetailPage() {
                         </div>
                         <span className={styles.ratingValue}>{safeRating.toFixed(1)}</span>
                         <span className={styles.bullet}>•</span>
-                        <span className={styles.reviewsCount}>{safeSalesCount} Avaliações</span>
+                        <span className={styles.reviewsCount}>{stats.totalReviews} Avaliações</span>
                     </div>
 
                     <div className={styles.price}>
@@ -363,20 +366,22 @@ export default function ProductDetailPage() {
                             <div>
                                 <h3 style={{ marginBottom: '5px', fontSize: '24px', fontWeight: 700 }}>Comentários Recentes</h3>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <div style={{ fontSize: '32px', fontWeight: 700 }}>{safeRating.toFixed(1)}</div>
+                                    <div style={{ fontSize: '32px', fontWeight: 700 }}>{stats.avgRating.toFixed(1)}</div>
                                     <div>
                                         <div style={{ display: 'flex' }}>
                                             {[...Array(5)].map((_, i) => (
-                                                <Star key={i} size={18} fill={i < Math.floor(safeRating) ? "#E3A653" : "none"} stroke="#E3A653" />
+                                                <Star key={i} size={18} fill={i < Math.floor(stats.avgRating) ? "#E3A653" : "none"} stroke="#E3A653" />
                                             ))}
                                         </div>
-                                        <div style={{ fontSize: '14px', color: '#666' }}>Baseado em {safeSalesCount} avaliações</div>
+                                        <div style={{ fontSize: '14px', color: '#666' }}>Baseado em {stats.totalReviews} avaliações</div>
                                     </div>
                                 </div>
                             </div>
-                            <button className={styles.evaluateBtn} onClick={() => setShowReviewForm(!showReviewForm)}>
-                                {showReviewForm ? 'Fechar Avaliação' : 'Avaliar Produto'}
-                            </button>
+                            {session && (
+                                <button className={styles.evaluateBtn} onClick={() => setShowReviewForm(!showReviewForm)}>
+                                    {showReviewForm ? 'Fechar Avaliação' : 'Avaliar Produto'}
+                                </button>
+                            )}
                         </div>
 
                         {showReviewForm && (

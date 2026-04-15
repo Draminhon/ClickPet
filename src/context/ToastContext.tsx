@@ -50,21 +50,22 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                         key={toast.id}
                         style={{
                             background: 'white',
-                            color: '#1A1A1A',
-                            padding: '12px 20px',
-                            borderRadius: '8px',
-                            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                            color: '#253D4E',
+                            padding: '16px 24px',
+                            borderRadius: '16px',
+                            boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '12px',
-                            minWidth: '300px',
-                            borderLeft: `4px solid ${toast.type === 'success' ? '#6CC551' : toast.type === 'error' ? '#dc3545' : '#FFC107'}`,
-                            animation: 'slideIn 0.3s ease'
+                            gap: '14px',
+                            minWidth: '320px',
+                            border: '1px solid #F2F3F7',
+                            borderLeft: `6px solid ${toast.type === 'success' ? '#3BB77E' : toast.type === 'error' ? '#FF3B30' : '#FFC107'}`,
+                            animation: 'slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
                         }}
                     >
-                        {toast.type === 'success' && <CheckCircle size={20} color="#6CC551" />}
-                        {toast.type === 'error' && <AlertCircle size={20} color="#dc3545" />}
-                        <span style={{ flex: 1, fontSize: '0.9rem', fontWeight: 500 }}>{toast.message}</span>
+                        {toast.type === 'success' && <CheckCircle size={22} color="#3BB77E" />}
+                        {toast.type === 'error' && <AlertCircle size={22} color="#FF3B30" />}
+                        <span style={{ flex: 1, fontSize: '15px', fontWeight: 600 }}>{toast.message}</span>
                         <button
                             onClick={() => removeToast(toast.id)}
                             style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#999' }}

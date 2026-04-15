@@ -7,6 +7,7 @@ import { useToast } from '@/context/ToastContext';
 import { Minus, Plus, ChevronUp, ChevronDown, QrCode, Upload } from 'lucide-react';
 import { maskPhone, maskPrice, maskCPF, maskCNPJ, maskZip } from '@/utils/masks';
 import MapPicker from '@/components/ui/MapPicker';
+import ImageCropModal from '@/components/modals/ImageCropModal';
 
 // ... (InputContainer, WorkingHoursToggle, TimeSelector omitted)
 // I'll re-add the imports correctly
@@ -306,6 +307,20 @@ export default function PartnerSettings() {
         }
     });
 
+    const [cropConfig, setCropConfig] = useState<{ 
+        isOpen: boolean; 
+        image: string; 
+        type: 'shopLogo' | 'bannerImage'; 
+        aspect: number;
+        title: string;
+    }>({
+        isOpen: false,
+        image: '',
+        type: 'shopLogo',
+        aspect: 1,
+        title: ''
+    });
+
     useEffect(() => {
         // Toggle welcome modal if profile is incomplete AND not dismissed for THIS user
         if (session?.user?.id) {
@@ -397,17 +412,30 @@ export default function PartnerSettings() {
     const handleLocalImageChange = (e: React.ChangeEvent<HTMLInputElement>, field: 'shopLogo' | 'bannerImage') => {
         const file = e.target.files?.[0];
         if (file) {
-            if (file.size > 1024 * 1024) { // 1MB limit
-                showToast('A imagem deve ter no máximo 1MB', 'error');
+            if (file.size > 2 * 1024 * 1024) { // Increased to 2MB to allow original high-res before crop
+                showToast('A imagem original deve ter no máximo 2MB', 'error');
                 return;
             }
 
             const reader = new FileReader();
             reader.onloadend = () => {
-                setFormData({ ...formData, [field]: reader.result as string });
+                setCropConfig({
+                    isOpen: true,
+                    image: reader.result as string,
+                    type: field,
+                    aspect: field === 'shopLogo' ? 1 : 1920 / 300,
+                    title: field === 'shopLogo' ? 'Ajustar Foto de Perfil' : 'Ajustar Banner da Vitrine'
+                });
             };
             reader.readAsDataURL(file);
         }
+        e.target.value = '';
+    };
+
+    const handleCropConfirm = (croppedImage: string) => {
+        setFormData({ ...formData, [cropConfig.type]: croppedImage });
+        setCropConfig({ ...cropConfig, isOpen: false });
+        showToast('Imagem ajustada com sucesso!');
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -1300,6 +1328,16 @@ export default function PartnerSettings() {
                         {loading ? 'SALVANDO...' : 'SALVAR INFORMAÇÕES'}
                     </button>
                 </div>
+            {/* Image Crop Modal */}
+            {cropConfig.isOpen && (
+                <ImageCropModal
+                    image={cropConfig.image}
+                    aspect={cropConfig.aspect}
+                    title={cropConfig.title}
+                    onClose={() => setCropConfig({ ...cropConfig, isOpen: false })}
+                    onConfirm={handleCropConfirm}
+                />
+            )}
             </div>
         </div>
     );

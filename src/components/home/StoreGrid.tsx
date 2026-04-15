@@ -15,14 +15,19 @@ interface Partner {
     distance?: number;
     workingHours?: any[];
     isOpen?: boolean;
+    rating?: number;
+    reviewCount?: number;
 }
 
 interface StoreGridProps {
     partners: Partner[];
+    limit?: number;
+    title?: string;
+    hideViewMore?: boolean;
 }
 
-export default function StoreGrid({ partners }: StoreGridProps) {
-    const displayLimit = 15;
+export default function StoreGrid({ partners, limit, title = "Lojas", hideViewMore = false }: StoreGridProps) {
+    const displayLimit = limit || 15;
     
     // States for filter chips
     const [isFreeDelivery, setIsFreeDelivery] = useState(true);
@@ -65,7 +70,7 @@ export default function StoreGrid({ partners }: StoreGridProps) {
 
     return (
         <section className={styles.container}>
-            <h2 className={styles.title}>Lojas</h2>
+            <h2 className={styles.title}>{title}</h2>
             
             {/* Filters Row */}
             <div className={styles.filtersRow}>
@@ -133,11 +138,12 @@ export default function StoreGrid({ partners }: StoreGridProps) {
             <div className={styles.grid}>
                 {displayedPartners.map(partner => {
                     const shopType = partner.specialization || 'Petshop';
-                    const distanceStr = partner.distance !== undefined 
+                    const distanceStr = partner.distance != null 
                         ? `${partner.distance.toFixed(1)} km` 
                         : 'Calculando...';
                     
-                    const { rating, reviews } = { rating: '0.0', reviews: 0 };
+                    const partnerRating = (partner.rating ?? 0).toFixed(1);
+                    const partnerReviewCount = partner.reviewCount ?? 0;
                     const isOpen = partner.workingHours ? isShopOpen(partner.workingHours) : false;
                     const isClinic = shopType.match(/Veterinária|Hospital|Clínica/i) !== null;
                     const specificInfoString = isClinic ? 'Especializado' : '30-45 min';
@@ -157,7 +163,7 @@ export default function StoreGrid({ partners }: StoreGridProps) {
                             <div className={styles.detailsColumn}>
                                 <div className={styles.nameRow}>
                                     <h3 className={styles.shopName}>{partner.name}</h3>
-                                    <BadgeCheck className={styles.badge} size={16.5} fill="currentColor" color="white" />
+                                    <BadgeCheck className={styles.badge} size={22} fill="currentColor" color="white" />
                                 </div>
 
                                 <div className={styles.infoLine}>
@@ -168,7 +174,7 @@ export default function StoreGrid({ partners }: StoreGridProps) {
 
                                 <div className={styles.ratingLine}>
                                     <Star className={styles.starIcon} size={17.12} fill="currentColor" />
-                                    <span>{rating} ({reviews} avaliações)</span>
+                                    <span>{partnerRating} ({partnerReviewCount} avaliações)</span>
                                 </div>
 
                                 <div className={styles.statusLine}>
@@ -185,15 +191,17 @@ export default function StoreGrid({ partners }: StoreGridProps) {
             </div>
 
             {/* Permanent Link Button to Expanded Shop Page */}
-            <div className={styles.viewMoreWrapper}>
-                <Link 
-                    href="/partners"
-                    className={styles.viewMoreButton} 
-                    style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                >
-                    Ver mais
-                </Link>
-            </div>
+            {!hideViewMore && (
+                <div className={styles.viewMoreWrapper}>
+                    <Link 
+                        href="/partners"
+                        className={styles.viewMoreButton} 
+                        style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
+                        Ver mais
+                    </Link>
+                </div>
+            )}
 
         </section>
     );

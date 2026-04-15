@@ -45,6 +45,10 @@ export async function PUT(req: Request) {
         }
 
         const updateData: any = {};
+        if (body.name !== undefined) {
+            user.name = body.name;
+            updateData.name = body.name;
+        }
         if (body.address) {
             user.address = { ...user.address, ...body.address };
             updateData.address = body.address;
@@ -116,6 +120,18 @@ export async function PUT(req: Request) {
         if (body.specialization !== undefined) {
             user.specialization = body.specialization;
             updateData.specialization = body.specialization;
+        }
+        if (body.bio !== undefined) {
+            user.bio = body.bio;
+            updateData.bio = body.bio;
+        }
+        if (body.whatsapp !== undefined) {
+            user.whatsapp = body.whatsapp;
+            updateData.whatsapp = body.whatsapp;
+        }
+        if (body.crmv !== undefined) {
+            user.crmv = body.crmv;
+            updateData.crmv = body.crmv;
         }
 
         await user.save();

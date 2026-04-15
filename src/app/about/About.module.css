@@ -8,9 +8,9 @@
 }
 
 .container {
-    max-width: 1200px;
+    max-width: 1440px;
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 0 120px;
 }
 
 .heroSection {
@@ -46,7 +46,7 @@
 .grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 60px;
+    gap: 100px;
     align-items: center;
     margin-bottom: 80px;
 }
@@ -62,6 +62,7 @@
     color: #4B5563;
     line-height: 1.7;
     margin-bottom: 20px;
+    text-align: justify;
 }
 
 .imageFrame {

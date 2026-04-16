@@ -18,7 +18,7 @@ export default function Header() {
     const { showToast } = useToast();
     const router = useRouter();
     const pathname = usePathname();
-    const { address, setLocationFromGPS, setLocationManual } = useLocation();
+    const { address, setLocationFromGPS, clearLocation, setLocationManual } = useLocation();
     
     const [showAddressModal, setShowAddressModal] = useState(false);
     const [showLocationDropdown, setShowLocationDropdown] = useState(false);
@@ -63,7 +63,7 @@ export default function Header() {
                     });
                 }
             })
-            .catch(() => { });
+            .catch(err => console.error(err));
     };
 
     const fetchAddressFromCoordinates = async (lat: number, lng: number) => {
@@ -90,13 +90,11 @@ export default function Header() {
 
     const handleSelectAddress = async (selectedAddr: any, isPrimary: boolean, index?: number) => {
         try {
-            // Update context first for immediate UI update
-            const coords = selectedAddr.coordinates?.coordinates;
             setLocationManual(
-                coords?.[1] || 0,
-                coords?.[0] || 0,
-                `${selectedAddr.street}${selectedAddr.number ? `, ${selectedAddr.number}` : ""}`,
-                selectedAddr.city || ""
+                selectedAddr.coordinates.coordinates[1],
+                selectedAddr.coordinates.coordinates[0],
+                `${selectedAddr.street}, ${selectedAddr.number}`,
+                selectedAddr.city
             );
 
             // If it was already primary, just close
@@ -164,9 +162,7 @@ export default function Header() {
                 
                 // If we deleted the primary address and it was currently selected in context, clear it
                 if (index === null && payload.address?.street === '') {
-                    setAddress('');
-                    setLat(null);
-                    setLng(null);
+                    clearLocation();
                 }
                 
                 fetchUserAddress();

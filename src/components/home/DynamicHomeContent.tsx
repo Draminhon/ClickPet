@@ -75,8 +75,9 @@ export default function DynamicHomeContent({ defaultPartners, defaultClinics }: 
     }
 
     // Scenario B: Location set - Show Zé Delivery / iFood style storefront
-    const petshopsOnly = nearbyPartners.filter(p => !p.specialization?.match(/Veterinária|Hospital|Clínica/i));
-    const clinicsOnly = nearbyPartners.filter(p => p.specialization?.match(/Veterinária|Hospital|Clínica/i));
+    const isClinicOrVet = (p: any) => p.role === 'veterinarian' || p.specialization?.match(/Veterinária|Hospital|Clínica/i);
+    const petshopsOnly = nearbyPartners.filter(p => !isClinicOrVet(p));
+    const clinicsOnly = nearbyPartners.filter(p => isClinicOrVet(p));
 
     return (
         <div className={styles.fullWidthCarousel}>

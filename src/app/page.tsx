@@ -22,9 +22,13 @@ async function getFeaturedPartners(isClinic = false) {
     };
 
     if (isClinic) {
-        // Now clinics should primarily have the veterinarian role
-        query.role = { $in: ['veterinarian', 'partner'] };
-        query.specialization = { $regex: /Veterinária|Hospital|Clínica/i };
+        query.$or = [
+            { role: 'veterinarian' },
+            { 
+                role: 'partner', 
+                specialization: { $regex: /Veterinária|Hospital|Clínica/i }
+            }
+        ];
     } else {
         query.role = 'partner';
         query.specialization = { $not: { $regex: /Veterinária|Hospital|Clínica/i } };

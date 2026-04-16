@@ -133,21 +133,42 @@ export default function Header() {
         }
     };
 
-    const handleDeleteAddress = async (index: number) => {
+    const handleDeleteAddress = async (index: number | null) => {
         if (!confirm('Tem certeza que deseja excluir este endereço?')) return;
         
         try {
-            const newAddresses = [...(userProfile?.deliveryAddresses || [])];
-            newAddresses.splice(index, 1);
+            let payload: any = {};
+            const remainingDeliveries = [...(userProfile?.deliveryAddresses || [])];
+
+            if (index === null) {
+                // Delete primary address
+                if (remainingDeliveries.length > 0) {
+                    payload.address = remainingDeliveries.shift(); 
+                    payload.deliveryAddresses = remainingDeliveries;
+                } else {
+                    payload.address = { street: '', number: '', complement: '', neighborhood: '', city: '', state: '', zip: '' };
+                }
+            } else {
+                remainingDeliveries.splice(index, 1);
+                payload.deliveryAddresses = remainingDeliveries;
+            }
 
             const res = await fetch('/api/profile', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ deliveryAddresses: newAddresses }),
+                body: JSON.stringify(payload),
             });
 
             if (res.ok) {
                 showToast('Endereço excluído');
+                
+                // If we deleted the primary address and it was currently selected in context, clear it
+                if (index === null && payload.address?.street === '') {
+                    setAddress('');
+                    setLat(null);
+                    setLng(null);
+                }
+                
                 fetchUserAddress();
             }
         } catch (error) {
@@ -280,6 +301,12 @@ export default function Header() {
                                                             onClick={(e) => { e.stopPropagation(); handleEditAddress(userProfile.address, null); }}
                                                         >
                                                             <Edit2 size={14} />
+                                                        </button>
+                                                        <button 
+                                                            className={`${styles.iconBtn} ${styles.deleteBtn}`}
+                                                            onClick={(e) => { e.stopPropagation(); handleDeleteAddress(null); }}
+                                                        >
+                                                            <Trash2 size={14} />
                                                         </button>
                                                     </div>
                                                 </div>

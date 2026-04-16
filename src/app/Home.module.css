@@ -13,9 +13,20 @@
     padding: 0 80px;
 }
 
+.fullWidthCarousel {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding-left: 80px;
+    margin-top: 40px;
+}
+
 @media (max-width: 1200px) {
     .contentWrapper {
         padding: 0 40px;
+    }
+    .fullWidthCarousel {
+        padding-left: 40px;
     }
 }
 
@@ -27,6 +38,10 @@
     
     .contentWrapper {
         padding: 0 20px;
+    }
+
+    .fullWidthCarousel {
+        padding-left: 20px;
     }
 }
 

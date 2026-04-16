@@ -138,7 +138,7 @@ export default function LoggedInHomeContent({ defaultPartners }: LoggedInHomeCon
     );
 
     return (
-        <div className={styles.contentWrapper} style={{ display: 'flex', flexDirection: 'column', marginTop: '40px' }}>
+        <div className={styles.fullWidthCarousel}>
             
             {/* Trending Partners Carousel */}
             <h2 style={{ fontFamily: "'Baloo 2', sans-serif", fontWeight: 600, fontSize: '24px', color: '#272727', margin: '0' }}>

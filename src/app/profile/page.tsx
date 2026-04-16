@@ -224,9 +224,44 @@ export default function ProfilePage() {
         setAddressForm({ street: '', number: '', complement: '', neighborhood: '', city: '', state: '', zip: '', lat: '', lng: '' });
     };
 
-    const handleDeleteAddress = (index: number) => {
-        const newAddrs = formData.deliveryAddresses.filter((_, i) => i !== index);
-        setFormData({ ...formData, deliveryAddresses: newAddrs, address: newAddrs[0] || { street: '', number: '', complement: '', neighborhood: '', city: '', state: '', zip: '' } });
+    const handleDeleteAddress = async (index: number | null) => {
+        if (!confirm('Tem certeza que deseja excluir este endereço?')) return;
+        
+        let newFormData = { ...formData };
+        
+        if (index === null) {
+            // Deleting primary address
+            const remaining = [...formData.deliveryAddresses];
+            if (remaining.length > 0) {
+                newFormData.address = remaining.shift() as any;
+                newFormData.deliveryAddresses = remaining;
+            } else {
+                newFormData.address = { street: '', number: '', complement: '', neighborhood: '', city: '', state: '', zip: '' };
+            }
+        } else {
+            // Deleting secondary address
+            newFormData.deliveryAddresses = formData.deliveryAddresses.filter((_, i) => i !== index);
+        }
+        
+        setFormData(newFormData);
+        
+        // Auto-save the deletion immediately for better UX
+        try {
+            const bodyData = { 
+                ...newFormData, 
+                cpf: newFormData.cpf.replace(/\D/g, '') 
+            };
+            const res = await fetch('/api/profile', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(bodyData),
+            });
+            if (res.ok) {
+                const updatedUser = await res.json();
+                setUserData(updatedUser);
+                showToast('Endereço removido com sucesso!');
+            }
+        } catch(e) {}
     };
 
     const handlePetImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -451,6 +486,14 @@ export default function ProfilePage() {
                                             <div style={{ fontSize: '0.95rem', color: '#555', marginBottom: '0.2rem' }}>{formData.address.neighborhood} - {formData.address.city}/{formData.address.state}</div>
                                             <div style={{ fontSize: '0.85rem', color: '#888' }}>CEP: {maskZip(formData.address.zip)} {formData.address.complement ? `| Cpl: ${formData.address.complement}` : ''}</div>
                                         </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleDeleteAddress(null)}
+                                            style={{ background: '#FEE2E2', border: 'none', color: '#EF4444', padding: '0.6rem', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                                            title="Excluir"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
                                     </div>
                                 )}
 

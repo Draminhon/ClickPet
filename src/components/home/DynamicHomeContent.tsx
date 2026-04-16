@@ -79,7 +79,7 @@ export default function DynamicHomeContent({ defaultPartners, defaultClinics }: 
     const clinicsOnly = nearbyPartners.filter(p => p.specialization?.match(/Veterinária|Hospital|Clínica/i));
 
     return (
-        <div className={styles.contentWrapper} style={{ display: 'flex', flexDirection: 'column', marginTop: '40px' }}>
+        <div className={styles.fullWidthCarousel}>
             
             {petshopsOnly.length > 0 && (
                 <>

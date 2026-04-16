@@ -39,7 +39,6 @@ const ReferralSchema = new mongoose.Schema({
 
 // Indexes
 ReferralSchema.index({ referrerId: 1 });
-ReferralSchema.index({ code: 1 });
 ReferralSchema.index({ referredEmail: 1 });
 
 export default mongoose.models.Referral || mongoose.model('Referral', ReferralSchema);

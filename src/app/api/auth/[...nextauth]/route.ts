@@ -15,10 +15,11 @@ export const authOptions: NextAuthOptions = {
                 password: { label: "Password", type: "password" },
                 twoFactorCode: { label: "2FA Token", type: "text" },
             },
-            async authorize(credentials) {
-                const { headers } = await import("next/headers");
-                const headersList = await headers();
-                const ip = headersList.get("x-forwarded-for") || headersList.get("x-real-ip") || "127.0.0.1";
+            async authorize(credentials, req) {
+                // Determine IP - safely handle req object
+                const ip = (req as any)?.headers?.['x-forwarded-for'] || 
+                           (req as any)?.headers?.['x-real-ip'] || 
+                           '127.0.0.1';
                 
                 const { authRateLimiter } = await import("@/lib/rateLimit");
                 const rateLimitResult = authRateLimiter.check(ip);
@@ -42,7 +43,7 @@ export const authOptions: NextAuthOptions = {
                     .lean();
 
                 if (!user) {
-                    throw new Error("Usuário não encontrado");
+                    throw new Error("Email ou senha incorretos");
                 }
 
                 if (user.lockUntil && new Date(user.lockUntil) > new Date()) {
@@ -61,7 +62,7 @@ export const authOptions: NextAuthOptions = {
                         updateData.lockUntil = new Date(Date.now() + 15 * 60 * 1000);
                     }
                     await User.findByIdAndUpdate(user._id, updateData);
-                    throw new Error("Senha incorreta");
+                    throw new Error("Email ou senha incorretos");
                 }
 
                 if (user.role === 'admin' && user.twoFactorEnabled) {

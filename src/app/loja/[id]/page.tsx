@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+export const dynamic = "force-dynamic";
 import Image from 'next/image';
 import Link from 'next/link';
 import { BadgeCheck, Star, Search, Truck, ChevronDown } from 'lucide-react';
@@ -38,11 +39,6 @@ export default async function StoreProfilePage({ params }: StoreProfilePageProps
 
     // Real Status Logic
     const isOpen = isShopOpen(partner.workingHours);
-
-    // UI Math Mocks (Stable per ID)
-    const sum = partner._id.toString().split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
-    const mockRating = ((sum % 9) / 10 + 4.1).toFixed(1); // 4.1 to 4.9
-    const mockReviews = (sum % 150) + 12;
 
     // Real Data Fetch
     const products = await Product.find({ partnerId: id, isActive: true }).lean();
@@ -123,8 +119,18 @@ export default async function StoreProfilePage({ params }: StoreProfilePageProps
                         <div className={styles.metaLeft}>
                             <span className={styles.specializationText}>{specialization}</span>
                             <span className={styles.bullet}>•</span>
-                            <Star size={18} fill="#FFD700" color="#FFD700" className={styles.starIcon} />
-                            <span className={styles.ratingText}>0.0 (0 avaliações)</span>
+                            <Star 
+                                size={18} 
+                                fill={partner.reviewCount > 0 ? "#FFD700" : "none"} 
+                                color={partner.reviewCount > 0 ? "#FFD700" : "#ccc"} 
+                                className={styles.starIcon} 
+                            />
+                            <span className={styles.ratingText}>
+                                {partner.reviewCount > 0 
+                                    ? `${partner.rating?.toFixed(1)} (${partner.reviewCount} avaliações)`
+                                    : 'Nenhuma avaliação'
+                                }
+                            </span>
                         </div>
 
                         {/* Response time & minimum order - Pushed to the right */}

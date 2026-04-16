@@ -31,7 +31,7 @@ async function getFeaturedPartners(isClinic = false) {
     }
 
     const partners = await User.find(query)
-        .select('name shopLogo specialization workingHours role')
+        .select('name shopLogo specialization workingHours role rating reviewCount')
         .limit(30)
         .lean();
 

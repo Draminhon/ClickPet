@@ -3,6 +3,7 @@ import dbConnect from '@/lib/db';
 import Review from '@/models/Review';
 import Product from '@/models/Product';
 import User from '@/models/User';
+import Order from '@/models/Order';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]/route";
 import { sanitizeObject } from '@/lib/sanitize';
@@ -28,10 +29,40 @@ export async function POST(req: Request) {
             return NextResponse.json({ message: 'Você já avaliou este item' }, { status: 400 });
         }
 
+        // SECURITY: Verify that the user actually purchased the item/from the partner
+        let verifiedOrder = null;
+        if (body.productId) {
+            verifiedOrder = await Order.findOne({
+                userId: session.user.id,
+                status: 'delivered',
+                'items.productId': body.productId
+            });
+        } else if (body.partnerId) {
+            verifiedOrder = await Order.findOne({
+                userId: session.user.id,
+                status: 'delivered',
+                partnerId: body.partnerId
+            });
+        }
+
+        if (!verifiedOrder) {
+            return NextResponse.json({ 
+                message: 'Você só pode avaliar produtos ou lojas após receber um pedido finalizado.' 
+            }, { status: 403 });
+        }
+
         const sanitizedBody = sanitizeObject(body);
+        
+        // SECURITY: Force verify status and associate with the real order
         const review = await Review.create({
-            ...sanitizedBody,
+            comment: sanitizedBody.comment,
+            rating: Math.min(5, Math.max(1, Number(sanitizedBody.rating) || 5)),
+            productId: body.productId,
+            partnerId: body.partnerId,
+            orderId: verifiedOrder._id,
+            verified: true,
             userId: session.user.id,
+            photos: Array.isArray(sanitizedBody.photos) ? sanitizedBody.photos : [],
         });
 
         // Recalculate and persist rating on Product

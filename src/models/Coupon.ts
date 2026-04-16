@@ -4,7 +4,6 @@ const CouponSchema = new mongoose.Schema({
     code: {
         type: String,
         required: [true, 'Please provide a coupon code'],
-        unique: true,
         uppercase: true,
     },
     partnerId: {
@@ -51,6 +50,6 @@ const CouponSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 CouponSchema.index({ partnerId: 1 });
-CouponSchema.index({ code: 1 });
+CouponSchema.index({ code: 1, partnerId: 1 }, { unique: true });
 
 export default mongoose.models.Coupon || mongoose.model('Coupon', CouponSchema);

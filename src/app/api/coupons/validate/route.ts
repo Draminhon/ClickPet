@@ -5,10 +5,15 @@ import Coupon from '@/models/Coupon';
 export async function POST(req: Request) {
     try {
         await dbConnect();
-        const { code, total } = await req.json();
+        const { code, total, partnerId } = await req.json();
+
+        if (!partnerId) {
+            return NextResponse.json({ message: 'Lojista não informado' }, { status: 400 });
+        }
 
         const coupon = await Coupon.findOne({
             code: code.toUpperCase(),
+            partnerId: partnerId, // SECURITY: Force check against specific partner
             isActive: true,
             expiresAt: { $gt: new Date() }
         });

@@ -34,7 +34,6 @@ const LoyaltyPointsSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // Index for faster queries
-LoyaltyPointsSchema.index({ userId: 1 });
 LoyaltyPointsSchema.index({ currentTier: 1 });
 
 // Tier thresholds

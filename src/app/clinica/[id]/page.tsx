@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowLeft, User, MapPin, Phone, Award, Calendar, FileText, MessageCircle } from 'lucide-react';
+import { maskPhone } from '@/utils/masks';
 import styles from './ClinicProfile.module.css';
 
 interface VetProfile {
@@ -81,7 +82,7 @@ export default function ClinicProfilePage() {
                 <div className={styles.notFound}>
                     <h2>Veterinário não encontrado</h2>
                     <p>O perfil que você está procurando não existe ou foi removido.</p>
-                    <Link href="/veterinarios" style={{ color: '#3BB77E', fontWeight: 600, marginTop: '10px' }}>
+                    <Link href="/" style={{ color: '#3BB77E', fontWeight: 600, marginTop: '10px' }}>
                         ← Voltar para a lista
                     </Link>
                 </div>
@@ -93,7 +94,7 @@ export default function ClinicProfilePage() {
         <div className={styles.profilePage}>
             {/* Back button */}
             <div className={styles.topBar}>
-                <Link href="/veterinarios" className={styles.backButton}>
+                <Link href="/" className={styles.backButton}>
                     <ArrowLeft size={18} />
                     Voltar para a lista
                 </Link>
@@ -183,7 +184,7 @@ export default function ClinicProfilePage() {
                                     </div>
                                     <div>
                                         <div className={styles.infoLabel}>Contato</div>
-                                        <div className={styles.infoValue}>{vet.whatsapp}</div>
+                                        <div className={styles.infoValue}>{maskPhone(vet.whatsapp)}</div>
                                     </div>
                                 </div>
                             )}

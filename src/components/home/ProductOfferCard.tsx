@@ -30,7 +30,7 @@ export default function ProductOfferCard({
     shopName = 'Petshop',
     productType = 'Produto',
     subCategory = 'Geral',
-    rating = 5.0,
+    rating = 0.0,
     salesCount = 0,
     noBorder = false
 }: ProductOfferCardProps) {

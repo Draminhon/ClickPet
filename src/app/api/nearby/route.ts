@@ -32,7 +32,11 @@ export async function GET(req: Request) {
         if (radius > 50) radius = 50;
 
         // Fetch real partners/vets
-        const findQuery: any = { status: { $ne: 'suspended' } };
+        // SECURITY: Only fetch active partners and veterinarians. NEVER include admin in public search.
+        const findQuery: any = { 
+            status: { $ne: 'suspended' },
+            role: { $in: ['partner', 'veterinarian'] }
+        };
         
         if (role !== 'any') {
             if (role === 'partner') {
@@ -83,21 +87,22 @@ export async function GET(req: Request) {
                 _id: String(partner._id),
                 name: partner.name,
                 shopLogo: partner.shopLogo || partner.image || null,
-                    bannerImage: partner.bannerImage || null,
-                    specialization: partner.specialization || '',
-                    bio: partner.bio || '',
-                    whatsapp: partner.whatsapp || partner.phone || '',
-                    crmv: partner.crmv || '',
-                    distance,
-                    deliveryFee,
-                    deliveryRadius: partner.deliveryRadius || 10,
-                    minimumOrderValue: partner.minimumOrderValue || 0,
-                    freeDeliveryMinimum: partner.freeDeliveryMinimum || 0,
-                    workingHours: partner.workingHours || [],
-                    role: partner.role || 'partner',
-                    rating: partner.rating || 0,
-                    reviewCount: partner.reviewCount || 0,
-                });
+                bannerImage: partner.bannerImage || null,
+                specialization: partner.specialization || '',
+                bio: partner.bio || '',
+                // SECURITY: Never leak encrypted PII strings (whatsapp/phone) to the public frontend
+                whatsapp: '', 
+                crmv: partner.role === 'veterinarian' ? partner.crmv || '' : '',
+                distance,
+                deliveryFee,
+                deliveryRadius: partner.deliveryRadius || 10,
+                minimumOrderValue: partner.minimumOrderValue || 0,
+                freeDeliveryMinimum: partner.freeDeliveryMinimum || 0,
+                workingHours: partner.workingHours || [],
+                role: partner.role || 'partner',
+                rating: partner.rating || 0,
+                reviewCount: partner.reviewCount || 0,
+            });
         }
 
         nearbyPartners.sort((a, b) => a.distance - b.distance);

@@ -4,6 +4,7 @@ import dbConnect from '@/lib/db';
 import Appointment from '@/models/Appointment';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]/route";
+import { sanitizeObject } from '@/lib/sanitize';
 
 export async function POST(req: Request) {
     try {
@@ -54,7 +55,7 @@ export async function GET(req: Request) {
         const appointments = await Appointment.find(query)
             .sort({ date: -1 })
             .populate('serviceId', 'name duration prices category image')
-            .populate('petId', 'name species breed age weight gender size temperament medicalNotes isVaccinated photo')
+            .populate('petId', 'name species breed age weight photo')
             .populate('userId', 'name email phone') // For partners to see who booked
             .populate('partnerId', 'name address'); // For users to see where
 

@@ -14,11 +14,19 @@ export async function POST(req: Request) {
         await dbConnect();
         const body = await req.json();
 
+        if (!session.user.id) {
+            return NextResponse.json({ message: 'Partner ID is missing from session' }, { status: 400 });
+        }
+
+        console.log(`[COUPON] Creating coupon '${body.code.toUpperCase()}' for partner ${session.user.id}`);
+        
         const coupon = await Coupon.create({
             ...body,
             partnerId: session.user.id,
             code: body.code.toUpperCase(),
         });
+
+        console.log(`[COUPON] Success:`, coupon._id);
 
         return NextResponse.json(coupon, { status: 201 });
     } catch (error: any) {

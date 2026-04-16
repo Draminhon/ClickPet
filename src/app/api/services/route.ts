@@ -3,6 +3,7 @@ import dbConnect from '@/lib/db';
 import Service from '@/models/Service';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]/route";
+import { sanitizeObject } from '@/lib/sanitize';
 
 export async function POST(req: Request) {
     try {
@@ -25,12 +26,27 @@ export async function POST(req: Request) {
             }, { status: 403 });
         }
 
-        const body = await req.json();
+        const rawBody = await req.json();
+        const body = sanitizeObject(rawBody);
 
-        const service = await Service.create({
-            ...body,
+        // SECURITY: Whitelist allowed fields to prevent mass assignment
+        const allowedFields = ['name', 'description', 'category', 'species', 'prices', 'duration', 'image', 'isActive', 'availability'];
+        const serviceData: any = { 
             partnerId: session.user.id,
+            // Defaults
+            isActive: true 
+        };
+
+        allowedFields.forEach(field => {
+            if (body[field] !== undefined) serviceData[field] = body[field];
         });
+
+        // Basic validation
+        if (!serviceData.name || serviceData.name.trim().length < 2) {
+            return NextResponse.json({ message: 'Nome do serviço é obrigatório' }, { status: 400 });
+        }
+
+        const service = await Service.create(serviceData);
 
         return NextResponse.json(service, { status: 201 });
     } catch (error: any) {

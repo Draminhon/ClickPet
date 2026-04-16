@@ -57,6 +57,9 @@ function CheckoutContent() {
     const [isPickup, setIsPickup] = useState(false);
     const [loading, setLoading] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState<'pix' | 'cartao' | 'pix_cartao'>('pix_cartao');
+    const [pointsBalance, setPointsBalance] = useState(0);
+    const [usePoints, setUsePoints] = useState(false);
+    const [pointsToRedeem, setPointsToRedeem] = useState(0);
 
     useEffect(() => {
         // Fetch user addresses from profile
@@ -116,6 +119,16 @@ function CheckoutContent() {
                     });
             });
         }
+
+        // Fetch loyalty points balance
+        fetch('/api/loyalty')
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.account) {
+                    setPointsBalance(data.account.totalPoints || 0);
+                }
+            })
+            .catch(err => console.error('Error fetching loyalty balance:', err));
     }, [items]);
 
     useEffect(() => {
@@ -183,55 +196,69 @@ function CheckoutContent() {
     const handleApplyCoupon = useCallback(async (codeOverride?: string) => {
         const code = codeOverride || couponCode;
         if (!code) return;
-
+        
         try {
-            const res = await fetch(`/api/coupons/validate`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ code, total })
-            });
-            const data = await res.json();
+            // Loop through unique partners in cart to find one where the coupon is valid
+            // This is more secure than global probe as it only checks stores the user is buying from
+            let foundValid = false;
+            let lastError = 'Cupom inválido para as lojas no seu carrinho';
 
-            if (res.ok && data.valid) {
-                // Check if already applied
-                if (appliedCoupons.some(c => c.code === data.code)) {
-                    if (!codeOverride) showToast('Este cupom já foi aplicado', 'error');
-                    return;
-                }
+            for (const pId of partnerIds) {
+                if (foundValid) break;
 
-                // Find matching items for this partner
-                const partnerItems = itemsByPartner[data.partnerId] || [];
-                if (partnerItems.length === 0) {
-                    showToast('Este cupom não se aplica a nenhum item no seu carrinho', 'error');
-                    return;
-                }
+                const res = await fetch(`/api/coupons/validate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        code, 
+                        total: itemsByPartner[pId].reduce((sum: number, i: any) => sum + (i.price * i.quantity), 0),
+                        partnerId: pId 
+                    })
+                });
+                const data = await res.json();
 
-                const partnerSubtotal = partnerItems.reduce((sum: number, i: any) => sum + (i.price * i.quantity), 0);
-                let discountAmount: number;
-                if (data.type === 'fixed') {
-                    discountAmount = data.discount;
-                } else {
-                    discountAmount = (partnerSubtotal * data.discount) / 100;
-                    if (data.maxDiscount && discountAmount > data.maxDiscount) {
-                        discountAmount = data.maxDiscount;
+                if (res.ok && data.valid) {
+                    foundValid = true;
+                    // Check if already applied
+                    if (appliedCoupons.some(c => c.code === data.code)) {
+                        if (!codeOverride) showToast('Este cupom já foi aplicado', 'error');
+                        return;
                     }
-                }
 
-                setAppliedCoupons(prev => [...prev, {
-                    code: data.code,
-                    partnerId: data.partnerId,
-                    discountPercent: data.discount,
-                    amount: discountAmount,
-                    shopName: partnerItems[0].shopName
-                }]);
-                setCouponCode('');
-                showToast(
-                    data.type === 'fixed'
-                        ? `Cupom aplicado! Desconto de R$ ${discountAmount.toFixed(2)} na loja ${partnerItems[0].shopName}`
-                        : `Cupom aplicado! ${data.discount}% de desconto na loja ${partnerItems[0].shopName}`
-                );
-            } else {
-                showToast(data.message || 'Cupom inválido', 'error');
+                    // Find matching items for this partner
+                    const partnerItems = itemsByPartner[data.partnerId] || [];
+                    const partnerSubtotal = partnerItems.reduce((sum: number, i: any) => sum + (i.price * i.quantity), 0);
+                    
+                    let discountAmount: number;
+                    if (data.type === 'fixed') {
+                        discountAmount = data.discount;
+                    } else {
+                        discountAmount = (partnerSubtotal * data.discount) / 100;
+                        if (data.maxDiscount && discountAmount > data.maxDiscount) {
+                            discountAmount = data.maxDiscount;
+                        }
+                    }
+
+                    setAppliedCoupons(prev => [...prev, {
+                        code: data.code,
+                        partnerId: data.partnerId,
+                        discountPercent: data.discount,
+                        amount: discountAmount,
+                        shopName: partnerItems[0].shopName
+                    }]);
+                    setCouponCode('');
+                    showToast(
+                        data.type === 'fixed'
+                            ? `Cupom aplicado! Desconto de R$ ${discountAmount.toFixed(2)} na loja ${partnerItems[0].shopName}`
+                            : `Cupom aplicado! ${data.discount}% de desconto na loja ${partnerItems[0].shopName}`
+                    );
+                } else {
+                    lastError = data.message || lastError;
+                }
+            }
+
+            if (!foundValid) {
+                showToast(lastError, 'error');
             }
         } catch (error) {
             showToast('Erro ao validar cupom', 'error');
@@ -298,7 +325,7 @@ function CheckoutContent() {
                 const partnerDelivery = isPickup ? 0 : (pInfo?.deliveryFee || 0);
                 const partnerTotal = partnerSubtotal - partnerDiscount + partnerDelivery;
 
-                const orderPayload = {
+                const orderPayload: any = {
                     items: partnerItems.map((item: any) => ({
                         ...item,
                         productId: item.id
@@ -318,6 +345,9 @@ function CheckoutContent() {
                     },
                     coupon: partnerCoupon?.code || undefined,
                     discount: partnerDiscount,
+                    // If multiple partners, we only apply points to the FIRST order to be simple
+                    // or we could split proportionally. For now, keep it simple.
+                    pointsRedeemed: (orderResults.length === 0 && usePoints) ? pointsToRedeem : 0,
                 };
 
                 const orderRes = await fetch('/api/orders', {
@@ -382,7 +412,8 @@ function CheckoutContent() {
 
     const totalDiscount = appliedCoupons.reduce((sum, c) => sum + c.amount, 0);
     const totalDeliveryFee = Object.values(partnerData).reduce((sum, d) => sum + (isPickup ? 0 : d.deliveryFee), 0);
-    const finalTotal = total - totalDiscount + totalDeliveryFee;
+    const pointsDiscount = usePoints ? (pointsToRedeem * 0.1) : 0;
+    const finalTotal = total - totalDiscount - pointsDiscount + totalDeliveryFee;
 
     const fetchAddressFromCoordinates = async (lat: number, lng: number) => {
         try {
@@ -672,6 +703,57 @@ function CheckoutContent() {
                         </div>
                     )}
 
+                    {/* Loyalty Points */}
+                    {pointsBalance > 0 && (
+                        <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem' }}>
+                                <h3 style={{ margin: 0, color: '#333' }}>Pontos de Fidelidade</h3>
+                                <span style={{ background: '#f0fdf4', color: '#16a34a', padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.9rem', fontWeight: 600 }}>
+                                    {pointsBalance} disponíveis
+                                </span>
+                            </div>
+
+                            <div style={{ padding: '1rem', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', cursor: 'pointer' }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={usePoints}
+                                        onChange={(e) => {
+                                            setUsePoints(e.target.checked);
+                                            if (e.target.checked) {
+                                                // Default to using all points up to 100% of subtotal
+                                                setPointsToRedeem(Math.min(pointsBalance, Math.floor((total * 10))));
+                                            }
+                                        }}
+                                        style={{ width: '20px', height: '20px', accentColor: '#3BB77E' }}
+                                    />
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ fontWeight: 600, color: '#253D4E' }}>Usar meus pontos para desconto</div>
+                                        <div style={{ fontSize: '0.85rem', color: '#64748b' }}>Cada 10 pontos equivalem a R$ 1,00 de desconto</div>
+                                    </div>
+                                </label>
+
+                                {usePoints && (
+                                    <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #e2e8f0' }}>
+                                        <input
+                                            type="range"
+                                            min="10"
+                                            max={pointsBalance}
+                                            step="10"
+                                            value={pointsToRedeem}
+                                            onChange={(e) => setPointsToRedeem(parseInt(e.target.value))}
+                                            style={{ width: '100%', accentColor: '#3BB77E', marginBottom: '0.6rem' }}
+                                        />
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1rem', fontWeight: 700 }}>
+                                            <span style={{ color: '#64748b' }}>Resgatando: <span style={{ color: '#253D4E' }}>{pointsToRedeem} pontos</span></span>
+                                            <span style={{ color: '#3BB77E' }}>- R$ {(pointsToRedeem * 0.1).toFixed(2)}</span>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
                     {/* Coupon */}
                     <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
                         <h3 style={{ marginBottom: '1.2rem', color: '#333' }}>Cupom de Desconto</h3>
@@ -847,6 +929,13 @@ function CheckoutContent() {
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                                     <span>Total Frete</span>
                                     <span>R$ {totalDeliveryFee.toFixed(2)}</span>
+                                </div>
+                            )}
+
+                            {usePoints && (
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: '#3BB77E', fontSize: '0.95rem', fontWeight: 500 }}>
+                                    <span>Pontos ({pointsToRedeem} pts)</span>
+                                    <span>- R$ {pointsDiscount.toFixed(2)}</span>
                                 </div>
                             )}
 

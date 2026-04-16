@@ -29,12 +29,30 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
             return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
         }
 
-        const updateData: any = { status: body.status };
-        if (body.status === 'confirmed') updateData.confirmedAt = new Date();
-        if (body.status === 'completed') updateData.completedAt = new Date();
-        if (body.status === 'cancelled') {
+        // SECURITY: Role-based status transitions
+        // Customers can ONLY cancel. Partners can confirm, complete, cancel, or mark as no_show.
+        const targetStatus = body.status;
+        const userRole = session.user.role;
+
+        if (userRole === 'customer') {
+            if (targetStatus !== 'cancelled') {
+                return NextResponse.json({ 
+                    message: 'Clientes só podem cancelar agendamentos. Confirmações e finalizações são exclusivas do parceiro.' 
+                }, { status: 403 });
+            }
+        } else if (userRole === 'partner') {
+            const allowedPartnerStatuses = ['confirmed', 'completed', 'cancelled', 'no_show'];
+            if (!allowedPartnerStatuses.includes(targetStatus)) {
+                return NextResponse.json({ message: 'Status inválido para o parceiro' }, { status: 400 });
+            }
+        }
+
+        const updateData: any = { status: targetStatus };
+        if (targetStatus === 'confirmed') updateData.confirmedAt = new Date();
+        if (targetStatus === 'completed') updateData.completedAt = new Date();
+        if (targetStatus === 'cancelled') {
             updateData.cancelledAt = new Date();
-            updateData.cancelReason = body.cancelReason;
+            updateData.cancelReason = body.cancelReason || 'Cancelado pelo usuário';
         }
 
         const updated = await Appointment.findByIdAndUpdate(id, updateData, { new: true });

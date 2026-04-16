@@ -109,6 +109,7 @@ export default function ProductDetailPage() {
 
     const handleApplyReview = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!product) return;
         try {
             const res = await fetch('/api/reviews', {
                 method: 'POST',
@@ -220,14 +221,18 @@ export default function ProductDetailPage() {
                                 <Star
                                     key={i}
                                     size={17.04}
-                                    fill={i < Math.floor(safeRating) ? "#E3A653" : "none"}
-                                    stroke={i < Math.floor(safeRating) ? "none" : "#E3A653"}
+                                    fill={stats.totalReviews > 0 && i < Math.floor(stats.avgRating) ? "#E3A653" : "none"}
+                                    stroke="#E3A653"
                                 />
                             ))}
                         </div>
-                        <span className={styles.ratingValue}>{safeRating.toFixed(1)}</span>
+                        <span className={styles.ratingValue}>
+                            {stats.totalReviews > 0 ? stats.avgRating.toFixed(1) : "0.0"}
+                        </span>
                         <span className={styles.bullet}>•</span>
-                        <span className={styles.reviewsCount}>{stats.totalReviews} Avaliações</span>
+                        <span className={styles.reviewsCount}>
+                            {stats.totalReviews > 0 ? `${stats.totalReviews} Avaliações` : "Nenhuma avaliação"}
+                        </span>
                     </div>
 
                     <div className={styles.price}>

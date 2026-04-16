@@ -22,17 +22,16 @@ export async function POST(req: Request) {
         const signature = req.headers.get('x-abacatepay-signature');
         const secret = process.env.ABACATEPAY_WEBHOOK_SECRET;
 
-        // VERIFY SIGNATURE (Security Hardening)
-        if (secret) {
-            const isValid = signature && verifyWebhookSignature(rawBody, signature, secret);
-            if (!isValid) {
-                console.error('[Webhook] Signature Mismatch!');
-                console.error('- Header Signature:', signature);
-                console.error('- Secret used (first 4):', secret.substring(0, 4) + '...');
-                return NextResponse.json({ message: 'Invalid signature' }, { status: 401 });
-            }
-        } else {
-            console.warn('[Webhook] ABACATEPAY_WEBHOOK_SECRET not defined. Skipping verification.');
+        // VERIFY SIGNATURE (Security Hardening: Fail-Closed)
+        if (!secret) {
+            console.error('[Webhook] CRITICAL: ABACATEPAY_WEBHOOK_SECRET is not defined! Rejecting all webhooks for security.');
+            return NextResponse.json({ message: 'Server configuration error' }, { status: 500 });
+        }
+
+        const isValid = signature && verifyWebhookSignature(rawBody, signature, secret);
+        if (!isValid) {
+            console.error('[Webhook] Signature Mismatch!');
+            return NextResponse.json({ message: 'Invalid signature' }, { status: 401 });
         }
 
         const body = JSON.parse(rawBody);

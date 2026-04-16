@@ -10,6 +10,7 @@ import VetSidebar from '@/components/layout/VetSidebar';
 import ImageCropModal from '@/components/modals/ImageCropModal';
 import { Camera, MapPin, MessageCircle, FileText, User, Tag, Image as ImageIcon, CheckCircle, Settings } from 'lucide-react';
 import Image from 'next/image';
+import { maskPhone } from '@/utils/masks';
 import styles from './VetDashboard.module.css';
 
 export default function VetDashboard() {
@@ -394,7 +395,7 @@ export default function VetDashboard() {
                                             className={styles.input} 
                                             placeholder="(11) 99999-9999"
                                             value={formData.whatsapp}
-                                            onChange={e => handleInputChange('whatsapp', e.target.value)}
+                                            onChange={e => handleInputChange('whatsapp', maskPhone(e.target.value))}
                                         />
                                     </div>
                                 </div>

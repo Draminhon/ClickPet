@@ -28,14 +28,17 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
         console.log(`[Order Update] User: ${session.user.id}, Role: ${session.user.role}, Order: ${id}, Order Owner: ${existingOrder.userId}, Status: ${body.status}, Order Status: ${existingOrder.status}`);
 
+        // Admin check: admins have full access
+        if (session.user.role === 'admin') {
+            isAuthorized = true;
+        }
         // Partner check: must be the partner of the order
-        if (session.user.role === 'partner') {
+        else if (session.user.role === 'partner') {
             if (existingOrder.partnerId.toString() === session.user.id) {
                 isAuthorized = true;
             }
         }
         // Client/User check: must be the owner, cancelling, and order must be pending
-        // We relax the role check to allow 'user' or 'client' as long as they are NOT 'partner' and own the order
         else {
             if (existingOrder.userId.toString() === session.user.id &&
                 body.status === 'cancelled' &&

@@ -8,6 +8,8 @@ import Coupon from '@/models/Coupon';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]/route";
 import notificationService from '@/lib/notification-service';
+import { calculateDistance, calculateDeliveryFee } from '@/lib/distance';
+import loyaltyService from '@/lib/loyalty-service';
 
 export async function POST(req: Request) {
     try {
@@ -96,16 +98,66 @@ export async function POST(req: Request) {
             }
         }
 
-        // SECURITY: Ensure deliveryFee is non-negative and capped at a reasonable value
-        const deliveryFee = Math.max(0, Math.min(Number(body.deliveryFee) || 0, 1000)); 
-        const calculatedTotal = subtotal - serverCalculatedDiscount + deliveryFee;
+        // SECURITY: Recalculate delivery fee server-side. Never trust client-provided pricing.
+        const partner = await User.findById(firstPartnerId);
+        if (!partner) {
+            return NextResponse.json({ message: 'Parceiro não encontrado' }, { status: 404 });
+        }
+
+        let verifiedDeliveryFee = 0;
+        let verifiedDistance = 0;
+
+        if (!body.isPickup) {
+            const userCoords = body.address?.coordinates;
+            const shopCoords = partner.address?.coordinates?.coordinates;
+
+            if (userCoords && shopCoords && Array.isArray(userCoords) && Array.isArray(shopCoords)) {
+                verifiedDistance = calculateDistance(userCoords[1], userCoords[0], shopCoords[1], shopCoords[0]);
+                verifiedDeliveryFee = calculateDeliveryFee(
+                    verifiedDistance,
+                    partner.deliveryFeePerKm || 2,
+                    subtotal,
+                    partner.freeDeliveryMinimum || 0
+                );
+            } else {
+                // Fallback or error if coordinates are missing for delivery
+                console.warn('[ORDER] Missing coordinates for delivery calculation, using capped fallback');
+                verifiedDeliveryFee = Math.max(0, Math.min(Number(body.deliveryFee) || 0, 50)); 
+            }
+        }
+
+        // SECURITY: Validate and calculate Loyalty Points discount
+        let pointsDiscount = 0;
+        const requestedPoints = Math.floor(Number(body.pointsRedeemed) || 0);
+        
+        if (requestedPoints > 0) {
+            try {
+                const loyaltyAccount = await loyaltyService.getLoyaltyAccount(session.user.id);
+                if (loyaltyAccount.totalPoints < requestedPoints) {
+                    return NextResponse.json({ message: 'Pontos de fidelidade insuficientes' }, { status: 400 });
+                }
+                
+                // POINTS_TO_REAL is 0.1 according to loyalty-service (10 points = R$1)
+                pointsDiscount = requestedPoints * 0.1;
+                
+                // Ensure discount doesn't exceed subtotal
+                if (pointsDiscount > subtotal - serverCalculatedDiscount) {
+                    pointsDiscount = subtotal - serverCalculatedDiscount;
+                }
+            } catch (pError) {
+                console.error('[ORDER] Loyalty points verification failed:', pError);
+                return NextResponse.json({ message: 'Erro ao validar pontos de fidelidade' }, { status: 400 });
+            }
+        }
+
+        const calculatedTotal = subtotal - serverCalculatedDiscount - pointsDiscount + verifiedDeliveryFee;
 
         const orderData: any = {
             userId: session.user.id,
             items: verifiedItems,
             total: Math.max(0, calculatedTotal),
-            deliveryFee,
-            distance: body.distance,
+            deliveryFee: verifiedDeliveryFee,
+            distance: verifiedDistance || body.distance,
             isPickup: !!body.isPickup,
             status: 'pending',
             address: body.address ? {
@@ -118,7 +170,8 @@ export async function POST(req: Request) {
             } : undefined,
             coupon: verifiedCoupon,
             discount: serverCalculatedDiscount,
-            pointsRedeemed: body.pointsRedeemed || 0,
+            pointsRedeemed: requestedPoints,
+            pointsDiscount: pointsDiscount,
             paymentMethod: body.paymentMethod || 'cartao',
             // SECURITY: Never trust client paymentStatus — always start as pending
             paymentStatus: 'pending',
@@ -148,6 +201,11 @@ export async function POST(req: Request) {
                 { $inc: { usedCount: 1 } },
                 { new: true }
             );
+        }
+
+        // Deduct points after order creation is guaranteed
+        if (requestedPoints > 0) {
+            await loyaltyService.redeemPoints(session.user.id, requestedPoints);
         }
 
         return NextResponse.json(order, { status: 201 });

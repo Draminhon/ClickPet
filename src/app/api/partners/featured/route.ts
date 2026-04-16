@@ -44,9 +44,9 @@ export async function GET() {
                 // Veterinary Clinics (15)
                 { name: 'Vila dos Bichos', role: 'partner', shopLogo: 'https://images.unsplash.com/photo-1628009368231-7bb7cfcb0def?w=100&h=100&fit=crop', specialization: 'Clínica Veterinária' },
                 { name: 'Saúde Animal', role: 'partner', shopLogo: 'https://images.unsplash.com/photo-1599443015574-be5fe8a05783?w=100&h=100&fit=crop', specialization: 'Hospital 24h' },
-                { name: 'Dr. Pet Care', role: 'partner', shopLogo: 'https://images.unsplash.com/photo-1576201836106-ca1756a1dc3b?w=100&h=100&fit=crop', specialization: 'Veterinária Geral' },
-                { name: 'Gato e Sapato', role: 'partner', shopLogo: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=100&h=100&fit=crop', specialization: 'Clínica de Felinos' },
-                { name: 'Vet Life', role: 'partner', shopLogo: 'https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?w=100&h=100&fit=crop', specialization: 'Clínica Veterinária' },
+                { name: 'Dr. Pet Care', role: 'partner', shopLogo: 'https://images.unsplash.com/photo-1517849845537-4d257902454a?w=100&h=100&fit=crop', specialization: 'Veterinária Geral' },
+                { name: 'Mundo Pet', role: 'partner', shopLogo: 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=100&h=100&fit=crop', specialization: 'Pet Shop' },
+                { name: 'Hovet Central', role: 'partner', shopLogo: 'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=100&h=100&fit=crop', specialization: 'Hospital Veterinário' },
                 { name: 'Centro MedVet', role: 'partner', shopLogo: 'https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=100&h=100&fit=crop', specialization: 'Clínica Veterinária' },
                 { name: 'Pet Health', role: 'partner', shopLogo: 'https://images.unsplash.com/photo-1584132967334-10e028bd69f7?w=100&h=100&fit=crop', specialization: 'Hospital Veterinário' },
                 { name: 'Clínica Amigo', role: 'partner', shopLogo: 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?w=100&h=100&fit=crop', specialization: 'Veterinária' },

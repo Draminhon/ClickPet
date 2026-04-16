@@ -261,6 +261,7 @@
 }
 
 .imageButton {
+    display: block;
     width: 200px;
     height: 300px;
     border-radius: 16px;
@@ -268,6 +269,7 @@
     position: relative;
     cursor: pointer;
     transition: transform 0.3s ease;
+    flex-shrink: 0;
 }
 
 .imageButton:hover {
@@ -320,6 +322,7 @@
     }
     
     .juntosRight {
+        width: 100%;
         justify-content: center;
         flex-wrap: wrap;
     }

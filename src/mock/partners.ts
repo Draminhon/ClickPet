@@ -17,7 +17,7 @@ export const MOCK_PARTNERS = [
     },
     { 
         _id: 'mock-2', name: 'Canto das Aves', specialization: 'Aves & Gaiolas', 
-        shopLogo: 'https://images.unsplash.com/photo-1543466835-00a732f2c038?w=100&h=100&fit=crop',
+        shopLogo: 'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=100&h=100&fit=crop',
         address: { street: 'Rua Principal', city: 'Paracuru', coordinates: { type: 'Point', coordinates: [-39.0310, -3.4115] } }
     },
     { 

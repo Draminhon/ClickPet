@@ -39,7 +39,7 @@ const DEMO_PROMOS: Promotion[] = [
         id: '4',
         title: 'Brinquedos Diversos',
         tag: 'Promo',
-        image: 'https://images.unsplash.com/photo-1576201836106-ca1756a1dc3b?w=1000&h=400&fit=crop',
+        image: 'https://images.unsplash.com/photo-1576201836105-81186fab35ed?w=1000&h=400&fit=crop',
         link: '/search?category=Brinquedos'
     }
 ];

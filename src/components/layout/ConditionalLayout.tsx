@@ -19,7 +19,6 @@ export default function ConditionalLayout({ children }: { children: React.ReactN
                 {children}
             </main>
             {!isAuthPage && !isPartnerPage && !isAdminPage && <Footer />}
-            {!isAuthPage && !isPartnerPage && !isAdminPage && <MobileNav />}
         </div>
     );
 }

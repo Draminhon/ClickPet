@@ -7,7 +7,7 @@ import LoggedInClinicsCarousel from '@/components/home/LoggedInClinicsCarousel';
 import StoreGrid from '@/components/home/StoreGrid';
 import MissingAddressModal from '@/components/modals/MissingAddressModal';
 import { useLocation } from '@/context/LocationContext';
-import styles from './Home.module.css';
+import styles from '@/app/Home.module.css';
 
 interface LoggedInHomeContentProps {
     defaultPartners: any[];
@@ -138,7 +138,7 @@ export default function LoggedInHomeContent({ defaultPartners }: LoggedInHomeCon
     );
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', width: '100%', paddingLeft: '80px', marginTop: '40px', paddingRight: '80px' }}>
+        <div className={styles.contentWrapper} style={{ display: 'flex', flexDirection: 'column', marginTop: '40px' }}>
             
             {/* Trending Partners Carousel */}
             <h2 style={{ fontFamily: "'Baloo 2', sans-serif", fontWeight: 600, fontSize: '24px', color: '#272727', margin: '0' }}>

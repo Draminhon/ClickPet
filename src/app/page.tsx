@@ -77,7 +77,7 @@ export default async function HomePage() {
                     />
 
                     {/* CTA Row and Divider */}
-                    <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+                    <div className={styles.contentWrapper} style={{ display: 'flex', flexDirection: 'column' }}>
                         <Link href="/login" style={{ textDecoration: 'none' }}>
                             <div className={styles.ctaRow}>
                                 <div className={styles.ctaIconContainer}>

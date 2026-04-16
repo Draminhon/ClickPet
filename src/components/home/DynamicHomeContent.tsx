@@ -8,7 +8,7 @@ import LoggedInPromotionsCarousel from '@/components/home/LoggedInPromotionsCaro
 import LoggedInClinicsCarousel from '@/components/home/LoggedInClinicsCarousel';
 import StoreGrid from '@/components/home/StoreGrid';
 import { useLocation } from '@/context/LocationContext';
-import styles from './Home.module.css';
+import styles from '@/app/Home.module.css';
 
 interface DynamicHomeContentProps {
     defaultPartners: any[];
@@ -79,7 +79,7 @@ export default function DynamicHomeContent({ defaultPartners, defaultClinics }: 
     const clinicsOnly = nearbyPartners.filter(p => p.specialization?.match(/Veterinária|Hospital|Clínica/i));
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', width: '100%', paddingLeft: '80px', marginTop: '40px' }}>
+        <div className={styles.contentWrapper} style={{ display: 'flex', flexDirection: 'column', marginTop: '40px' }}>
             
             {petshopsOnly.length > 0 && (
                 <>

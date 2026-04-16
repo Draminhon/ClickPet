@@ -3,6 +3,31 @@
     flex-direction: column;
     gap: 64px;
     padding-bottom: 64px;
+    overflow-x: hidden;
+}
+
+.contentWrapper {
+    width: 100%;
+    max-width: 1480px;
+    margin: 0 auto;
+    padding: 0 80px;
+}
+
+@media (max-width: 1200px) {
+    .contentWrapper {
+        padding: 0 40px;
+    }
+}
+
+@media (max-width: 768px) {
+    .homeContainer {
+        gap: 40px;
+        padding-bottom: 40px;
+    }
+    
+    .contentWrapper {
+        padding: 0 20px;
+    }
 }
 
 .heroSection {
@@ -176,10 +201,16 @@
 }
 
 .pageDivider {
-    width: 1480px;
+    width: 100%;
     height: 1px;
     background-color: #DDE1E6;
     border: none;
+}
+
+@media (max-width: 768px) {
+    .ctaText {
+        font-size: 14px;
+    }
 }
 
 .juntosSection {
@@ -204,21 +235,21 @@
 }
 
 .juntosPart1 {
-    font-size: 64px;
+    font-size: clamp(40px, 8vw, 64px);
     font-weight: 700;
     color: #272727;
     line-height: 1;
 }
 
 .juntosComma {
-    font-size: 72px;
+    font-size: clamp(48px, 10vw, 72px);
     font-weight: 700;
     color: #272727;
 }
 
 .juntosPart2 {
-    font-size: 80px;
-    font-weight: 800; /* Extrabold */
+    font-size: clamp(48px, 10vw, 80px);
+    font-weight: 800;
     color: #272727;
     line-height: 1;
     margin-top: -5px;
@@ -264,3 +295,65 @@
     inset: 0;
     background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 60%);
 }
+
+@media (max-width: 1200px) {
+    .juntosSection {
+        padding: 0 40px;
+    }
+    
+    .imageButton {
+        width: 160px;
+        height: 240px;
+    }
+}
+
+@media (max-width: 992px) {
+    .juntosSection {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 32px;
+    }
+    
+    .juntosLeft {
+        align-items: center;
+    }
+    
+    .juntosRight {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 768px) {
+    .juntosSection {
+        padding: 0 20px;
+    }
+    
+    .imageButton {
+        width: 140px;
+        height: 210px;
+    }
+    
+    .imageButtonLabel {
+        font-size: 16px;
+        bottom: 16px;
+        left: 12px;
+        right: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .juntosRight {
+        gap: 12px;
+    }
+    
+    .imageButton {
+        width: calc(50% - 6px);
+        height: 200px;
+    }
+    
+    .imageButton:last-child {
+        width: 100%;
+    }
+}

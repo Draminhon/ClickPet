@@ -60,12 +60,17 @@ function CheckoutContent() {
     const [pointsBalance, setPointsBalance] = useState(0);
     const [usePoints, setUsePoints] = useState(false);
     const [pointsToRedeem, setPointsToRedeem] = useState(0);
+    const [userHasRequiredDocs, setUserHasRequiredDocs] = useState(false);
 
     useEffect(() => {
         // Fetch user addresses from profile
         fetch('/api/profile')
             .then(res => res.json())
             .then(data => {
+                if (data) {
+                    setUserHasRequiredDocs(!!data.cpf && !!data.phone);
+                }
+                
                 if (data && data.deliveryAddresses && data.deliveryAddresses.length > 0) {
                     setDeliveryAddresses(data.deliveryAddresses);
                     setSelectedAddressIndex(0);
@@ -284,6 +289,11 @@ function CheckoutContent() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (!userHasRequiredDocs) {
+            setShowMissingDocModal(true);
+            return;
+        }
 
         // Validate each partner
         for (const pId of partnerIds) {

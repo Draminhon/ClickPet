@@ -53,6 +53,10 @@ export default async function HomePage() {
         redirect('/partner/dashboard');
     }
 
+    if (session?.user?.role === 'veterinarian') {
+        redirect('/vet/dashboard');
+    }
+
     const [dbPartners, dbClinics] = await Promise.all([
         getFeaturedPartners(false),
         getFeaturedPartners(true)

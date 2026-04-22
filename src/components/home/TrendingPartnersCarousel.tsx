@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { BadgeCheck } from 'lucide-react';
@@ -26,6 +26,36 @@ interface TrendingPartnersCarouselProps {
 export default function TrendingPartnersCarousel({ partners }: TrendingPartnersCarouselProps) {
     const scrollRef = useRef<HTMLDivElement>(null);
     const [isPaused, setIsPaused] = useState(false);
+    const [isDragging, setIsDragging] = useState(false);
+    const startX = useRef(0);
+    const scrollLeft = useRef(0);
+
+    const handleMouseDown = (e: React.MouseEvent) => {
+        setIsDragging(true);
+        setIsPaused(true);
+        startX.current = e.pageX - (scrollRef.current?.offsetLeft || 0);
+        scrollLeft.current = scrollRef.current?.scrollLeft || 0;
+    };
+
+    const handleMouseLeave = () => {
+        setIsDragging(false);
+        setIsPaused(false);
+    };
+
+    const handleMouseUp = () => {
+        setIsDragging(false);
+        setIsPaused(false);
+    };
+
+    const handleMouseMove = (e: React.MouseEvent) => {
+        if (!isDragging) return;
+        e.preventDefault();
+        const x = e.pageX - (scrollRef.current?.offsetLeft || 0);
+        const walk = (x - startX.current) * 2;
+        if (scrollRef.current) {
+            scrollRef.current.scrollLeft = scrollLeft.current - walk;
+        }
+    };
 
     useEffect(() => {
         const container = scrollRef.current;
@@ -33,10 +63,19 @@ export default function TrendingPartnersCarousel({ partners }: TrendingPartnersC
 
         let animationFrame: number;
         
+        let accumulator = 0;
+        
         // Auto-scroll logic
         const scroll = () => {
-            if (!isPaused && container) {
-                container.scrollLeft += 0.6; // Speed adjustment
+            if (!isPaused && !isDragging && container) {
+                // CONFIGURAÇÃO DE VELOCIDADE:
+                // Altere o valor abaixo (ex: 0.2). Valores maiores = mais rápido.
+                accumulator += 0.5; 
+                
+                if (accumulator >= 1) {
+                    container.scrollLeft += Math.floor(accumulator);
+                    accumulator -= Math.floor(accumulator);
+                }
                 
                 // Infinite loop reset
                 // Since we extended the array (partners * 4), we reset when halfway
@@ -71,9 +110,13 @@ export default function TrendingPartnersCarousel({ partners }: TrendingPartnersC
         <section 
             className={styles.carouselContainer}
             onMouseEnter={() => setIsPaused(true)}
-            onMouseLeave={() => setIsPaused(false)}
+            onMouseLeave={handleMouseLeave}
+            onMouseDown={handleMouseDown}
+            onMouseUp={handleMouseUp}
+            onMouseMove={handleMouseMove}
+            style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
         >
-            <div className={styles.carouselTrack} ref={scrollRef}>
+            <div className={styles.carouselTrack} ref={scrollRef} style={isDragging ? { pointerEvents: 'none' } : {}}>
                 {partners.map((partner, index) => {
                     const shopType = partner.specialization || 'Petshop';
                     const distanceStr = partner.distance != null 

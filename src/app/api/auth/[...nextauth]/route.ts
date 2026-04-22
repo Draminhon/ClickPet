@@ -121,7 +121,7 @@ export const authOptions: NextAuthOptions = {
                         const { cookies } = await import("next/headers");
                         const cookieStore = await cookies();
                         const intent = cookieStore.get('clickpet_register_intent')?.value;
-                        const roleToAssign = intent === 'partner' ? 'partner' : 'customer';
+                        const roleToAssign = (intent === 'partner' || intent === 'veterinarian') ? intent : 'customer';
 
                         dbUser = await User.create({
                             name: user.name,

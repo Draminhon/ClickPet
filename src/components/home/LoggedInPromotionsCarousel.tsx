@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import styles from './LoggedInPromotionsCarousel.module.css';
@@ -47,6 +47,36 @@ const DEMO_PROMOS: Promotion[] = [
 export default function LoggedInPromotionsCarousel() {
     const scrollRef = useRef<HTMLDivElement>(null);
     const [isPaused, setIsPaused] = useState(false);
+    const [isDragging, setIsDragging] = useState(false);
+    const startX = useRef(0);
+    const scrollLeft = useRef(0);
+
+    const handleMouseDown = (e: React.MouseEvent) => {
+        setIsDragging(true);
+        setIsPaused(true);
+        startX.current = e.pageX - (scrollRef.current?.offsetLeft || 0);
+        scrollLeft.current = scrollRef.current?.scrollLeft || 0;
+    };
+
+    const handleMouseLeave = () => {
+        setIsDragging(false);
+        setIsPaused(false);
+    };
+
+    const handleMouseUp = () => {
+        setIsDragging(false);
+        setIsPaused(false);
+    };
+
+    const handleMouseMove = (e: React.MouseEvent) => {
+        if (!isDragging) return;
+        e.preventDefault();
+        const x = e.pageX - (scrollRef.current?.offsetLeft || 0);
+        const walk = (x - startX.current) * 2;
+        if (scrollRef.current) {
+            scrollRef.current.scrollLeft = scrollLeft.current - walk;
+        }
+    };
 
     useEffect(() => {
         const container = scrollRef.current;
@@ -54,10 +84,19 @@ export default function LoggedInPromotionsCarousel() {
 
         let animationFrame: number;
         
+        let accumulator = 0;
+        
         // Auto-scroll logic
         const scroll = () => {
-            if (!isPaused && container) {
-                container.scrollLeft += 0.8; // Slightly faster for promos
+            if (!isPaused && !isDragging && container) {
+                // CONFIGURAÇÃO DE VELOCIDADE:
+                // Altere o valor abaixo (ex: 0.3). Valores maiores = mais rápido.
+                accumulator += 0.5; 
+                
+                if (accumulator >= 1) {
+                    container.scrollLeft += Math.floor(accumulator);
+                    accumulator -= Math.floor(accumulator);
+                }
                 
                 // Infinite loop reset
                 if (container.scrollLeft >= container.scrollWidth / 2) {
@@ -94,9 +133,13 @@ export default function LoggedInPromotionsCarousel() {
                 className={styles.carouselWrapper}
                 ref={scrollRef}
                 onMouseEnter={() => setIsPaused(true)}
-                onMouseLeave={() => setIsPaused(false)}
+                onMouseLeave={handleMouseLeave}
+                onMouseDown={handleMouseDown}
+                onMouseUp={handleMouseUp}
+                onMouseMove={handleMouseMove}
+                style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
             >
-                <div className={styles.carouselTrack}>
+                <div className={styles.carouselTrack} style={isDragging ? { pointerEvents: 'none' } : {}}>
                     {extendedPromos.map((promo, index) => (
                         <Link 
                             href={promo.link} 

@@ -109,16 +109,17 @@ export default function ProductDetailPage() {
 
     const handleApplyReview = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!product) return;
+        const p = product;
+        if (!p) return;
         try {
             const res = await fetch('/api/reviews', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     productId: id,
-                    partnerId: typeof product.partnerId === 'object'
-                        ? product.partnerId?._id?.toString()
-                        : product.partnerId?.toString(),
+                    partnerId: typeof p.partnerId === 'object'
+                        ? p.partnerId?._id?.toString()
+                        : p.partnerId?.toString(),
                     rating: newReview.rating,
                     comment: newReview.comment
                 })
@@ -148,7 +149,8 @@ export default function ProductDetailPage() {
     const safeSalesCount = product.salesCount ?? 0;
 
     const handleAddToCart = () => {
-        if (!product) return;
+        const p = product;
+        if (!p) return;
 
         // AUTH CHECK FOR GUESTS
         if (!session) {
@@ -157,20 +159,20 @@ export default function ProductDetailPage() {
         }
 
         // partnerId may be populated (object) or a raw string
-        const pid = typeof product.partnerId === 'object' 
-            ? product.partnerId?._id?.toString() || product.partnerId?.toString()
-            : product.partnerId?.toString();
-        const shopName = typeof product.partnerId === 'object' 
-            ? product.partnerId?.name || 'Petshop'
+        const pid = typeof p.partnerId === 'object' 
+            ? p.partnerId?._id?.toString() || p.partnerId?.toString()
+            : p.partnerId?.toString();
+        const shopName = typeof p.partnerId === 'object' 
+            ? p.partnerId?.name || 'Petshop'
             : 'Petshop';
         addToCart({
-            id: product._id,
-            title: product.title,
+            id: p._id,
+            title: p.title,
             price: currentPrice,
             shopName,
-            image: product.image,
-            productType: product.productType || 'Produto',
-            subCategory: product.subCategory || 'Geral',
+            image: p.image,
+            productType: p.productType || 'Produto',
+            subCategory: p.subCategory || 'Geral',
             selectedWeight: selectedWeight,
             partnerId: pid,
         }, quantity);

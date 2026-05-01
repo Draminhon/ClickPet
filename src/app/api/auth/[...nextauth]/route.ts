@@ -175,6 +175,9 @@ export const authOptions: NextAuthOptions = {
                             }
                             const a = dbUser.address;
                             token.isProfileComplete = !!(dbUser.cnpj && dbUser.phone && a?.street && a?.number && a?.city && a?.neighborhood && (a?.zip || a?.zipCode));
+                        } else if (dbUser.role === 'veterinarian') {
+                            const a = dbUser.address;
+                            token.isProfileComplete = !!(dbUser.crmv && dbUser.specialization && dbUser.whatsapp && a?.street && a?.number && a?.city && a?.neighborhood && a?.zip);
                         }
                     }
                 } else {
@@ -191,6 +194,10 @@ export const authOptions: NextAuthOptions = {
                         }
                         const a = dbUser?.address;
                         token.isProfileComplete = !!(dbUser?.cnpj && dbUser?.phone && a?.street && a?.number && a?.city && a?.neighborhood && (a?.zip || a?.zipCode));
+                    } else if (user.role === 'veterinarian') {
+                        const dbUser = await User.findById(user.id).lean() as any;
+                        const a = dbUser?.address;
+                        token.isProfileComplete = !!(dbUser?.crmv && dbUser?.specialization && dbUser?.whatsapp && a?.street && a?.number && a?.city && a?.neighborhood && a?.zip);
                     }
                 }
             } else if (token.id) {
@@ -225,6 +232,9 @@ export const authOptions: NextAuthOptions = {
                             }
                             const a = dbUser.address;
                             token.isProfileComplete = !!(dbUser.cnpj && dbUser.phone && a?.street && a?.number && a?.city && a?.neighborhood && (a?.zip || a?.zipCode));
+                        } else if (dbUser.role === 'veterinarian') {
+                            const a = dbUser.address;
+                            token.isProfileComplete = !!(dbUser.crmv && dbUser.specialization && dbUser.whatsapp && a?.street && a?.number && a?.city && a?.neighborhood && a?.zip);
                         }
                     } else {
                         // Quick check only for token version and role persistence

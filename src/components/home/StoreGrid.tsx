@@ -17,46 +17,62 @@ interface Partner {
     isOpen?: boolean;
     rating?: number;
     reviewCount?: number;
+    role?: string;
 }
 
 interface StoreGridProps {
     partners: Partner[];
+    allPartners?: Partner[];
     limit?: number;
     title?: string;
     hideViewMore?: boolean;
 }
 
-export default function StoreGrid({ partners, limit, title = "Lojas", hideViewMore = false }: StoreGridProps) {
+export default function StoreGrid({ partners, allPartners, limit, title = "Lojas", hideViewMore = false }: StoreGridProps) {
     const displayLimit = limit || 15;
     
     // States for filter chips
-    const [isFreeDelivery, setIsFreeDelivery] = useState(true);
+    const [isAll, setIsAll] = useState(true);
     const [isVet, setIsVet] = useState(false);
     const [isPetshop, setIsPetshop] = useState(false);
     
     // Dropdown visibility states
     const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
+    // Helper to detect if a partner is a vet/clinic
+    const isClinicOrVet = (p: Partner) => 
+        p.role === 'veterinarian' || !!p.specialization?.match(/Veterinária|Hospital|Clínica/i);
+
     // Filter Logic
-    const filteredPartners = partners.filter(p => {
-        // Free delivery mock logic: Assume they all have free delivery for mock or check later
-        // Veterinary vs Petshop exclusive filters
-        if (isVet && !p.specialization?.match(/Veterinária|Hospital|Clínica/i)) return false;
-        if (isPetshop && p.specialization?.match(/Veterinária|Hospital|Clínica/i)) return false;
+    // "Todos" = show everything from allPartners
+    // "Veterinário" = show only vets from allPartners
+    // "Petshop" = show only petshops from partners
+    // No filter = show only petshops from partners (default)
+    const sourceList = (isAll || isVet) ? (allPartners || partners) : partners;
+    const filteredPartners = sourceList.filter(p => {
+        if (isAll) return true; // Show everything
+        if (isVet && !isClinicOrVet(p)) return false;
+        if (isPetshop && isClinicOrVet(p)) return false;
         return true;
     });
 
     const displayedPartners = filteredPartners.slice(0, displayLimit);
 
     const toggleFilter = (type: string) => {
-        if (type === 'delivery') setIsFreeDelivery(!isFreeDelivery);
+        if (type === 'all') {
+            setIsAll(true);
+            setIsVet(false);
+            setIsPetshop(false);
+        }
         if (type === 'vet') {
             setIsVet(!isVet);
-            if (!isVet) setIsPetshop(false); // Exclusivity
+            setIsAll(false);
+            if (!isVet) setIsPetshop(false);
         }
         if (type === 'petshop') {
             setIsPetshop(!isPetshop);
-            if (!isPetshop) setIsVet(false); // Exclusivity
+            setIsAll(false);
+            if (!isPetshop) setIsVet(false);
         }
     };
 
@@ -91,8 +107,8 @@ export default function StoreGrid({ partners, limit, title = "Lojas", hideViewMo
                 </div>
 
                 {/* Toggles */}
-                <button className={isFreeDelivery ? styles.chipActive : styles.chip} onClick={() => toggleFilter('delivery')}>
-                    <span className={isFreeDelivery ? styles.chipTextActive : styles.chipText}>Entrega Grátis</span>
+                <button className={isAll ? styles.chipActive : styles.chip} onClick={() => toggleFilter('all')}>
+                    <span className={isAll ? styles.chipTextActive : styles.chipText}>Todos</span>
                 </button>
                 
                 <button className={isVet ? styles.chipActive : styles.chip} onClick={() => toggleFilter('vet')}>
@@ -145,11 +161,12 @@ export default function StoreGrid({ partners, limit, title = "Lojas", hideViewMo
                     const partnerRating = (partner.rating ?? 0).toFixed(1);
                     const partnerReviewCount = partner.reviewCount ?? 0;
                     const isOpen = partner.workingHours ? isShopOpen(partner.workingHours) : false;
-                    const isClinic = shopType.match(/Veterinária|Hospital|Clínica/i) !== null;
+                    const isClinic = isClinicOrVet(partner);
                     const specificInfoString = isClinic ? 'Especializado' : '30-45 min';
+                    const linkHref = isClinic ? `/clinica/${partner._id}` : `/loja/${partner._id}`;
 
                     return (
-                        <Link href={`/loja/${partner._id}`} key={partner._id} className={styles.card}>
+                        <Link href={linkHref} key={partner._id} className={styles.card}>
                             <div className={styles.imageWrapper}>
                                 <Image 
                                     src={partner.shopLogo || 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?w=100&h=100&fit=crop'} 
@@ -167,7 +184,7 @@ export default function StoreGrid({ partners, limit, title = "Lojas", hideViewMo
                                 </div>
 
                                 <div className={styles.infoLine}>
-                                    <span>{shopType}</span>
+                                    <span>{isClinic ? 'Veterinário' : shopType}</span>
                                     <span className={styles.bullet}>•</span>
                                     <span>{distanceStr}</span>
                                 </div>
@@ -178,11 +195,17 @@ export default function StoreGrid({ partners, limit, title = "Lojas", hideViewMo
                                 </div>
 
                                 <div className={styles.statusLine}>
-                                    <span>{specificInfoString}</span>
-                                    <span className={styles.bullet}>•</span>
-                                    <span className={isOpen ? styles.statusOpen : styles.statusClosed}>
-                                        {isOpen ? 'Aberto' : 'Fechado'}
-                                    </span>
+                                    {isClinic ? (
+                                        <span style={{ color: '#ED802A', fontWeight: 400, fontSize: '14px' }}>{shopType}</span>
+                                    ) : (
+                                        <>
+                                            <span>{specificInfoString}</span>
+                                            <span className={styles.bullet}>•</span>
+                                            <span className={isOpen ? styles.statusOpen : styles.statusClosed}>
+                                                {isOpen ? 'Aberto' : 'Fechado'}
+                                            </span>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         </Link>

@@ -174,7 +174,7 @@ export default function LoggedInHomeContent({ defaultPartners }: LoggedInHomeCon
                     Todas as lojas
                 </h2>
                 {!hasLocation ? <NoLocationMessage /> : petshopsOnly.length > 0 ? (
-                    <StoreGrid partners={petshopsOnly} />
+                    <StoreGrid partners={petshopsOnly} allPartners={nearbyPartners} />
                 ) : (
                     <div style={{ textAlign: 'center', padding: '40px 20px', backgroundColor: '#fff', borderRadius: '12px', margin: '20px 0', color: '#7E7E7E' }}>
                         <p style={{ fontSize: '16px', fontWeight: 500 }}>Nenhuma loja encontrada na sua região no momento.</p>

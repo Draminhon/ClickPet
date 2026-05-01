@@ -104,7 +104,7 @@ export default function DynamicHomeContent({ defaultPartners, defaultClinics }: 
                 </div>
             )}
 
-            <StoreGrid partners={nearbyPartners} />
+            <StoreGrid partners={petshopsOnly} allPartners={nearbyPartners} />
         </div>
     );
 }

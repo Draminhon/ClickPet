@@ -14,12 +14,14 @@ import { maskPhone } from '@/utils/masks';
 import styles from './VetDashboard.module.css';
 
 export default function VetDashboard() {
-    const { data: session } = useSession();
+    const { data: session, update: updateSession } = useSession();
     const { showToast } = useToast();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [isDirty, setIsDirty] = useState(false);
     const [activeTab, setActiveTab] = useState('overview');
+    const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+    const [validationErrors, setValidationErrors] = useState<string[]>([]);
     
     // Cropping state
     const [cropModalOpen, setCropModalOpen] = useState(false);
@@ -50,10 +52,10 @@ export default function VetDashboard() {
     });
 
     useEffect(() => {
-        if (session) {
+        if (session && loading) {
             fetchProfile();
         }
-    }, [session]);
+    }, [session, loading]);
 
     // Warning for unsaved changes
     useEffect(() => {
@@ -68,7 +70,38 @@ export default function VetDashboard() {
         return () => window.removeEventListener('beforeunload', handleBeforeUnload);
     }, [isDirty]);
 
+    // Check for incomplete profile to show welcome modal
+    useEffect(() => {
+        if (!loading && session?.user) {
+            const isComplete = (session.user as any).isProfileComplete;
+            const hasSeenModal = sessionStorage.getItem('vet_welcome_modal_seen');
+            
+            // Local check to see if current formData is also complete
+            const isLocalComplete = !!(
+                formData.crmv && 
+                formData.specialization && 
+                formData.whatsapp && 
+                formData.address.street && 
+                formData.address.city && 
+                formData.address.zip
+            );
+
+            if (isComplete === false && !isLocalComplete && !hasSeenModal) {
+                setShowWelcomeModal(true);
+            } else if (isLocalComplete) {
+                // If they just filled everything, hide it
+                setShowWelcomeModal(false);
+            }
+        }
+    }, [loading, session, formData]);
+
+    const handleCloseWelcomeModal = () => {
+        setShowWelcomeModal(false);
+        sessionStorage.setItem('vet_welcome_modal_seen', 'true');
+    };
+
     const fetchProfile = async () => {
+        if (!loading && !isDirty) setLoading(true);
         try {
             const res = await fetch('/api/profile');
             const data = await res.json();
@@ -180,9 +213,44 @@ export default function VetDashboard() {
             return { ...prev, [field]: value };
         });
         setIsDirty(true);
+        // Remove from validation errors as the user types
+        if (validationErrors.includes(field)) {
+            setValidationErrors(prev => prev.filter(err => err !== field));
+        }
+    };
+
+    const validateForm = () => {
+        const errors: string[] = [];
+        if (!formData.name) errors.push('name');
+        if (!formData.crmv) errors.push('crmv');
+        if (!formData.specialization) errors.push('specialization');
+        if (!formData.whatsapp) errors.push('whatsapp');
+        if (!formData.address.street) errors.push('address.street');
+        if (!formData.address.number) errors.push('address.number');
+        if (!formData.address.neighborhood) errors.push('address.neighborhood');
+        if (!formData.address.city) errors.push('address.city');
+        if (!formData.address.zip) errors.push('address.zip');
+        
+        setValidationErrors(errors);
+        return errors;
     };
 
     const handleSave = async () => {
+        const errors = validateForm();
+        
+        if (errors.length > 0) {
+            showToast('Preencha os campos obrigatórios marcados em vermelho.', 'error');
+            
+            // Switch to the correct tab for the first error
+            const firstError = errors[0];
+            if (firstError.startsWith('address')) {
+                setActiveTab('location');
+            } else {
+                setActiveTab('profile');
+            }
+            return;
+        }
+
         setSaving(true);
         try {
             const payload = {
@@ -205,6 +273,8 @@ export default function VetDashboard() {
             if (res.ok) {
                 showToast('Perfil atualizado com sucesso!', 'success');
                 setIsDirty(false);
+                // Refresh session to update isProfileComplete status
+                updateSession();
             } else {
                 const errData = await res.json();
                 throw new Error(errData.message || 'Falha ao salvar');
@@ -238,7 +308,6 @@ export default function VetDashboard() {
                                 {activeTab === 'overview' && 'Painel Geral'}
                                 {activeTab === 'profile' && 'Meu Perfil Profissional'}
                                 {activeTab === 'location' && 'Localização do Consultório'}
-                                {activeTab === 'settings' && 'Configurações da Conta'}
                             </h1>
                             <p style={{ color: '#7E7E7E', fontSize: '14px', marginTop: '5px' }}>
                                 Gerencie suas informações e visibilidade na plataforma.
@@ -247,7 +316,7 @@ export default function VetDashboard() {
                         {isDirty && <span className={styles.unsavedBadge}>Alterações não salvas</span>}
                     </div>
 
-                    {activeTab === 'overview' && (
+                    <div style={{ display: activeTab === 'overview' ? 'block' : 'none' }}>
                         <div className={styles.overviewGrid}>
                             <div className={styles.profileSection} style={{ marginBottom: '60px' }}>
                                 {/* Banner AREA */}
@@ -337,9 +406,9 @@ export default function VetDashboard() {
                                 </div>
                             </div>
                         </div>
-                    )}
+                    </div>
 
-                    {activeTab === 'profile' && (
+                    <div style={{ display: activeTab === 'profile' ? 'block' : 'none' }}>
                         <div className={styles.formGrid}>
                             <div className={styles.leftCol}>
                                 <div className={styles.card}>
@@ -348,7 +417,7 @@ export default function VetDashboard() {
                                     <div className={styles.inputGroup}>
                                         <label className={styles.label}>Nome Profissional/Clínica</label>
                                         <input 
-                                            className={styles.input} 
+                                            className={`${styles.input} ${validationErrors.includes('name') ? styles.inputError : ''}`} 
                                             value={formData.name}
                                             onChange={e => handleInputChange('name', e.target.value)}
                                         />
@@ -357,7 +426,7 @@ export default function VetDashboard() {
                                     <div className={styles.inputGroup}>
                                         <label className={styles.label}>CRMV</label>
                                         <input 
-                                            className={styles.input} 
+                                            className={`${styles.input} ${validationErrors.includes('crmv') ? styles.inputError : ''}`} 
                                             placeholder="Ex: 12345-SP"
                                             value={formData.crmv}
                                             onChange={e => handleInputChange('crmv', e.target.value)}
@@ -367,8 +436,8 @@ export default function VetDashboard() {
                                     <div className={styles.inputGroup}>
                                         <label className={styles.label}>Especialidade Principal</label>
                                         <input 
-                                            className={styles.input} 
-                                            placeholder="Ex: Dermatologia, Cirurgia, Clínica Geral"
+                                            className={`${styles.input} ${validationErrors.includes('specialization') ? styles.inputError : ''}`} 
+                                            placeholder="Ex: Dermatologia, Ortopedia"
                                             value={formData.specialization}
                                             onChange={e => handleInputChange('specialization', e.target.value)}
                                         />
@@ -388,11 +457,42 @@ export default function VetDashboard() {
 
                             <div className={styles.rightCol}>
                                 <div className={styles.card}>
+                                    <h3 className={styles.sectionTitle}><ImageIcon size={20} /> Fotos do Perfil</h3>
+                                    <div className={styles.settingsImageGrid} style={{ gridTemplateColumns: '1fr', gap: '20px' }}>
+                                        <div className={styles.imageEditCard} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '15px' }}>
+                                            <label className={styles.label}>Foto de Perfil</label>
+                                            <div className={styles.avatarPreviewGroup} style={{ flexDirection: 'column', gap: '10px' }}>
+                                                <div className={styles.avatarCircle} style={{ width: '100px', height: '100px' }}>
+                                                    {formData.image ? <Image src={formData.image} alt="Avatar" fill /> : <User size={50} />}
+                                                </div>
+                                                <label className={styles.uploadBtn} style={{ padding: '6px 15px', fontSize: '12px' }}>
+                                                    Alterar Foto
+                                                    <input type="file" hidden accept="image/*" onChange={e => handleImageChange(e, 'image')} />
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <div className={styles.imageEditCard} style={{ padding: '15px' }}>
+                                            <label className={styles.label}>Banner da Clínica</label>
+                                            <div className={styles.bannerPreviewGroup} style={{ marginTop: '10px' }}>
+                                                <div className={styles.bannerRect} style={{ height: '80px' }}>
+                                                    {formData.bannerImage ? <Image src={formData.bannerImage} alt="Banner" fill /> : <ImageIcon size={30} />}
+                                                </div>
+                                                <label className={styles.uploadBtn} style={{ padding: '6px 15px', fontSize: '12px' }}>
+                                                    Alterar Banner
+                                                    <input type="file" hidden accept="image/*" onChange={e => handleImageChange(e, 'bannerImage')} />
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className={styles.card}>
                                     <h3 className={styles.sectionTitle}><MessageCircle size={20} /> Contato</h3>
                                     <div className={styles.inputGroup}>
                                         <label className={styles.label}>WhatsApp Professional</label>
                                         <input 
-                                            className={styles.input} 
+                                            className={`${styles.input} ${validationErrors.includes('whatsapp') ? styles.inputError : ''}`} 
                                             placeholder="(11) 99999-9999"
                                             value={formData.whatsapp}
                                             onChange={e => handleInputChange('whatsapp', maskPhone(e.target.value))}
@@ -408,9 +508,9 @@ export default function VetDashboard() {
                                 </button>
                             </div>
                         </div>
-                    )}
+                    </div>
 
-                    {activeTab === 'location' && (
+                    <div style={{ display: activeTab === 'location' ? 'block' : 'none' }}>
                         <div className={styles.formGrid}>
                             <div className={styles.leftCol}>
                                 <div className={styles.card}>
@@ -420,7 +520,7 @@ export default function VetDashboard() {
                                         <div className={styles.inputGroup}>
                                             <label className={styles.label}>CEP</label>
                                             <input 
-                                                className={styles.input} 
+                                                className={`${styles.input} ${validationErrors.includes('address.zip') ? styles.inputError : ''}`} 
                                                 placeholder="00000-000"
                                                 value={formData.address.zip}
                                                 onChange={e => handleInputChange('address.zip', e.target.value)}
@@ -441,8 +541,8 @@ export default function VetDashboard() {
                                         <div className={styles.inputGroup}>
                                             <label className={styles.label}>Logradouro (Rua/Av)</label>
                                             <input 
-                                                className={styles.input} 
-                                                placeholder="Nome da rua"
+                                                className={`${styles.input} ${validationErrors.includes('address.street') ? styles.inputError : ''}`} 
+                                                placeholder="Rua, Av..."
                                                 value={formData.address.street}
                                                 onChange={e => handleInputChange('address.street', e.target.value)}
                                             />
@@ -450,7 +550,7 @@ export default function VetDashboard() {
                                         <div className={styles.inputGroup}>
                                             <label className={styles.label}>Número</label>
                                             <input 
-                                                className={styles.input} 
+                                                className={`${styles.input} ${validationErrors.includes('address.number') ? styles.inputError : ''}`} 
                                                 placeholder="123"
                                                 value={formData.address.number}
                                                 onChange={e => handleInputChange('address.number', e.target.value)}
@@ -462,7 +562,7 @@ export default function VetDashboard() {
                                         <div className={styles.inputGroup}>
                                             <label className={styles.label}>Bairro</label>
                                             <input 
-                                                className={styles.input} 
+                                                className={`${styles.input} ${validationErrors.includes('address.neighborhood') ? styles.inputError : ''}`} 
                                                 placeholder="Bairro"
                                                 value={formData.address.neighborhood}
                                                 onChange={e => handleInputChange('address.neighborhood', e.target.value)}
@@ -471,7 +571,7 @@ export default function VetDashboard() {
                                         <div className={styles.inputGroup}>
                                             <label className={styles.label}>Cidade</label>
                                             <input 
-                                                className={styles.input} 
+                                                className={`${styles.input} ${validationErrors.includes('address.city') ? styles.inputError : ''}`} 
                                                 placeholder="Cidade"
                                                 value={formData.address.city}
                                                 onChange={e => handleInputChange('address.city', e.target.value)}
@@ -515,48 +615,7 @@ export default function VetDashboard() {
                                 </div>
                             </div>
                         </div>
-                    )}
-
-                    {activeTab === 'settings' && (
-                        <div className={styles.card}>
-                            <h3 className={styles.sectionTitle}><Settings size={20} /> Ajustes de Imagens</h3>
-                            <p style={{ color: '#7E7E7E', marginBottom: '30px' }}>Personalize o banner e a foto que aparecem para os seus clientes.</p>
-
-                            <div className={styles.settingsImageGrid}>
-                                <div className={styles.imageEditCard} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                    <label className={styles.label} style={{ width: '100%', textAlign: 'center' }}>Foto de Perfil</label>
-                                    <div className={styles.avatarPreviewGroup} style={{ flexDirection: 'column', gap: '15px' }}>
-                                        <div className={styles.avatarCircle} style={{ width: '120px', height: '120px' }}>
-                                            {formData.image ? <Image src={formData.image} alt="Avatar" fill /> : <User size={60} />}
-                                        </div>
-                                        <label className={styles.uploadBtn}>
-                                            Alterar Foto
-                                            <input type="file" hidden accept="image/*" onChange={e => handleImageChange(e, 'image')} />
-                                        </label>
-                                    </div>
-                                </div>
-
-                                <div className={styles.imageEditCard}>
-                                    <label className={styles.label}>Banner da Clínica</label>
-                                    <div className={styles.bannerPreviewGroup}>
-                                        <div className={styles.bannerRect}>
-                                            {formData.bannerImage ? <Image src={formData.bannerImage} alt="Banner" fill /> : <ImageIcon size={40} />}
-                                        </div>
-                                        <label className={styles.uploadBtn}>
-                                            Alterar Banner
-                                            <input type="file" hidden accept="image/*" onChange={e => handleImageChange(e, 'bannerImage')} />
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div style={{ marginTop: '40px', paddingTop: '30px', borderTop: '1px solid #ECECEC' }}>
-                                <button className={styles.saveButton} onClick={handleSave} disabled={saving}>
-                                    {saving ? 'SALVANDO...' : 'SALVAR TODAS AS ALTERAÇÕES'}
-                                </button>
-                            </div>
-                        </div>
-                    )}
+                    </div>
                 </div>
             </main>
 
@@ -568,6 +627,46 @@ export default function VetDashboard() {
                     onClose={() => setCropModalOpen(false)}
                     onConfirm={handleCropConfirm}
                 />
+            )}
+
+            {showWelcomeModal && (
+                <div className={styles.modalOverlay}>
+                    <div className={styles.welcomeModal}>
+                        <div className={styles.welcomeIcon}>
+                            <User size={40} />
+                        </div>
+                        <h2>Bem-vindo ao ClickPet!</h2>
+                        <p>
+                            Ficamos felizes em ter você conosco. Para começar a aparecer para os clientes próximos a você, 
+                            <strong> você precisa completar o seu cadastro profissional e de localização.</strong>
+                        </p>
+                        <div className={styles.welcomeSteps}>
+                            <div className={styles.step}>
+                                <div className={styles.stepNum}>1</div>
+                                <span>Preencha seus dados profissionais (CRMV, Bio, WhatsApp)</span>
+                            </div>
+                            <div className={styles.step}>
+                                <div className={styles.stepNum}>2</div>
+                                <span>Configure o endereço do seu consultório no mapa</span>
+                            </div>
+                        </div>
+                        <button 
+                            className={styles.welcomeBtn}
+                            onClick={() => {
+                                handleCloseWelcomeModal();
+                                setActiveTab('profile');
+                            }}
+                        >
+                            Completar Meu Cadastro
+                        </button>
+                        <button 
+                            className={styles.welcomeSecondaryBtn}
+                            onClick={handleCloseWelcomeModal}
+                        >
+                            Fazer isso mais tarde
+                        </button>
+                    </div>
+                </div>
             )}
         </div>
     );

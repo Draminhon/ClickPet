@@ -82,17 +82,34 @@
     border-radius: 12px;
     border: 1px solid rgba(212, 215, 227, 1);
     background: rgba(247, 251, 255, 1);
-    font-size: 14px;
-    font-weight: 500;
+    font-size: 13px;
+    font-weight: 600;
     color: rgba(37, 61, 78, 0.6);
     transition: all 0.2s;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 0 8px;
+    white-space: nowrap;
 }
 
 .roleBtn.active {
     border-color: rgba(59, 183, 126, 1);
     background-color: rgba(59, 183, 126, 0.05);
     color: rgba(59, 183, 126, 1);
+    box-shadow: 0 4px 12px rgba(59, 183, 126, 0.1);
+}
+
+.roleIcon {
+    opacity: 0.5;
+    transition: all 0.2s;
+}
+
+.roleBtn.active .roleIcon {
+    opacity: 1;
+    transform: scale(1.1);
 }
 
 .form {

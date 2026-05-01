@@ -27,33 +27,53 @@ export default function TrendingPartnersCarousel({ partners }: TrendingPartnersC
     const scrollRef = useRef<HTMLDivElement>(null);
     const [isPaused, setIsPaused] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
+    const [hasMoved, setHasMoved] = useState(false);
+    const isMouseDown = useRef(false);
     const startX = useRef(0);
     const scrollLeft = useRef(0);
 
     const handleMouseDown = (e: React.MouseEvent) => {
-        setIsDragging(true);
+        isMouseDown.current = true;
+        setHasMoved(false);
         setIsPaused(true);
         startX.current = e.pageX - (scrollRef.current?.offsetLeft || 0);
         scrollLeft.current = scrollRef.current?.scrollLeft || 0;
     };
 
     const handleMouseLeave = () => {
+        isMouseDown.current = false;
         setIsDragging(false);
         setIsPaused(false);
     };
 
     const handleMouseUp = () => {
-        setIsDragging(false);
+        isMouseDown.current = false;
+        // Usamos um pequeno timeout para garantir que o evento de clique do Link
+        // ocorra ANTES de resetarmos o isDragging/hasMoved se necessário,
+        // ou simplesmente resetamos aqui e confiamos no hasMoved no Link.
+        setTimeout(() => {
+            setIsDragging(false);
+            setHasMoved(false);
+        }, 10);
         setIsPaused(false);
     };
 
     const handleMouseMove = (e: React.MouseEvent) => {
-        if (!isDragging) return;
-        e.preventDefault();
+        if (!isMouseDown.current) return;
+
         const x = e.pageX - (scrollRef.current?.offsetLeft || 0);
-        const walk = (x - startX.current) * 2;
-        if (scrollRef.current) {
-            scrollRef.current.scrollLeft = scrollLeft.current - walk;
+        const walk = x - startX.current;
+
+        if (Math.abs(walk) > 5) {
+            setIsDragging(true);
+            setHasMoved(true);
+        }
+
+        if (isDragging) {
+            e.preventDefault();
+            if (scrollRef.current) {
+                scrollRef.current.scrollLeft = scrollLeft.current - walk * 2;
+            }
         }
     };
 
@@ -129,7 +149,16 @@ export default function TrendingPartnersCarousel({ partners }: TrendingPartnersC
                     const isOpen = partner.workingHours ? isShopOpen(partner.workingHours) : false;
 
                     return (
-                        <Link href={`/loja/${partner._id}`} key={`${partner._id}-${index}`} className={styles.card}>
+                        <Link 
+                            href={`/loja/${partner._id}`} 
+                            key={`${partner._id}-${index}`} 
+                            className={styles.card}
+                            onClick={(e) => {
+                                if (hasMoved) {
+                                    e.preventDefault();
+                                }
+                            }}
+                        >
                             {/* Fotografia da loja */}
                             <div className={styles.imageWrapper}>
                                 <Image 
@@ -155,11 +184,17 @@ export default function TrendingPartnersCarousel({ partners }: TrendingPartnersC
                                 </div>
 
                                 <div className={styles.infoRow}>
-                                    <span className={styles.infoText}>{responseTime}</span>
-                                    <span className={styles.bullet}>•</span>
-                                    <span className={isOpen ? styles.statusOpen : styles.statusClosed}>
-                                        {isOpen ? 'Loja aberta' : 'Loja fechada'}
-                                    </span>
+                                    {partner.specialization && !partner.specialization.includes('Petshop') ? (
+                                        <span style={{ color: '#ED802A', fontWeight: 400, fontSize: '14px' }}>{partner.specialization}</span>
+                                    ) : (
+                                        <>
+                                            <span className={styles.infoText}>{responseTime}</span>
+                                            <span className={styles.bullet}>•</span>
+                                            <span className={isOpen ? styles.statusOpen : styles.statusClosed}>
+                                                {isOpen ? 'Loja aberta' : 'Loja fechada'}
+                                            </span>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         </Link>

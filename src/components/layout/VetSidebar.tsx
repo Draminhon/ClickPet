@@ -31,7 +31,6 @@ export default function VetSidebar({ user, activeTab, setActiveTab }: VetSidebar
         { id: 'overview', label: 'Painel Geral', icon: LayoutDashboard },
         { id: 'profile', label: 'Meu Perfil', icon: User },
         { id: 'location', label: 'Localização', icon: MapPin },
-        { id: 'settings', label: 'Configurações', icon: Settings },
     ];
 
     return (

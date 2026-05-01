@@ -48,33 +48,50 @@ export default function LoggedInPromotionsCarousel() {
     const scrollRef = useRef<HTMLDivElement>(null);
     const [isPaused, setIsPaused] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
+    const [hasMoved, setHasMoved] = useState(false);
+    const isMouseDown = useRef(false);
     const startX = useRef(0);
     const scrollLeft = useRef(0);
 
     const handleMouseDown = (e: React.MouseEvent) => {
-        setIsDragging(true);
+        isMouseDown.current = true;
+        setHasMoved(false);
         setIsPaused(true);
         startX.current = e.pageX - (scrollRef.current?.offsetLeft || 0);
         scrollLeft.current = scrollRef.current?.scrollLeft || 0;
     };
 
     const handleMouseLeave = () => {
+        isMouseDown.current = false;
         setIsDragging(false);
         setIsPaused(false);
     };
 
     const handleMouseUp = () => {
-        setIsDragging(false);
+        isMouseDown.current = false;
+        setTimeout(() => {
+            setIsDragging(false);
+            setHasMoved(false);
+        }, 10);
         setIsPaused(false);
     };
 
     const handleMouseMove = (e: React.MouseEvent) => {
-        if (!isDragging) return;
-        e.preventDefault();
+        if (!isMouseDown.current) return;
+
         const x = e.pageX - (scrollRef.current?.offsetLeft || 0);
-        const walk = (x - startX.current) * 2;
-        if (scrollRef.current) {
-            scrollRef.current.scrollLeft = scrollLeft.current - walk;
+        const walk = x - startX.current;
+
+        if (Math.abs(walk) > 5) {
+            setIsDragging(true);
+            setHasMoved(true);
+        }
+
+        if (isDragging) {
+            e.preventDefault();
+            if (scrollRef.current) {
+                scrollRef.current.scrollLeft = scrollLeft.current - walk * 2;
+            }
         }
     };
 
@@ -145,6 +162,11 @@ export default function LoggedInPromotionsCarousel() {
                             href={promo.link} 
                             key={`${promo.id}-${index}`}
                             className={styles.promoContainer}
+                            onClick={(e) => {
+                                if (hasMoved) {
+                                    e.preventDefault();
+                                }
+                            }}
                         >
                             <Image
                                 src={promo.image}

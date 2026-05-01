@@ -58,6 +58,21 @@ export async function GET(req: Request) {
         const nearbyPartners: any[] = [];
 
         for (const partner of allPartnersToProcess) {
+            // Filter incomplete veterinarians
+            if (partner.role === 'veterinarian') {
+                const a = partner.address;
+                const isComplete = !!(
+                    partner.crmv && 
+                    partner.specialization && 
+                    partner.whatsapp && 
+                    a?.street && 
+                    a?.city && 
+                    a?.coordinates?.coordinates?.length === 2
+                );
+                
+                if (!isComplete) continue;
+            }
+
             const coords = partner.address?.coordinates?.coordinates;
             
             let distance = null;

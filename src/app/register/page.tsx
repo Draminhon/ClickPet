@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { useToast } from '@/context/ToastContext';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, User, Store, Stethoscope } from 'lucide-react';
 import styles from './Register.module.css';
 
 const carouselImages = [
@@ -142,6 +142,7 @@ function RegisterContent() {
                             onClick={() => setRole('customer')}
                         >
                             Sou Cliente
+                            <User size={18} className={styles.roleIcon} />
                         </button>
                         <button
                             type="button"
@@ -149,6 +150,7 @@ function RegisterContent() {
                             onClick={() => setRole('partner')}
                         >
                             Sou Parceiro
+                            <Store size={18} className={styles.roleIcon} />
                         </button>
                         <button
                             type="button"
@@ -156,6 +158,7 @@ function RegisterContent() {
                             onClick={() => setRole('veterinarian')}
                         >
                             Sou Veterinário
+                            <Stethoscope size={18} className={styles.roleIcon} />
                         </button>
                     </div>
 

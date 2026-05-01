@@ -17,21 +17,7 @@
     text-align: left;
 }
 
-.filtersRow {
-    display: flex;
-    flex-direction: row;
-    gap: 16px;
-    overflow-x: auto;
-    padding-bottom: 8px;
-    /* space for scroll bar if compressed */
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    /* IE and Edge */
-}
 
-.filtersRow::-webkit-scrollbar {
-    display: none;
-}
 
 .chip {
     display: flex;
@@ -113,15 +99,25 @@
     display: inline-block;
 }
 
+.filtersRow {
+    display: flex;
+    flex-direction: row;
+    gap: 16px;
+    padding-bottom: 8px;
+    position: relative;
+    z-index: 100;
+}
+
 .dropdownMenu {
     position: absolute;
-    top: 50px;
+    top: 100%;
+    margin-top: 8px;
     left: 0;
     background-color: white;
     border: 1px solid #DDE1E6;
     border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    z-index: 100;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
     min-width: 200px;
     display: flex;
     flex-direction: column;

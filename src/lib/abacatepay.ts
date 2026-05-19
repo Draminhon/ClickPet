@@ -317,8 +317,10 @@ export async function sendPix(params: SendPixParams) {
         amount: params.amount,
         externalId: params.externalId,
         description: params.description || 'Repasse ClickPet',
-        pixKey: params.pixKey,
-        pixKeyType: params.pixKeyType,
+        pix: {
+            key: params.pixKey,
+            type: params.pixKeyType,
+        },
     });
     return result.data;
 }

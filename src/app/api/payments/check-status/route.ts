@@ -103,15 +103,16 @@ export async function GET(req: Request) {
                 }
 
                 // ── SPLIT: Send 90% to partner via PIX ──
-                processPartnerPayout(record).then(result => {
-                    if (result.success) {
-                        console.log(`[CheckStatus] ✅ Split completed for order ${record._id}: R$ ${result.splitAmount?.toFixed(2)} → partner`);
+                try {
+                    const splitResult = await processPartnerPayout(record);
+                    if (splitResult.success) {
+                        console.log(`[CheckStatus] ✅ Split completed for order ${record._id}: R$ ${splitResult.splitAmount?.toFixed(2)} → partner`);
                     } else {
-                        console.warn(`[CheckStatus] ⚠️ Split issue for order ${record._id}: ${result.error}`);
+                        console.warn(`[CheckStatus] ⚠️ Split issue for order ${record._id}: ${splitResult.error}`);
                     }
-                }).catch(err => {
-                    console.error(`[CheckStatus] ❌ Split error for order ${record._id}:`, err.message);
-                });
+                } catch (splitErr: any) {
+                    console.error(`[CheckStatus] ❌ Split error for order ${record._id}:`, splitErr.message);
+                }
             } else if (type === 'subscription') {
                 const isAlreadyActive = record.status === 'active';
                 

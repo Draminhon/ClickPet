@@ -88,16 +88,18 @@ export async function POST(req: Request) {
                     console.log(`[Webhook] Order ${order._id} payment approved`);
 
                     // ── SPLIT: Send 90% to partner via PIX ──
-                    // Fire-and-forget: don't block the webhook response
-                    processPartnerPayout(order).then(result => {
-                        if (result.success) {
-                            console.log(`[Webhook] ✅ Split completed for order ${order._id}: R$ ${result.splitAmount?.toFixed(2)} → partner`);
+                    // Must await (not fire-and-forget) because Vercel serverless
+                    // kills the function after the response is sent.
+                    try {
+                        const splitResult = await processPartnerPayout(order);
+                        if (splitResult.success) {
+                            console.log(`[Webhook] ✅ Split completed for order ${order._id}: R$ ${splitResult.splitAmount?.toFixed(2)} → partner`);
                         } else {
-                            console.warn(`[Webhook] ⚠️ Split issue for order ${order._id}: ${result.error}`);
+                            console.warn(`[Webhook] ⚠️ Split issue for order ${order._id}: ${splitResult.error}`);
                         }
-                    }).catch(err => {
-                        console.error(`[Webhook] ❌ Split error for order ${order._id}:`, err.message);
-                    });
+                    } catch (splitErr: any) {
+                        console.error(`[Webhook] ❌ Split error for order ${order._id}:`, splitErr.message);
+                    }
 
                     // Calculate and log total time
                     const startTime = (order as any).paymentStartedAt || order.createdAt;
@@ -154,15 +156,16 @@ export async function POST(req: Request) {
                     console.log(`[Webhook] PIX payment confirmed for order ${order._id}`);
 
                     // ── SPLIT: Send 90% to partner via PIX ──
-                    processPartnerPayout(order).then(result => {
-                        if (result.success) {
+                    try {
+                        const splitResult = await processPartnerPayout(order);
+                        if (splitResult.success) {
                             console.log(`[Webhook] ✅ Split completed for PIX order ${order._id}`);
                         } else {
-                            console.warn(`[Webhook] ⚠️ Split issue for PIX order ${order._id}: ${result.error}`);
+                            console.warn(`[Webhook] ⚠️ Split issue for PIX order ${order._id}: ${splitResult.error}`);
                         }
-                    }).catch(err => {
-                        console.error(`[Webhook] ❌ Split error for PIX order ${order._id}:`, err.message);
-                    });
+                    } catch (splitErr: any) {
+                        console.error(`[Webhook] ❌ Split error for PIX order ${order._id}:`, splitErr.message);
+                    }
                 }
                 break;
             }

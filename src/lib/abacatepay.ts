@@ -337,8 +337,13 @@ export async function getPixTransfer(pixId: string) {
  */
 export function mapPixKeyType(keyType: string): PixKeyType {
     const mapping: Record<string, PixKeyType> = {
+        // Exact values from partner settings UI (line 905 of settings/page.tsx)
         'CPF': 'CPF',
         'CNPJ': 'CNPJ',
+        'TELEFONE': 'PHONE',
+        'E-MAIL': 'EMAIL',
+        'CHAVE ALEATÓRIA': 'RANDOM',
+        // Additional variations for safety
         'PHONE': 'PHONE',
         'Telefone': 'PHONE',
         'EMAIL': 'EMAIL',

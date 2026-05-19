@@ -115,10 +115,19 @@ export async function processPartnerPayout(order: any): Promise<SplitResult> {
         }
 
         // Send PIX to partner
-        const pixKeyType = mapPixKeyType(partner.pixConfig.keyType || 'CPF');
-        const pixKey = partner.pixConfig.key;
+        const rawKeyType = partner.pixConfig.keyType || 'CPF';
+        const pixKeyType = mapPixKeyType(rawKeyType);
+        // CRITICAL: Strip formatting masks from PIX key before sending
+        // UI stores: (11) 98765-4321, 123.456.789-01, 00.000.000/0000-00
+        // API expects: 11987654321, 12345678901, 00000000000000
+        const rawPixKey = partner.pixConfig.key;
+        const pixKey = (pixKeyType === 'EMAIL' || pixKeyType === 'RANDOM')
+            ? rawPixKey  // Don't strip email addresses or random keys
+            : rawPixKey.replace(/\D/g, ''); // Strip all non-digits for CPF/CNPJ/PHONE
 
-        console.log(`${logPrefix} Sending PIX: R$ ${partnerShare.toFixed(2)} → ${pixKeyType}: ${pixKey.substring(0, 4)}****`);
+        console.log(`${logPrefix} Partner: ${partner.name} (${partner._id})`);
+        console.log(`${logPrefix} PIX Config: keyType="${rawKeyType}" → mapped="${pixKeyType}"`);
+        console.log(`${logPrefix} PIX Key: raw="${rawPixKey}" → cleaned="${pixKey}"`);
 
         const pixResult = await sendPix({
             amount: partnerShareCentavos,

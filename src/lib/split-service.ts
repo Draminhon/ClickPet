@@ -15,7 +15,7 @@
  */
 
 import User from '@/models/User';
-import { sendPix, mapPixKeyType, toCentavos } from '@/lib/abacatepay';
+import { sendPix, mapPixKeyType } from '@/lib/abacatepay';
 
 // Default split: ClickPet keeps 10%, Partner gets 90%
 const PLATFORM_FEE_PERCENTAGE = parseInt(process.env.CLICKPET_SPLIT_PERCENTAGE || '10', 10);
@@ -95,15 +95,16 @@ export async function processPartnerPayout(order: any): Promise<SplitResult> {
         // Calculate split amounts
         const partnerShare = calculatePartnerShare(order.total);
         const clickpetShare = order.total - partnerShare;
-        const partnerShareCentavos = toCentavos(partnerShare);
+        // Use raw centavos (NOT toCentavos which has a R$1.00 floor)
+        const partnerShareCentavos = Math.round(partnerShare * 100);
 
         console.log(`${logPrefix} Total: R$ ${order.total.toFixed(2)}`);
-        console.log(`${logPrefix} Partner share (${PARTNER_PERCENTAGE}%): R$ ${partnerShare.toFixed(2)}`);
+        console.log(`${logPrefix} Partner share (${PARTNER_PERCENTAGE}%): R$ ${partnerShare.toFixed(2)} (${partnerShareCentavos} centavos)`);
         console.log(`${logPrefix} ClickPet fee (${PLATFORM_FEE_PERCENTAGE}%): R$ ${clickpetShare.toFixed(2)}`);
 
         // Minimum PIX amount is R$ 1.00 (100 centavos)
         if (partnerShareCentavos < 100) {
-            const error = `Valor do repasse (R$ ${partnerShare.toFixed(2)}) é menor que o mínimo de R$ 1,00`;
+            const error = `Valor do repasse (R$ ${partnerShare.toFixed(2)}) é menor que o mínimo de R$ 1,00. Teste com valor acima de R$ 1,12.`;
             console.warn(`${logPrefix} ${error}`);
             order.splitStatus = 'skipped';
             order.splitError = error;

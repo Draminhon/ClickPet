@@ -10,7 +10,9 @@ import { processPartnerPayout } from '@/lib/split-service';
 /**
  * POST /api/payments/webhook
  * Receives payment notifications from AbacatePay.
- * Events: billing.paid, pix.paid, pix.expired
+ * 
+ * v2 Events: checkout.completed, checkout.refunded, transparent.completed, transparent.refunded
+ * v1 Events (backward compat): billing.paid, pix.paid, pix.expired
  * 
  * NOTE: For local development without ngrok, use polling via /api/payments/check-status instead.
  * This endpoint is ready for production use.
@@ -45,15 +47,28 @@ export async function POST(req: Request) {
             return NextResponse.json({ message: 'Missing event type' }, { status: 400 });
         }
 
-        // Extract billing/pix ID from the payload
+        // Extract billing/checkout ID from the payload
+        // v2 sends data.id directly, v1 sent data.billing.id
         const billingId = data?.billing?.id || data?.id;
 
         if (!billingId) {
-            console.warn('[Webhook] No billing/pix ID found in payload');
+            console.warn('[Webhook] No billing/checkout ID found in payload');
             return NextResponse.json({ received: true });
         }
 
-        switch (event) {
+        // Normalize v2 event names to v1 for unified handling
+        let normalizedEvent = event;
+        if (event === 'checkout.completed' || event === 'transparent.completed') {
+            normalizedEvent = 'billing.paid';
+        } else if (event === 'checkout.refunded' || event === 'transparent.refunded') {
+            normalizedEvent = 'payment.refunded';
+        } else if (event === 'transparent.expired') {
+            normalizedEvent = 'pix.expired';
+        }
+
+        console.log(`[Webhook] Event: ${event} → normalized: ${normalizedEvent}`);
+
+        switch (normalizedEvent) {
             case 'billing.paid': {
                 // Try to find an Order with this billing ID
                 const order = await Order.findOne({ abacatepayBillingId: billingId });

@@ -1,16 +1,24 @@
 /**
- * AbacatePay API Integration Module
+ * AbacatePay API v2 Integration Module
  * Docs: https://docs.abacatepay.com
  * All amounts are in CENTAVOS (e.g., R$ 10.00 = 1000)
  * 
- * v1 endpoints: billing, customer (existing)
- * v2 endpoints: pix/send (split payments)
+ * Migrated from v1 to v2 for production API keys.
+ * v1 → v2 endpoint mapping:
+ *   /billing/create   → /checkouts/create (requires product IDs)
+ *   /billing/get       → /checkouts/one
+ *   /billing/list      → /checkouts/list
+ *   /customer/create   → /customers/create
+ *   /customer/list     → /customers/list
+ *   /pixQrCode/create  → /transparents/create
+ *   /pixQrCode/check   → /transparents/check
+ *   (new) /pix/send    → PIX transfers for split payments
+ *   (new) /products/create → product registration
  */
 
 import crypto from 'crypto';
 
-const ABACATEPAY_BASE_URL = 'https://api.abacatepay.com/v1';
-const ABACATEPAY_V2_BASE_URL = 'https://api.abacatepay.com/v2';
+const ABACATEPAY_BASE_URL = 'https://api.abacatepay.com/v2';
 
 function getApiKey(): string {
     const key = process.env.ABACATEPAY_API_KEY;
@@ -28,9 +36,8 @@ function getHeaders() {
     };
 }
 
-async function apiRequest(method: string, endpoint: string, body?: any, useV2 = false) {
-    const baseUrl = useV2 ? ABACATEPAY_V2_BASE_URL : ABACATEPAY_BASE_URL;
-    const url = `${baseUrl}${endpoint}`;
+async function apiRequest(method: string, endpoint: string, body?: any) {
+    const url = `${ABACATEPAY_BASE_URL}${endpoint}`;
     
     const options: RequestInit = {
         method,
@@ -60,6 +67,40 @@ async function apiRequest(method: string, endpoint: string, body?: any, useV2 = 
     return data;
 }
 
+// ────────────── PRODUCTS ──────────────
+
+export interface CreateProductParams {
+    externalId: string;
+    name: string;
+    description?: string;
+    price: number;   // in centavos
+    currency?: string; // default "BRL"
+}
+
+/**
+ * Create a product in AbacatePay (v2).
+ * Products must be created before being used in checkouts.
+ * Returns the product with its AbacatePay ID.
+ */
+export async function createProduct(params: CreateProductParams) {
+    const result = await apiRequest('POST', '/products/create', {
+        externalId: params.externalId,
+        name: params.name,
+        description: params.description,
+        price: params.price,
+        currency: params.currency || 'BRL',
+    });
+    return result.data;
+}
+
+/**
+ * List all products.
+ */
+export async function listProducts() {
+    const result = await apiRequest('GET', '/products/list');
+    return result.data;
+}
+
 // ────────────── CUSTOMERS ──────────────
 
 export interface AbacateCustomer {
@@ -67,13 +108,21 @@ export interface AbacateCustomer {
     cellphone: string;
     email: string;
     taxId: string;  // CPF or CNPJ
+    zipCode?: string;
 }
 
 /**
- * Create a customer in AbacatePay.
+ * Create a customer in AbacatePay (v2).
+ * Unique by taxId — creating with existing taxId returns the existing customer.
  */
 export async function createCustomer(customer: AbacateCustomer) {
-    const result = await apiRequest('POST', '/customer/create', customer);
+    const result = await apiRequest('POST', '/customers/create', {
+        email: customer.email,
+        name: customer.name,
+        cellphone: customer.cellphone,
+        taxId: customer.taxId,
+        zipCode: customer.zipCode,
+    });
     return result.data;
 }
 
@@ -81,11 +130,11 @@ export async function createCustomer(customer: AbacateCustomer) {
  * List all customers.
  */
 export async function listCustomers() {
-    const result = await apiRequest('GET', '/customer/list');
+    const result = await apiRequest('GET', '/customers/list');
     return result.data;
 }
 
-// ────────────── BILLING ──────────────
+// ────────────── CHECKOUT (was BILLING) ──────────────
 
 export interface AbacateProduct {
     externalId: string;
@@ -106,24 +155,66 @@ export interface CreateBillingParams {
 }
 
 /**
- * Create a billing (charge) in AbacatePay.
- * Returns the billing with a payment URL.
+ * Create a checkout (charge) in AbacatePay v2.
+ * 
+ * v2 flow: creates products first, then customer, then checkout.
+ * This function handles the full flow to maintain backward compatibility
+ * with the existing create-billing/create-subscription routes.
+ * 
+ * Returns the checkout with a payment URL (same shape as v1 billing).
  */
 export async function createBilling(params: CreateBillingParams) {
-    const result = await apiRequest('POST', '/billing/create', params);
+    // Step 1: Create products and collect their AbacatePay IDs
+    const items: { id: string; quantity: number }[] = [];
+    
+    for (const product of params.products) {
+        const created = await createProduct({
+            externalId: product.externalId,
+            name: product.name,
+            description: product.description,
+            price: product.price,
+        });
+        items.push({
+            id: created.id,
+            quantity: product.quantity,
+        });
+    }
+
+    // Step 2: Create customer if provided (get customerId)
+    let customerId = params.customerId;
+    if (!customerId && params.customer) {
+        const customer = await createCustomer(params.customer);
+        customerId = customer.id;
+    }
+
+    // Step 3: Create checkout
+    const checkoutBody: any = {
+        items,
+        methods: params.methods,
+        returnUrl: params.returnUrl,
+        completionUrl: params.completionUrl,
+    };
+
+    if (customerId) {
+        checkoutBody.customerId = customerId;
+    }
+
+    const result = await apiRequest('POST', '/checkouts/create', checkoutBody);
+    
+    // Return in a shape compatible with v1 (id, url, customer)
     return result.data;
 }
 
 /**
- * Get billing status by ID.
+ * Get checkout (billing) status by ID.
  */
 export async function getBilling(billingId: string) {
     try {
-        const result = await apiRequest('GET', `/billing/get?id=${billingId}`);
+        const result = await apiRequest('GET', `/checkouts/one?id=${billingId}`);
         return result.data;
     } catch (error: any) {
         if (error.message && error.message.includes('Not found')) {
-            // AbacatePay Sandbox edge case fallback: event consistency /get vs /list
+            // Fallback: try listing and finding
             try {
                 const listData = await listBillings();
                 const allBillings = listData || [];
@@ -138,14 +229,14 @@ export async function getBilling(billingId: string) {
 }
 
 /**
- * List all billings.
+ * List all checkouts (billings).
  */
 export async function listBillings() {
-    const result = await apiRequest('GET', '/billing/list');
+    const result = await apiRequest('GET', '/checkouts/list');
     return result.data;
 }
 
-// ────────────── PIX QR CODE ──────────────
+// ────────────── CHECKOUT TRANSPARENTE (PIX QR CODE) ──────────────
 
 export interface CreatePixQrCodeParams {
     amount: number;  // in centavos
@@ -156,32 +247,53 @@ export interface CreatePixQrCodeParams {
 }
 
 /**
- * Create a PIX QR Code for direct payment.
+ * Create a transparent checkout (PIX QR Code) for direct payment.
  */
 export async function createPixQrCode(params: CreatePixQrCodeParams) {
-    const result = await apiRequest('POST', '/pixQrCode/create', params);
+    const body: any = {
+        data: {
+            amount: params.amount,
+            description: params.description,
+            expiresIn: params.expiresIn,
+        },
+    };
+
+    if (params.customer) {
+        body.data.customer = {
+            name: params.customer.name,
+            email: params.customer.email,
+            taxId: params.customer.taxId,
+            cellphone: params.customer.cellphone,
+        };
+    }
+
+    if (params.metadata) {
+        body.data.metadata = params.metadata;
+    }
+
+    const result = await apiRequest('POST', '/transparents/create', body);
     return result.data;
 }
 
 /**
- * Check the status of a PIX QR Code payment.
+ * Check the status of a transparent checkout (PIX QR Code).
  */
 export async function checkPixStatus(pixId: string) {
-    const result = await apiRequest('GET', `/pixQrCode/check?id=${pixId}`);
+    const result = await apiRequest('GET', `/transparents/check?id=${pixId}`);
     return result.data;
 }
 
 /**
- * Simulate payment for a PIX QR Code (DEV MODE ONLY).
+ * Simulate payment for a transparent checkout (DEV MODE ONLY).
  */
 export async function simulatePixPayment(pixId: string) {
-    const result = await apiRequest('POST', `/pixQrCode/simulate-payment?id=${pixId}`, {
+    const result = await apiRequest('POST', `/transparents/simulate-payment?id=${pixId}`, {
         metadata: {}
     });
     return result.data;
 }
 
-// ────────────── PIX TRANSFER (v2) ──────────────
+// ────────────── PIX TRANSFER (split payments) ──────────────
 
 export type PixKeyType = 'CPF' | 'CNPJ' | 'PHONE' | 'EMAIL' | 'RANDOM';
 
@@ -194,7 +306,7 @@ export interface SendPixParams {
 }
 
 /**
- * Send a PIX transfer to a third party (v2 API).
+ * Send a PIX transfer to a third party.
  * Used for split payments: sending the partner's share after a sale.
  * 
  * Endpoint: POST /v2/pix/send
@@ -207,15 +319,15 @@ export async function sendPix(params: SendPixParams) {
         description: params.description || 'Repasse ClickPet',
         pixKey: params.pixKey,
         pixKeyType: params.pixKeyType,
-    }, true); // useV2 = true
+    });
     return result.data;
 }
 
 /**
- * Get PIX transfer status by ID (v2 API).
+ * Get PIX transfer status by ID.
  */
 export async function getPixTransfer(pixId: string) {
-    const result = await apiRequest('GET', `/pix/get?id=${pixId}`, undefined, true);
+    const result = await apiRequest('GET', `/pix/get?id=${pixId}`);
     return result.data;
 }
 

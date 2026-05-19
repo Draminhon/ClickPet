@@ -2,11 +2,15 @@
  * AbacatePay API Integration Module
  * Docs: https://docs.abacatepay.com
  * All amounts are in CENTAVOS (e.g., R$ 10.00 = 1000)
+ * 
+ * v1 endpoints: billing, customer (existing)
+ * v2 endpoints: pix/send (split payments)
  */
 
 import crypto from 'crypto';
 
 const ABACATEPAY_BASE_URL = 'https://api.abacatepay.com/v1';
+const ABACATEPAY_V2_BASE_URL = 'https://api.abacatepay.com/v2';
 
 function getApiKey(): string {
     const key = process.env.ABACATEPAY_API_KEY;
@@ -24,8 +28,9 @@ function getHeaders() {
     };
 }
 
-async function apiRequest(method: string, endpoint: string, body?: any) {
-    const url = `${ABACATEPAY_BASE_URL}${endpoint}`;
+async function apiRequest(method: string, endpoint: string, body?: any, useV2 = false) {
+    const baseUrl = useV2 ? ABACATEPAY_V2_BASE_URL : ABACATEPAY_BASE_URL;
+    const url = `${baseUrl}${endpoint}`;
     
     const options: RequestInit = {
         method,
@@ -174,6 +179,64 @@ export async function simulatePixPayment(pixId: string) {
         metadata: {}
     });
     return result.data;
+}
+
+// ────────────── PIX TRANSFER (v2) ──────────────
+
+export type PixKeyType = 'CPF' | 'CNPJ' | 'PHONE' | 'EMAIL' | 'RANDOM';
+
+export interface SendPixParams {
+    amount: number;           // in centavos (min 100 = R$ 1.00)
+    pixKey: string;           // the PIX key value
+    pixKeyType: PixKeyType;   // type of PIX key
+    externalId: string;       // unique reference in your system
+    description?: string;     // optional description (max 140 chars)
+}
+
+/**
+ * Send a PIX transfer to a third party (v2 API).
+ * Used for split payments: sending the partner's share after a sale.
+ * 
+ * Endpoint: POST /v2/pix/send
+ * Docs: https://docs.abacatepay.com/pages/pix/create
+ */
+export async function sendPix(params: SendPixParams) {
+    const result = await apiRequest('POST', '/pix/send', {
+        amount: params.amount,
+        externalId: params.externalId,
+        description: params.description || 'Repasse ClickPet',
+        pixKey: params.pixKey,
+        pixKeyType: params.pixKeyType,
+    }, true); // useV2 = true
+    return result.data;
+}
+
+/**
+ * Get PIX transfer status by ID (v2 API).
+ */
+export async function getPixTransfer(pixId: string) {
+    const result = await apiRequest('GET', `/pix/get?id=${pixId}`, undefined, true);
+    return result.data;
+}
+
+/**
+ * Map internal pixConfig keyType to AbacatePay PixKeyType.
+ * Partners store their PIX config in User.pixConfig.keyType.
+ */
+export function mapPixKeyType(keyType: string): PixKeyType {
+    const mapping: Record<string, PixKeyType> = {
+        'CPF': 'CPF',
+        'CNPJ': 'CNPJ',
+        'PHONE': 'PHONE',
+        'Telefone': 'PHONE',
+        'EMAIL': 'EMAIL',
+        'Email': 'EMAIL',
+        'E-mail': 'EMAIL',
+        'RANDOM': 'RANDOM',
+        'Aleatória': 'RANDOM',
+        'Chave Aleatória': 'RANDOM',
+    };
+    return mapping[keyType] || 'CPF';
 }
 
 // ────────────── HELPERS ──────────────

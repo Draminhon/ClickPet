@@ -126,7 +126,30 @@ const OrderSchema = new mongoose.Schema({
     },
     cancelReason: {
         type: String,
-    }
+    },
+    // ── Split Payment Tracking ──
+    // When a customer pays, 90% goes to the partner and 10% stays with ClickPet.
+    // The repasse is done via PIX transfer (POST /v2/pix/send).
+    splitStatus: {
+        type: String,
+        enum: ['pending', 'processing', 'completed', 'failed', 'skipped'],
+        default: 'pending',
+    },
+    splitAmount: {
+        type: Number,  // Amount sent to partner (in R$, e.g. 90.00)
+    },
+    splitPixId: {
+        type: String,  // AbacatePay PIX transfer ID (txn_xxx)
+    },
+    splitError: {
+        type: String,  // Error message if split failed
+    },
+    splitProcessedAt: {
+        type: Date,    // When the split was executed
+    },
+    platformFee: {
+        type: Number,  // Amount retained by ClickPet (10%, in R$)
+    },
 }, { timestamps: true });
 
 OrderSchema.plugin(fieldEncryption, {

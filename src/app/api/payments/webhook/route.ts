@@ -5,6 +5,7 @@ import Subscription from '@/models/Subscription';
 import User from '@/models/User';
 import notificationService from '@/lib/notification-service';
 import { verifyWebhookSignature } from '@/lib/abacatepay';
+import { processPartnerPayout } from '@/lib/split-service';
 
 /**
  * POST /api/payments/webhook
@@ -71,6 +72,18 @@ export async function POST(req: Request) {
 
                     console.log(`[Webhook] Order ${order._id} payment approved`);
 
+                    // ── SPLIT: Send 90% to partner via PIX ──
+                    // Fire-and-forget: don't block the webhook response
+                    processPartnerPayout(order).then(result => {
+                        if (result.success) {
+                            console.log(`[Webhook] ✅ Split completed for order ${order._id}: R$ ${result.splitAmount?.toFixed(2)} → partner`);
+                        } else {
+                            console.warn(`[Webhook] ⚠️ Split issue for order ${order._id}: ${result.error}`);
+                        }
+                    }).catch(err => {
+                        console.error(`[Webhook] ❌ Split error for order ${order._id}:`, err.message);
+                    });
+
                     // Calculate and log total time
                     const startTime = (order as any).paymentStartedAt || order.createdAt;
                     const duration = (Date.now() - new Date(startTime).getTime()) / 1000;
@@ -124,6 +137,17 @@ export async function POST(req: Request) {
                     order.paymentStatus = 'approved';
                     await order.save();
                     console.log(`[Webhook] PIX payment confirmed for order ${order._id}`);
+
+                    // ── SPLIT: Send 90% to partner via PIX ──
+                    processPartnerPayout(order).then(result => {
+                        if (result.success) {
+                            console.log(`[Webhook] ✅ Split completed for PIX order ${order._id}`);
+                        } else {
+                            console.warn(`[Webhook] ⚠️ Split issue for PIX order ${order._id}: ${result.error}`);
+                        }
+                    }).catch(err => {
+                        console.error(`[Webhook] ❌ Split error for PIX order ${order._id}:`, err.message);
+                    });
                 }
                 break;
             }

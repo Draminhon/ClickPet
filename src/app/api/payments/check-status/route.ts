@@ -7,6 +7,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { getBilling } from '@/lib/abacatepay';
 import notificationService from '@/lib/notification-service';
+import { processPartnerPayout } from '@/lib/split-service';
 
 /**
  * GET /api/payments/check-status?orderId=xxx
@@ -100,6 +101,17 @@ export async function GET(req: Request) {
                         record.total
                     );
                 }
+
+                // ── SPLIT: Send 90% to partner via PIX ──
+                processPartnerPayout(record).then(result => {
+                    if (result.success) {
+                        console.log(`[CheckStatus] ✅ Split completed for order ${record._id}: R$ ${result.splitAmount?.toFixed(2)} → partner`);
+                    } else {
+                        console.warn(`[CheckStatus] ⚠️ Split issue for order ${record._id}: ${result.error}`);
+                    }
+                }).catch(err => {
+                    console.error(`[CheckStatus] ❌ Split error for order ${record._id}:`, err.message);
+                });
             } else if (type === 'subscription') {
                 const isAlreadyActive = record.status === 'active';
                 

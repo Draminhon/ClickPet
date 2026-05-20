@@ -13,12 +13,15 @@ export async function POST(req: Request) {
         }
 
         await dbConnect();
-        const user = await User.findById(session.user.id);
-        if (user) {
-            user.tokenVersion = (user.tokenVersion || 0) + 1;
-            await user.save();
-            await logAction(req, 'logout', { userId: user._id });
-        }
+        const userId = session.user.id;
+        const userRole = session.user.role || 'customer';
+        
+        // Faz o update direto no banco ao invés de buscar e salvar o documento completo
+        await User.updateOne({ _id: userId }, { $inc: { tokenVersion: 1 } });
+        
+        // Registra o log em background de forma assíncrona (não-bloqueante) e evita nova descriptografia de token
+        logAction(req, 'logout', { userId }, { id: userId, role: userRole })
+            .catch(err => console.error('[AUDIT] Failed to log logout in background:', err));
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error("Logout error", error);

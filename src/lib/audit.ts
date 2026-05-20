@@ -9,16 +9,24 @@ import { getToken } from 'next-auth/jwt';
 export async function logAction(
     req: NextRequest | Request,
     action: string,
-    details: any = {}
+    details: any = {},
+    overrideUser?: { id: string; role: string }
 ) {
     try {
         await dbConnect();
 
-        // Get session data
-        const token = await getToken({
-            req: req as any,
-            secret: process.env.NEXTAUTH_SECRET
-        });
+        let userId = overrideUser?.id || null;
+        let userRole = overrideUser?.role || 'anonymous';
+
+        if (!overrideUser) {
+            // Get session data
+            const token = await getToken({
+                req: req as any,
+                secret: process.env.NEXTAUTH_SECRET
+            });
+            userId = (token?.id as string) || null;
+            userRole = (token?.role as string) || 'anonymous';
+        }
 
         // Get IP from headers (standard Next.js way)
         const forwarded = req.headers.get('x-forwarded-for');
@@ -26,8 +34,8 @@ export async function logAction(
 
         await AuditLog.create({
             action,
-            userId: token?.id || null,
-            userRole: (token?.role as string) || 'anonymous',
+            userId,
+            userRole,
             details,
             ipAddress
         });

@@ -237,11 +237,8 @@ export const authOptions: NextAuthOptions = {
                             token.isProfileComplete = !!(dbUser.crmv && dbUser.specialization && dbUser.whatsapp && a?.street && a?.number && a?.city && a?.neighborhood && a?.zip);
                         }
                     } else {
-                        // Quick check only for token version and role persistence
-                        const dbUser = await User.findById(token.id).select('tokenVersion role').lean() as any;
-                        if (dbUser) {
-                            token.role = dbUser.role || token.role;
-                        }
+                        // Confia nos dados já assinados e seguros no JWT para evitar consultas repetitivas ao banco.
+                        // Sincroniza e recarrega os dados a cada 2 minutos (fluxo do shouldRefreshHeavy) ou por trigger manual.
                     }
                 } catch (e) {
                     console.error("[AUTH] JWT Refresh Error:", e);

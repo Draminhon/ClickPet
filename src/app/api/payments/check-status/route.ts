@@ -102,7 +102,7 @@ export async function GET(req: Request) {
                     );
                 }
 
-                // ── SPLIT: Send 90% to partner via PIX ──
+                // ── SPLIT: Send 85% pure to partner via PIX ──
                 try {
                     const splitResult = await processPartnerPayout(record);
                     if (splitResult.success) {

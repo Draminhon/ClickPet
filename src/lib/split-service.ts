@@ -17,8 +17,8 @@
 import User from '@/models/User';
 import { sendPix, mapPixKeyType } from '@/lib/abacatepay';
 
-// Default split: ClickPet keeps 10%, Partner gets 90%
-const PLATFORM_FEE_PERCENTAGE = parseInt(process.env.CLICKPET_SPLIT_PERCENTAGE || '10', 10);
+// Default split: ClickPet keeps 15% (commission), Partner gets 85% (pure)
+const PLATFORM_FEE_PERCENTAGE = parseInt(process.env.CLICKPET_SPLIT_PERCENTAGE || '15', 10);
 const PARTNER_PERCENTAGE = 100 - PLATFORM_FEE_PERCENTAGE;
 
 export interface SplitResult {
@@ -85,7 +85,7 @@ export async function processPartnerPayout(order: any): Promise<SplitResult> {
             order.splitError = error;
             // Still calculate what WOULD be owed
             const partnerShare = calculatePartnerShare(order.total);
-            const clickpetShare = order.total - partnerShare;
+            const clickpetShare = Math.round((order.total - partnerShare) * 100) / 100;
             order.splitAmount = partnerShare;
             order.platformFee = clickpetShare;
             await order.save();
@@ -94,17 +94,38 @@ export async function processPartnerPayout(order: any): Promise<SplitResult> {
 
         // Calculate split amounts
         const partnerShare = calculatePartnerShare(order.total);
-        const clickpetShare = order.total - partnerShare;
-        // Use raw centavos (NOT toCentavos which has a R$1.00 floor)
+        const clickpetShare = Math.round((order.total - partnerShare) * 100) / 100;
+        // Use raw centavos
         const partnerShareCentavos = Math.round(partnerShare * 100);
+
+        // ABACATEPAY FEES & SHIELDING:
+        // We charge 15% platform commission (R$ 3.00 on R$ 20.00).
+        // The partner must receive exactly 85% pure (R$ 17.00 on R$ 20.00).
+        // Since AbacatePay automatically deducts the R$ 0.80 (80 centavos) payout fee 
+        // from the Pix transfer amount itself, we must add the R$ 0.80 payout fee
+        // to the payout amount we send. This way, the partner receives exactly partnerShare,
+        // and both the incoming fee (R$ 0.80) and outgoing fee (R$ 0.80) are absorbed 
+        // by ClickPet's 15% commission.
+        // E.g. For R$ 20.00: 
+        // - ClickPet gross fee = R$ 3.00 (15%)
+        // - Partner pure share = R$ 17.00 (85%)
+        // - We send = R$ 17.00 + R$ 0.80 = R$ 17.80.
+        // - Partner receives = R$ 17.80 - R$ 0.80 = R$ 17.00 (Pure 85%).
+        // - ClickPet net = R$ 20.00 - R$ 0.80 (incoming fee) - R$ 17.80 (sent) = R$ 1.40.
+        const ABACATEPAY_PAYOUT_FEE_CENTAVOS = 80;
+        const amountToSendCentavos = partnerShareCentavos + ABACATEPAY_PAYOUT_FEE_CENTAVOS;
 
         console.log(`${logPrefix} Total: R$ ${order.total.toFixed(2)}`);
         console.log(`${logPrefix} Partner share (${PARTNER_PERCENTAGE}%): R$ ${partnerShare.toFixed(2)} (${partnerShareCentavos} centavos)`);
-        console.log(`${logPrefix} ClickPet fee (${PLATFORM_FEE_PERCENTAGE}%): R$ ${clickpetShare.toFixed(2)}`);
+        console.log(`${logPrefix} ClickPet gross fee (${PLATFORM_FEE_PERCENTAGE}%): R$ ${clickpetShare.toFixed(2)}`);
+        console.log(`${logPrefix} Payout fee absorbed by ClickPet: R$ ${(ABACATEPAY_PAYOUT_FEE_CENTAVOS/100).toFixed(2)}`);
+        console.log(`${logPrefix} Total PIX sent: R$ ${(amountToSendCentavos/100).toFixed(2)}`);
+        console.log(`${logPrefix} Partner will receive pure: R$ ${((amountToSendCentavos - ABACATEPAY_PAYOUT_FEE_CENTAVOS)/100).toFixed(2)}`);
 
         // Minimum PIX amount is R$ 1.00 (100 centavos)
+        // With the 85% model, the partner's share must be at least R$ 1.00.
         if (partnerShareCentavos < 100) {
-            const error = `Valor do repasse (R$ ${partnerShare.toFixed(2)}) é menor que o mínimo de R$ 1,00. Teste com valor acima de R$ 1,12.`;
+            const error = `Valor do repasse (R$ ${partnerShare.toFixed(2)}) é menor que o mínimo de R$ 1,00. Teste com valor acima de R$ 1,18.`;
             console.warn(`${logPrefix} ${error}`);
             order.splitStatus = 'skipped';
             order.splitError = error;
@@ -130,7 +151,7 @@ export async function processPartnerPayout(order: any): Promise<SplitResult> {
         console.log(`${logPrefix} PIX Key: raw="${rawPixKey}" → cleaned="${pixKey}"`);
 
         const pixResult = await sendPix({
-            amount: partnerShareCentavos,
+            amount: amountToSendCentavos,
             pixKey: pixKey,
             pixKeyType: pixKeyType,
             externalId: `split-${orderId}`,
@@ -161,7 +182,7 @@ export async function processPartnerPayout(order: any): Promise<SplitResult> {
         // Save the error but don't crash the payment flow
         try {
             const partnerShare = calculatePartnerShare(order.total);
-            const clickpetShare = order.total - partnerShare;
+            const clickpetShare = Math.round((order.total - partnerShare) * 100) / 100;
             order.splitStatus = 'failed';
             order.splitError = error.message || 'Unknown error during split';
             order.splitAmount = partnerShare;

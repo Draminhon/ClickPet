@@ -32,7 +32,7 @@ export default function Footer() {
             <div className={styles.bottomRow}>
                 <div className={styles.legalColLeft}>
                     <span className={styles.legalText}>© Copyright 2026 - ClickPet - Todos os direitos reservados</span>
-                    <span className={styles.legalText}>CNPJ: 0.000.000/0000-00</span>
+                    <span className={styles.legalText}>CNPJ: 66.020.276/0001-40</span>
                 </div>
                 
                 <div className={styles.legalColRight}>

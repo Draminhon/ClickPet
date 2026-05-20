@@ -229,6 +229,7 @@ export async function GET(req: Request) {
 
         const orders = await Order.find(query)
             .populate('deliveryPersonId')
+            .populate('userId', 'name email phone')
             .sort({ createdAt: -1 });
 
         return NextResponse.json(orders);

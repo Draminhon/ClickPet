@@ -87,7 +87,7 @@ export async function POST(req: Request) {
 
                     console.log(`[Webhook] Order ${order._id} payment approved`);
 
-                    // ── SPLIT: Send 90% to partner via PIX ──
+                    // ── SPLIT: Send 85% pure to partner via PIX ──
                     // Must await (not fire-and-forget) because Vercel serverless
                     // kills the function after the response is sent.
                     try {
@@ -155,7 +155,7 @@ export async function POST(req: Request) {
                     await order.save();
                     console.log(`[Webhook] PIX payment confirmed for order ${order._id}`);
 
-                    // ── SPLIT: Send 90% to partner via PIX ──
+                    // ── SPLIT: Send 85% pure to partner via PIX ──
                     try {
                         const splitResult = await processPartnerPayout(order);
                         if (splitResult.success) {

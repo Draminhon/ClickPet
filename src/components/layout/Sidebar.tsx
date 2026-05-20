@@ -16,7 +16,8 @@ import {
     LogOut,
     ChevronLeft,
     ChevronRight,
-    ChevronDown
+    ChevronDown,
+    Receipt
 } from 'lucide-react';
 import { signOut, useSession } from 'next-auth/react';
 import styles from './Sidebar.module.css';
@@ -92,6 +93,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
     const navItems = [
         { href: '/partner/dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { href: '/partner/orders', label: 'Pedidos', icon: ShoppingBag },
+        { href: '/partner/receipts', label: 'Comprovantes', icon: Receipt },
         { href: '/partner/services', label: 'Serviços', icon: Scissors },
         { href: '/partner/appointments', label: 'Agendamentos', icon: Calendar },
         { href: '/partner/coupons', label: 'Cupons', icon: Ticket },

@@ -207,40 +207,49 @@ export default function PartnerOrders() {
                 }
 
                 @media print {
-                    /* Oculta toda a barra lateral, banner de assinatura e elementos não relacionados */
-                    aside, 
-                    main > div:first-of-type, 
-                    .no-print, 
-                    button,
+                    /* Oculta sidebar, banner, dashboard, drawer, backdrop e botões de ação */
+                    aside,
+                    .no-print,
                     .recharts-responsive-container {
                         display: none !important;
+                    }
+                    /* Remove margem da sidebar do layout principal */
+                    body, html {
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        overflow: visible !important;
+                        background: white !important;
                     }
                     main {
                         margin-left: 0 !important;
                         padding: 0 !important;
                         background: white !important;
+                        overflow: visible !important;
                     }
-                    /* Exibe somente o container de comprovante */
+                    /* Torna o container do comprovante estático para fluxo normal de impressão */
                     .clickpet-modal-overlay-print {
-                        position: absolute !important;
-                        top: 0 !important;
-                        left: 0 !important;
+                        position: static !important;
                         width: 100% !important;
                         height: auto !important;
                         background: white !important;
+                        backdrop-filter: none !important;
                         padding: 0 !important;
                         margin: 0 !important;
                         display: block !important;
-                        z-index: 99999 !important;
+                        overflow: visible !important;
                     }
                     .clickpet-modal-content-print {
                         max-width: 100% !important;
+                        max-height: none !important;
                         box-shadow: none !important;
                         border: none !important;
+                        border-radius: 0 !important;
                         padding: 0 !important;
                         margin: 0 !important;
                         transform: none !important;
+                        animation: none !important;
                         background: white !important;
+                        overflow: visible !important;
                     }
                     /* Força o navegador a imprimir cores de fundo */
                     * {

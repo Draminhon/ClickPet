@@ -18,28 +18,28 @@ const DEMO_PROMOS: Promotion[] = [
         id: '1',
         title: 'Desconto em Rações Premium',
         tag: 'Oferta',
-        image: 'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=1000&h=400&fit=crop',
+        image: '/assets/promo/promo.png',
         link: '/search?category=Ração'
     },
     {
         id: '2',
         title: 'Banho e Tosa Profissional',
         tag: 'Serviços',
-        image: 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?w=1000&h=400&fit=crop',
+        image: '/assets/promo/promo.png',
         link: '/partners'
     },
     {
         id: '3',
         title: 'Acessórios para Gatos',
         tag: 'Novidade',
-        image: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=1000&h=400&fit=crop',
+        image: '/assets/promo/promo.png',
         link: '/search?category=Gatos'
     },
     {
         id: '4',
         title: 'Brinquedos Diversos',
         tag: 'Promo',
-        image: 'https://images.unsplash.com/photo-1576201836105-81186fab35ed?w=1000&h=400&fit=crop',
+        image: '/assets/promo/promo.png',
         link: '/search?category=Brinquedos'
     }
 ];
@@ -175,10 +175,6 @@ export default function LoggedInPromotionsCarousel() {
                                 sizes="380px"
                                 className={styles.promoImage}
                             />
-                            <div className={styles.overlay}>
-                                <span className={styles.tag}>{promo.tag}</span>
-                                <h3 className={styles.title}>{promo.title}</h3>
-                            </div>
                         </Link>
                     ))}
                 </div>

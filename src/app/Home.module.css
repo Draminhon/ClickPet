@@ -270,6 +270,10 @@
     margin-top: -5px;
 }
 
+.clickPetGreen {
+    color: #5CA87C;
+}
+
 .juntosRight {
     display: flex;
     gap: 20px;

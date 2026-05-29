@@ -251,10 +251,10 @@ export default function Header() {
 
     return (
         <>
-            <header className={styles.header}>
+            <header className={`${styles.header} ${!session ? styles.headerTransparent : ''}`}>
                 <div className={styles.headerContent}>
                     {/* Logo */}
-                    <Link href="/" className={styles.logo}>
+                    <Link href="/" className={`${styles.logo} ${!session ? styles.logoWhite : ''}`}>
                         ClickPet.
                     </Link>
 

@@ -105,7 +105,7 @@ export default async function HomePage() {
                         <div className={styles.juntosLeft}>
                             <div className={styles.juntosTextContainer}>
                                 <span className={styles.juntosPart1}>Juntos<span className={styles.juntosComma}>,</span></span>
-                                <span className={styles.juntosPart2}>somos a ClickPet.</span>
+                                <span className={styles.juntosPart2}>somos a <span className={styles.clickPetGreen}>ClickPet.</span></span>
                             </div>
                             
                             <Link href="/login" style={{ textDecoration: 'none' }}>
@@ -121,7 +121,7 @@ export default async function HomePage() {
                         <div className={styles.juntosRight}>
                             <Link href="/login" className={styles.imageButton}>
                                 <Image 
-                                    src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=200&h=300&fit=crop" 
+                                    src="/assets/animals/cat.png" 
                                     alt="Quero comprar" 
                                     fill
                                     sizes="200px"
@@ -132,7 +132,7 @@ export default async function HomePage() {
                             </Link>
                             <Link href="/login" className={styles.imageButton}>
                                 <Image 
-                                    src="https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=200&h=300&fit=crop" 
+                                    src="/assets/animals/chihuaha.png" 
                                     alt="Quero vender" 
                                     fill
                                     sizes="200px"
@@ -143,7 +143,7 @@ export default async function HomePage() {
                             </Link>
                             <Link href="/about" className={styles.imageButton}>
                                 <Image 
-                                    src="https://images.unsplash.com/photo-1517849845537-4d257902454a?w=200&h=300&fit=crop" 
+                                    src="/assets/animals/parrot.png" 
                                     alt="Saiba mais" 
                                     fill
                                     sizes="200px"

@@ -257,6 +257,79 @@ export default function PartnerOrders() {
                         print-color-adjust: exact !important;
                     }
                 }
+
+                @media (max-width: 768px) {
+                    .orders-toolbar {
+                        flex-direction: column !important;
+                        align-items: stretch !important;
+                        gap: 0.75rem !important;
+                    }
+                    .orders-tabs-container {
+                        width: 100% !important;
+                    }
+                    .orders-search-container {
+                        width: 100% !important;
+                    }
+                    .orders-search-input-wrapper {
+                        flex: 1 !important;
+                        width: auto !important;
+                    }
+                    .orders-table-container {
+                        border: none !important;
+                        background: transparent !important;
+                        padding: 0 !important;
+                    }
+                    .orders-table, 
+                    .orders-table tbody, 
+                    .orders-table-row, 
+                    .orders-table-cell {
+                        display: block !important;
+                        width: 100% !important;
+                    }
+                    .orders-table-header {
+                        display: none !important;
+                    }
+                    .orders-table-row {
+                        background: #F9FBFD !important;
+                        border: 1px solid rgba(209, 217, 226, 1) !important;
+                        border-radius: 12px !important;
+                        padding: 1rem !important;
+                        margin-bottom: 1rem !important;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important;
+                        text-align: left !important;
+                    }
+                    .orders-table-cell {
+                        display: flex !important;
+                        justify-content: space-between !important;
+                        align-items: center !important;
+                        padding: 10px 0 !important;
+                        border-bottom: 1px dashed rgba(209, 217, 226, 0.4) !important;
+                        text-align: right !important;
+                        font-size: 14px !important;
+                    }
+                    .orders-table-cell:last-child {
+                        border-bottom: none !important;
+                    }
+                    .orders-table-cell::before {
+                        content: attr(data-label) !important;
+                        font-weight: 700 !important;
+                        color: #757575 !important;
+                        text-transform: uppercase !important;
+                        font-size: 11px !important;
+                        text-align: left !important;
+                        margin-right: 16px !important;
+                    }
+                    .orders-table-cell:first-child {
+                        border-bottom: 1px solid rgba(209, 217, 226, 1) !important;
+                        padding-bottom: 12px !important;
+                        margin-bottom: 8px !important;
+                        justify-content: flex-start !important;
+                        padding-top: 0 !important;
+                    }
+                    .orders-table-cell:first-child::before {
+                        display: none !important;
+                    }
+                }
             ` }} />
 
             {/* Painel do Dashboard Geral (Oculto na impressão) */}
@@ -381,9 +454,9 @@ export default function PartnerOrders() {
                     </h3>
 
                     {/* Toolbar */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div className="orders-toolbar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
                         {/* Tabs Container */}
-                        <div style={{
+                        <div className="orders-tabs-container" style={{
                             display: 'flex',
                             width: '452px',
                             height: '40px',
@@ -416,9 +489,9 @@ export default function PartnerOrders() {
                         </div>
 
                         {/* Search and Action Container */}
-                        <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+                        <div className="orders-search-container" style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
                             {/* Search Bar */}
-                            <div style={{
+                            <div className="orders-search-input-wrapper" style={{
                                 display: 'flex',
                                 alignItems: 'center',
                                 width: '288.5px',
@@ -465,16 +538,16 @@ export default function PartnerOrders() {
                     </div>
 
                     {/* Table Container */}
-                    <div style={{
+                    <div className="orders-table-container" style={{
                         background: '#F9FBFD',
                         borderRadius: '12px',
                         padding: '1.5rem 0',
                         border: '1px solid rgba(209, 217, 226, 1)',
                         overflowX: 'auto'
                     }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                        <table className="orders-table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                             <thead>
-                                <tr style={{ borderBottom: '1px solid rgba(209, 217, 226, 1)', color: '#757575', fontSize: '14px' }}>
+                                <tr className="orders-table-header" style={{ borderBottom: '1px solid rgba(209, 217, 226, 1)', color: '#757575', fontSize: '14px' }}>
                                     <th style={{ padding: '1rem 0', fontWeight: 700, width: '12.5%', textAlign: 'center' }}>ID</th>
                                     <th style={{ padding: '1rem 0', fontWeight: 700, width: '12.5%', textAlign: 'center' }}>DATA</th>
                                     <th style={{ padding: '1rem 0', fontWeight: 700, width: '12.5%', textAlign: 'center' }}>ITENS</th>
@@ -515,6 +588,7 @@ export default function PartnerOrders() {
                                         return (
                                             <tr 
                                                 key={order._id} 
+                                                className="orders-table-row"
                                                 onClick={(e) => {
                                                     const target = e.target as HTMLElement;
                                                     // Abre o drawer somente se não clicou em um botão de ação rápida
@@ -539,23 +613,23 @@ export default function PartnerOrders() {
                                                     e.currentTarget.style.background = getRowBackground();
                                                 }}
                                             >
-                                                <td style={{ padding: '1.2rem 0', fontWeight: 600, color: '#3BB77E' }}>
+                                                <td className="orders-table-cell" data-label="ID" style={{ padding: '1.2rem 0', fontWeight: 600, color: '#3BB77E' }}>
                                                     #{order._id.slice(-6).toUpperCase()}
                                                 </td>
-                                                <td style={{ padding: '1.2rem 0' }}>
+                                                <td className="orders-table-cell" data-label="Data" style={{ padding: '1.2rem 0' }}>
                                                     {new Date(order.createdAt).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
                                                 </td>
-                                                <td style={{ padding: '1.2rem 0' }}>{order.items?.length || 0}</td>
-                                                <td style={{ padding: '1.2rem 0', fontWeight: 600, color: '#253D4E' }}>
+                                                <td className="orders-table-cell" data-label="Itens" style={{ padding: '1.2rem 0' }}>{order.items?.length || 0}</td>
+                                                <td className="orders-table-cell" data-label="Total" style={{ padding: '1.2rem 0', fontWeight: 600, color: '#253D4E' }}>
                                                     R$ {order.total?.toFixed(2).replace('.', ',')}
                                                 </td>
-                                                <td style={{ padding: '1.2rem 0' }}>
+                                                <td className="orders-table-cell" data-label="Status" style={{ padding: '1.2rem 0' }}>
                                                     <OrderStatusBadge status={order.status} />
                                                 </td>
-                                                <td style={{ padding: '1.2rem 0' }}>
+                                                <td className="orders-table-cell" data-label="Cliente" style={{ padding: '1.2rem 0' }}>
                                                     {order.userId?.name || order.user?.name || '-'}
                                                 </td>
-                                                <td style={{ padding: '1.2rem 0', textTransform: 'uppercase', fontSize: '13px', fontWeight: 700 }}>
+                                                <td className="orders-table-cell" data-label="Pagamento" style={{ padding: '1.2rem 0', textTransform: 'uppercase', fontSize: '13px', fontWeight: 700 }}>
                                                     <span style={{
                                                         color: order.paymentStatus === 'approved' ? '#3BB77E' : 
                                                                order.paymentStatus === 'pending' ? '#FFC107' : '#FF3B30'
@@ -565,7 +639,7 @@ export default function PartnerOrders() {
                                                          order.paymentStatus === 'pending' ? 'PENDENTE' : 'APROVADO'}
                                                     </span>
                                                 </td>
-                                                <td style={{ padding: '1.2rem 0' }} onClick={(e) => e.stopPropagation()}>
+                                                <td className="orders-table-cell" data-label="Ações" style={{ padding: '1.2rem 0' }} onClick={(e) => e.stopPropagation()}>
                                                     {order.status === 'pending' && (
                                                         <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
                                                             <button onClick={() => handleStatusUpdate(order._id, 'accepted')} style={{ padding: '6px 12px', fontSize: '12px', background: '#3BB77E', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 600, cursor: 'pointer', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = '#2aac6c'} onMouseLeave={e => e.currentTarget.style.background = '#3BB77E'}>Aceitar</button>

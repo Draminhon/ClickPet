@@ -1,0 +1,325 @@
+.settingsContainer {
+    padding: 32px;
+    background: white;
+    min-height: 100vh;
+}
+
+.headerRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 48px;
+}
+
+.headerButtons {
+    display: flex;
+    gap: 16px;
+}
+
+.sectionTitle {
+    font-size: 18px;
+    font-weight: 700;
+    color: #253D4E;
+    margin-bottom: 32px;
+}
+
+.visualIdentitySection {
+    display: flex;
+    gap: 48px;
+    align-items: flex-start;
+    margin-bottom: 64px;
+}
+
+.logoContainer {
+    width: 150px;
+    flex-shrink: 0;
+}
+
+.bannerContainer {
+    flex: 1;
+}
+
+.logoUploadBox {
+    width: 150px;
+    height: 150px;
+    border: 2px dashed #D1D9E2;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    overflow: hidden;
+    position: relative;
+    background-color: #F9FBFD;
+}
+
+.bannerUploadBox {
+    width: 100%;
+    height: 150px;
+    border: 2px dashed #D1D9E2;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    overflow: hidden;
+    position: relative;
+    background-color: #F9FBFD;
+}
+
+.formSectionRow {
+    display: flex;
+    gap: 64px;
+    margin-bottom: 64px;
+}
+
+.colHalf {
+    flex: 1;
+    min-width: 0;
+}
+
+.nestedFlexRow {
+    display: flex;
+    gap: 24px;
+}
+
+.nestedCol {
+    flex: 1;
+    min-width: 0;
+}
+
+.tableWrapper {
+    border: 1px solid #D1D9E2;
+    border-radius: 10px;
+    background: #F9FBFD;
+    overflow: hidden;
+    padding: 0 24px;
+}
+
+.workingHoursTable {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: auto;
+}
+
+.paymentRow {
+    display: flex;
+    gap: 64px;
+    align-items: flex-start;
+    margin-bottom: 64px;
+}
+
+.acceptedMethodsCol {
+    width: 450px;
+    flex-shrink: 0;
+}
+
+.acceptedMethodsList {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.methodCard {
+    width: 450px;
+    height: 64px;
+    border-radius: 10px;
+    border: 1px solid #D1D9E2;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    justify-content: space-between;
+    box-sizing: border-box;
+    background: white;
+}
+
+.methodsFeeTableWrapper {
+    width: 450px;
+    height: 238px;
+    border-radius: 10px;
+    border: 1px solid #D1D9E2;
+    background: white;
+    overflow: hidden;
+}
+
+.receiptConfigCol {
+    flex: 1;
+}
+
+.pixIntegrationBanner {
+    width: 100%;
+    height: 108px;
+    border-radius: 10px;
+    border: 1px solid #D1D9E2;
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 24px;
+    box-sizing: border-box;
+    background: white;
+}
+
+.addressSectionRow {
+    display: flex;
+    gap: 64px;
+    margin-top: 64px;
+    margin-bottom: 64px;
+}
+
+.footerRow {
+    display: flex;
+    justify-content: flex-end;
+    padding: 48px 0;
+    margin-top: 48px;
+    border-top: 1px solid #F0F0F0;
+}
+
+@media (max-width: 768px) {
+    .settingsContainer {
+        padding: 16px !important;
+    }
+
+    .headerRow {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 16px !important;
+        margin-bottom: 32px !important;
+    }
+
+    .headerButtons {
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+
+    .headerButtons button {
+        width: 100% !important;
+    }
+
+    .visualIdentitySection {
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 24px !important;
+        margin-bottom: 40px !important;
+    }
+
+    .logoContainer {
+        width: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+    }
+
+    .bannerContainer {
+        width: 100% !important;
+    }
+
+    .formSectionRow {
+        flex-direction: column !important;
+        gap: 32px !important;
+        margin-bottom: 40px !important;
+    }
+
+    .colHalf {
+        width: 100% !important;
+    }
+
+    .nestedFlexRow {
+        flex-direction: column !important;
+        gap: 16px !important;
+    }
+
+    .tableWrapper {
+        padding: 0 16px !important;
+    }
+
+    .workingHoursTable thead {
+        display: none !important;
+    }
+
+    .workingHoursTable,
+    .workingHoursTable tbody,
+    .workingHoursTable tr,
+    .workingHoursTable td {
+        display: block !important;
+        width: 100% !important;
+    }
+
+    .workingHoursTable tr {
+        padding: 16px 0 !important;
+        border-bottom: 1px solid #F0F0F0 !important;
+    }
+
+    .workingHoursTable tr:last-child {
+        border-bottom: none !important;
+    }
+
+    .workingHoursTable td {
+        padding: 8px 0 !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+    }
+
+    /* We show labels for working hours */
+    .workingHoursTable td::before {
+        font-weight: 600 !important;
+        color: #757575 !important;
+        font-size: 12px !important;
+        text-transform: uppercase !important;
+    }
+
+    .workingHoursTable td:nth-child(1)::before { content: "Dia"; }
+    .workingHoursTable td:nth-child(2)::before { content: "Status"; }
+    .workingHoursTable td:nth-child(3)::before { content: "Abertura"; }
+    .workingHoursTable td:nth-child(4)::before { content: "Fechamento"; }
+
+    .paymentRow {
+        flex-direction: column !important;
+        gap: 32px !important;
+        margin-bottom: 40px !important;
+    }
+
+    .acceptedMethodsCol {
+        width: 100% !important;
+    }
+
+    .methodCard {
+        width: 100% !important;
+    }
+
+    .methodsFeeTableWrapper {
+        width: 100% !important;
+        height: auto !important;
+    }
+
+    .receiptConfigCol {
+        width: 100% !important;
+    }
+
+    .pixIntegrationBanner {
+        height: auto !important;
+        padding: 16px !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 16px !important;
+    }
+
+    .addressSectionRow {
+        flex-direction: column !important;
+        gap: 32px !important;
+        margin-top: 40px !important;
+        margin-bottom: 40px !important;
+    }
+
+    .footerRow {
+        padding: 24px 0 !important;
+        margin-top: 24px !important;
+    }
+
+    .footerRow button {
+        width: 100% !important;
+    }
+}

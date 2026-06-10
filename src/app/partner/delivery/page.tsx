@@ -397,7 +397,7 @@ export default function DeliveryPersonsPage() {
                     <div className={styles.editModalContent}>
                         <h3 className={styles.modalTitle} style={{ marginBottom: '24px' }}>Editar Entregador</h3>
                         
-                        <div style={{ display: 'flex', gap: '32px' }}>
+                        <div className={styles.modalFlexRow}>
                             <div className={styles.photoUploadSection}>
                                 <label className={styles.photoCircle}>
                                     {editFormData.photo ? (
@@ -411,7 +411,7 @@ export default function DeliveryPersonsPage() {
                             </div>
 
                             <form onSubmit={handleEditSubmit} style={{ flex: 1 }}>
-                                <div className={styles.formGrid} style={{ gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+                                <div className={styles.formGrid}>
                                     <div className={styles.formGroup}>
                                         <label className={styles.fieldLabel}>NOME COMPLETO</label>
                                         <div className={styles.inputContainer}>

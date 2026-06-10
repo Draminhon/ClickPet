@@ -358,6 +358,87 @@
     .settingsImageGrid {
         grid-template-columns: 1fr;
     }
+    .formGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Mobile Header Bar */
+.mobileHeader {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .mobileHeader {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        background: #FFFFFF;
+        padding: 16px 20px;
+        border-bottom: 1px solid #ECECEC;
+        position: sticky;
+        top: 0;
+        z-index: 900;
+    }
+
+    .menuButton {
+        background: transparent;
+        border: none;
+        color: #253D4E;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 4px;
+    }
+
+    .mobileLogo {
+        font-size: 22px;
+        font-weight: 800;
+        color: #253D4E;
+        font-family: 'Baloo 2', sans-serif;
+    }
+
+    .mobileLogo span {
+        color: #3BB77E;
+    }
+
+    .mainContent {
+        margin-left: 0 !important;
+        padding: 0 0 20px 0;
+    }
+
+    .dashboardContainer {
+        margin: 20px auto;
+        padding: 0 16px;
+    }
+
+    .title {
+        font-size: 26px;
+    }
+
+    .card {
+        padding: 20px;
+        border-radius: 16px;
+    }
+
+    .addressGrid, .addressGridFull {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .avatarWrapper {
+        width: 100px;
+        height: 100px;
+        bottom: -40px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .bannerWrapper {
+        height: 150px;
+        border-radius: 16px;
+    }
 }
 
 .modalOverlay {

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Package, MapPin, Calendar, Truck, AlertCircle } from 'lucide-react';
 import OrderStatusBadge from '@/components/ui/OrderStatusBadge';
 import { useToast } from '@/context/ToastContext';
+import styles from './Orders.module.css';
 
 export default function CustomerOrders() {
     const { showToast } = useToast();
@@ -68,7 +69,7 @@ export default function CustomerOrders() {
     }
 
     return (
-        <div className="container" style={{ padding: '2rem 0' }}>
+        <div className={`container ${styles.ordersContainer}`}>
             <h1 className="section-title">Meus Pedidos</h1>
 
             {orders.length === 0 ? (
@@ -80,9 +81,9 @@ export default function CustomerOrders() {
             ) : (
                 <div style={{ display: 'grid', gap: '2rem' }}>
                     {orders.map(order => (
-                        <div key={order._id} style={{ background: 'white', borderRadius: '12px', padding: '2rem', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+                        <div key={order._id} className={styles.orderCard}>
                             {/* Header */}
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1.5rem', paddingBottom: '1rem', borderBottom: '1px solid #eee' }}>
+                            <div className={styles.orderHeader}>
                                 <div>
                                     <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '0.5rem' }}>
                                         Pedido #{order._id.slice(-6).toUpperCase()}
@@ -97,38 +98,30 @@ export default function CustomerOrders() {
 
                             {/* Timeline */}
                             {order.status !== 'cancelled' && (
-                                <div style={{ marginBottom: '2rem' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', position: 'relative' }}>
+                                <div className={styles.timelineScroll}>
+                                    <div className={styles.timelineFlex}>
                                         {getStatusTimeline(order).map((step, idx) => (
-                                            <div key={idx} style={{ flex: 1, position: 'relative', textAlign: 'center' }}>
-                                                <div style={{
-                                                    width: '32px',
-                                                    height: '32px',
-                                                    borderRadius: '50%',
-                                                    background: step.completed ? '#6CC551' : '#ddd',
-                                                    margin: '0 auto 0.5rem',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    color: 'white',
-                                                    fontWeight: 700,
-                                                    fontSize: '0.9rem',
-                                                }}>
+                                            <div key={idx} className={styles.stepContainer}>
+                                                <div 
+                                                    className={styles.stepCircle}
+                                                    style={{ background: step.completed ? '#6CC551' : '#ddd' }}
+                                                >
                                                     {step.completed ? '✓' : idx + 1}
                                                 </div>
-                                                <p style={{ fontSize: '0.75rem', color: step.completed ? '#333' : '#999', fontWeight: step.active ? 600 : 400 }}>
+                                                <p 
+                                                    className={styles.stepLabel}
+                                                    style={{ 
+                                                        color: step.completed ? '#333' : '#999', 
+                                                        fontWeight: step.active ? 600 : 400 
+                                                    }}
+                                                >
                                                     {step.label}
                                                 </p>
                                                 {idx < 4 && (
-                                                    <div style={{
-                                                        position: 'absolute',
-                                                        top: '16px',
-                                                        left: '50%',
-                                                        width: '100%',
-                                                        height: '2px',
-                                                        background: step.completed ? '#6CC551' : '#ddd',
-                                                        zIndex: -1,
-                                                    }} />
+                                                    <div 
+                                                        className={styles.timelineLine}
+                                                        style={{ background: step.completed ? '#6CC551' : '#ddd' }}
+                                                    />
                                                 )}
                                             </div>
                                         ))}
@@ -152,20 +145,20 @@ export default function CustomerOrders() {
                                 <h4 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem' }}>Itens do Pedido</h4>
                                 <div style={{ background: '#f9f9f9', borderRadius: '8px', padding: '1rem' }}>
                                     {order.items.map((item: any, idx: number) => (
-                                        <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.95rem' }}>
-                                            <span>{item.quantity}x {item.title}</span>
-                                            <span style={{ fontWeight: 600 }}>R$ {(item.price * item.quantity).toFixed(2).replace('.', ',')}</span>
+                                        <div key={idx} className={styles.itemRow}>
+                                            <span className={styles.itemName}>{item.quantity}x {item.title}</span>
+                                            <span className={styles.itemPrice}>R$ {(item.price * item.quantity).toFixed(2).replace('.', ',')}</span>
                                         </div>
                                     ))}
                                     {order.discount > 0 && (
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#6CC551' }}>
-                                            <span>Desconto {order.coupon && `(Cupom: ${order.coupon})`}</span>
-                                            <span>- R$ {order.discount.toFixed(2).replace('.', ',')}</span>
+                                        <div className={styles.discountRow}>
+                                            <span className={styles.itemName}>Desconto {order.coupon && `(Cupom: ${order.coupon})`}</span>
+                                            <span className={styles.itemPrice}>- R$ {order.discount.toFixed(2).replace('.', ',')}</span>
                                         </div>
                                     )}
-                                    <div style={{ borderTop: '1px solid #ddd', marginTop: '0.5rem', paddingTop: '0.5rem', display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: '1.1rem' }}>
+                                    <div className={styles.totalRow}>
                                         <span>Total</span>
-                                        <span style={{ color: '#6CC551' }}>R$ {order.total.toFixed(2).replace('.', ',')}</span>
+                                        <span className={styles.totalPriceText}>R$ {order.total.toFixed(2).replace('.', ',')}</span>
                                     </div>
                                 </div>
                             </div>

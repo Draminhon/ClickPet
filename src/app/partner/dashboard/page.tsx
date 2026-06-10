@@ -317,11 +317,11 @@ export default function Dashboard() {
                                         <span className={styles.productName} style={{ fontSize: '16px' }}>{product.title}</span>
                                     </div>
                                 </td>
-                                <td className={styles.cell}>{product.description}</td>
-                                <td className={styles.cell}>{product.productType || 'Geral'}</td>
-                                <td className={styles.cell}>{formatCurrency(product.price)}</td>
-                                <td className={styles.cell}>{product.discount}%</td>
-                                <td className={styles.cell}>{product.category}</td>
+                                <td className={styles.cell} data-label="Descrição">{product.description}</td>
+                                <td className={styles.cell} data-label="Tipo">{product.productType || 'Geral'}</td>
+                                <td className={styles.cell} data-label="Preço">{formatCurrency(product.price)}</td>
+                                <td className={styles.cell} data-label="Desconto">{product.discount}%</td>
+                                <td className={styles.cell} data-label="Categorias">{product.category}</td>
                             </tr>
                         ))}
                     </tbody>

@@ -354,3 +354,129 @@
         flex: 1;
     }
 }
+
+/* ──────────────────────────────────────────────────────────────────────────
+   RESPONSIVE DESIGN RULES FOR MOBILE VIEWPORTS
+   ────────────────────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+    .container {
+        padding: 1.5rem 16px;
+    }
+
+    .cartItem {
+        position: relative;
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        align-items: center !important;
+        padding: 16px !important;
+        gap: 0 !important;
+    }
+
+    .removeBtn {
+        position: absolute !important;
+        top: 16px !important;
+        right: 16px !important;
+        margin-right: 0 !important;
+    }
+
+    .productImage {
+        width: 80px !important;
+        height: 80px !important;
+        margin-right: 16px !important;
+    }
+
+    .infoColumn {
+        margin-right: 24px !important;
+        flex: 1 1 auto !important;
+    }
+
+    .productTitle {
+        font-size: 18px !important;
+        white-space: normal !important;
+        display: -webkit-box !important;
+        -webkit-line-clamp: 2 !important;
+        -webkit-box-orient: vertical !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        line-height: 1.3 !important;
+        padding-right: 20px !important; /* avoid overlapping with remove button */
+    }
+
+    .priceColumn {
+        width: 100% !important;
+        margin-top: 16px !important;
+        padding-top: 12px !important;
+        border-top: 1px dashed #EAEAEA !important;
+        justify-content: space-between !important;
+        gap: 12px !important;
+    }
+
+    .unitPrice {
+        font-size: 16px !important;
+        min-width: 0 !important;
+    }
+
+    .quantitySelector {
+        width: 109px !important;
+        height: 32px !important;
+    }
+
+    .qtyValue {
+        font-size: 14px !important;
+    }
+
+    .qtyBtn {
+        width: 32px !important;
+    }
+
+    .totalPrice {
+        font-size: 18px !important;
+        min-width: 0 !important;
+    }
+
+    .couponSection {
+        padding: 16px !important;
+    }
+
+    .couponTitle {
+        font-size: 18px !important;
+        margin-bottom: 12px !important;
+    }
+
+    .couponInputArea {
+        height: 44px !important;
+    }
+
+    .couponInputContainer {
+        height: 44px !important;
+    }
+
+    .couponInput {
+        font-size: 15px !important;
+    }
+
+    .couponApplyBtn {
+        height: 44px !important;
+        width: 100px !important;
+        font-size: 15px !important;
+    }
+
+    .summary {
+        padding: 16px !important;
+    }
+
+    .summaryTitle {
+        font-size: 1.25rem !important;
+    }
+
+    .checkoutBtn {
+        height: 48px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 !important;
+        font-size: 16px !important;
+        margin-top: 1.25rem !important;
+    }
+}

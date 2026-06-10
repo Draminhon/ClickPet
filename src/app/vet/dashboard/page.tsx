@@ -8,7 +8,7 @@ import Footer from '@/components/layout/Footer';
 import MapPicker from '@/components/ui/MapPicker';
 import VetSidebar from '@/components/layout/VetSidebar';
 import ImageCropModal from '@/components/modals/ImageCropModal';
-import { Camera, MapPin, MessageCircle, FileText, User, Tag, Image as ImageIcon, CheckCircle, Settings } from 'lucide-react';
+import { Camera, MapPin, MessageCircle, FileText, User, Tag, Image as ImageIcon, CheckCircle, Settings, Menu } from 'lucide-react';
 import Image from 'next/image';
 import { maskPhone } from '@/utils/masks';
 import styles from './VetDashboard.module.css';
@@ -22,6 +22,8 @@ export default function VetDashboard() {
     const [activeTab, setActiveTab] = useState('overview');
     const [showWelcomeModal, setShowWelcomeModal] = useState(false);
     const [validationErrors, setValidationErrors] = useState<string[]>([]);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
     
     // Cropping state
     const [cropModalOpen, setCropModalOpen] = useState(false);
@@ -56,6 +58,15 @@ export default function VetDashboard() {
             fetchProfile();
         }
     }, [session, loading]);
+
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth <= 768);
+        };
+        handleResize(); // Initialize on client mount
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     // Warning for unsaved changes
     useEffect(() => {
@@ -298,9 +309,22 @@ export default function VetDashboard() {
                 }}
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
+                isOpen={sidebarOpen}
+                onClose={() => setSidebarOpen(false)}
             />
 
             <main className={styles.mainContent}>
+                {isMobile && (
+                    <div className={styles.mobileHeader}>
+                        <button onClick={() => setSidebarOpen(true)} className={styles.menuButton}>
+                            <Menu size={24} />
+                        </button>
+                        <span className={styles.mobileLogo}>
+                            ClickPet<span>.</span>
+                        </span>
+                    </div>
+                )}
+
                 <div className={styles.dashboardContainer}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
                         <div>

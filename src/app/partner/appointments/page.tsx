@@ -147,33 +147,16 @@ export default function PartnerAppointmentsPage() {
             </div>
 
             {/* Toolbar - Same style as Orders */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+            <div className={styles.toolbar}>
                 {/* Tabs Container */}
-                <div style={{
-                    display: 'flex',
-                    width: '600px', // Adjusted to fit 5 tabs
-                    height: '40px',
-                    borderRadius: '5px',
-                    border: '1px solid #D1D9E2',
-                    overflow: 'hidden'
-                }}>
+                <div className={styles.tabsContainer}>
                     {['TODOS', 'PENDENTES', 'CANCELADOS', 'CONFIRMADOS', 'CONCLUIDOS'].map((tab, idx) => (
                         <button
                             key={tab}
                             onClick={() => { setActiveTab(tab); setCurrentPage(1); }}
+                            className={`${styles.tabBtn} ${activeTab === tab ? styles.tabBtnActive : ''}`}
                             style={{
-                                flex: 1,
-                                border: 'none',
-                                borderRight: idx < 4 ? '1px solid #D1D9E2' : 'none',
-                                background: activeTab === tab ? '#3BB77E' : 'transparent',
-                                color: activeTab === tab ? '#FEFEFE' : '#757575',
-                                fontWeight: activeTab === tab ? 'bold' : 600,
-                                fontSize: '11px', // Slightly smaller font to fit
-                                cursor: 'pointer',
-                                transition: 'all 0.2s ease',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
+                                borderRight: idx < 4 ? '1px solid #D1D9E2' : 'none'
                             }}
                         >
                             {tab}
@@ -203,7 +186,7 @@ export default function PartnerAppointmentsPage() {
                         ) : (
                             currentTableData.map((a) => (
                                 <tr key={a._id} className={styles.tableRow} style={{ borderBottom: '1px solid rgba(209, 217, 226, 1)' }}>
-                                    <td className={styles.tableCell}>
+                                    <td className={styles.tableCell} data-label="Agendamento">
                                         <div className={styles.productCell}>
                                             <Image
                                                 src={a.serviceId?.image || '/assets/animals/chihuaha.png'}
@@ -215,11 +198,11 @@ export default function PartnerAppointmentsPage() {
                                             <span>{a.serviceId?.name}</span>
                                         </div>
                                     </td>
-                                    <td className={styles.tableCell}>{a.time}</td>
-                                    <td className={styles.tableCell}>{new Date(a.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</td>
-                                    <td className={styles.tableCell}>{a.userId?.name || 'Cliente'}</td>
-                                    <td className={styles.tableCell}>{a.status.toUpperCase()}</td>
-                                    <td className={styles.tableCell}>
+                                    <td className={styles.tableCell} data-label="Horário">{a.time}</td>
+                                    <td className={styles.tableCell} data-label="Data">{new Date(a.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</td>
+                                    <td className={styles.tableCell} data-label="Cliente">{a.userId?.name || 'Cliente'}</td>
+                                    <td className={styles.tableCell} data-label="Status">{a.status.toUpperCase()}</td>
+                                    <td className={styles.tableCell} data-label="Ações">
                                         <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
                                             {a.status === 'pending' && (
                                                 <>

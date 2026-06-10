@@ -256,11 +256,11 @@ function ServicesContent() {
                                             <span className={styles.serviceNameText} style={{ fontSize: '16px' }}>{s.name}</span>
                                         </div>
                                     </td>
-                                    <td className={styles.tableCell}><span className={styles.tableCellDefault}>{getCategoryLabel(s.category)}</span></td>
-                                    <td className={styles.tableCell}><span className={styles.tableCellDefault}>{s.prices?.[0]?.size || '-'}</span></td>
-                                    <td className={styles.tableCell}><span className={styles.tableCellDefault}>R$ {s.prices?.[0]?.price?.toFixed(2) || '0.00'}</span></td>
-                                    <td className={styles.tableCell}><span className={styles.tableCellDefault}>{s.duration || '-'}</span></td>
-                                    <td className={styles.tableCell}><span className={styles.tableCellDefault}>{getSpeciesLabel(s.species)}</span></td>
+                                    <td className={styles.tableCell} data-label="Categoria"><span className={styles.tableCellDefault}>{getCategoryLabel(s.category)}</span></td>
+                                    <td className={styles.tableCell} data-label="Porte"><span className={styles.tableCellDefault}>{s.prices?.[0]?.size || '-'}</span></td>
+                                    <td className={styles.tableCell} data-label="Preço"><span className={styles.tableCellDefault}>R$ {s.prices?.[0]?.price?.toFixed(2) || '0.00'}</span></td>
+                                    <td className={styles.tableCell} data-label="Duração (Min)"><span className={styles.tableCellDefault}>{s.duration || '-'}</span></td>
+                                    <td className={styles.tableCell} data-label="Espécie"><span className={styles.tableCellDefault}>{getSpeciesLabel(s.species)}</span></td>
                                 </tr>
                             );
                         })}

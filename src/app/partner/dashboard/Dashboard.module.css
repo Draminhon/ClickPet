@@ -419,3 +419,153 @@
 .dots {
     color: #757575;
 }
+
+@media (max-width: 768px) {
+    .dashboardContainer {
+        padding: 16px;
+    }
+
+    .metricsRow {
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+
+    .metricCard {
+        width: 100%;
+    }
+
+    .quickActions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+
+    .actionBtn {
+        width: 100% !important;
+    }
+
+    .searchContainer {
+        width: 100% !important;
+    }
+
+    .optionsBtn {
+        align-self: flex-end;
+    }
+
+    .productsContainer {
+        border: none;
+        background-color: transparent;
+        padding: 0;
+    }
+
+    .table, .table tbody, .tableRow, .cell {
+        display: block;
+        width: 100%;
+    }
+
+    .tableHeader {
+        display: none;
+    }
+
+    .tableRow {
+        background-color: #F9FBFD;
+        border: 1px solid #D1D9E2;
+        border-radius: 10px;
+        padding: 16px;
+        margin-bottom: 16px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    }
+
+    .tableRow:last-child {
+        margin-bottom: 0;
+    }
+
+    .cell {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px dashed #D1D9E2;
+        text-align: right;
+        font-size: 14px;
+    }
+
+    .cell:last-child {
+        border-bottom: none;
+    }
+
+    .cell::before {
+        content: attr(data-label);
+        font-weight: 700;
+        color: #757575;
+        text-transform: uppercase;
+        font-size: 11px;
+        text-align: left;
+        margin-right: 16px;
+    }
+
+    .cell:first-child {
+        border-bottom: 1px solid #D1D9E2;
+        padding-bottom: 12px;
+        margin-bottom: 8px;
+        justify-content: flex-start;
+        padding-top: 0;
+    }
+
+    .cell:first-child::before {
+        display: none;
+    }
+
+    .productCell {
+        padding-left: 0;
+    }
+
+    .graphsRow {
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    .graphContainer {
+        height: auto;
+        min-height: 444px;
+    }
+
+    .chartWithLegend {
+        flex-direction: column;
+        gap: 16px;
+        align-items: center;
+    }
+
+    .customLegend {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        max-width: 100%;
+        gap: 8px 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .pagination {
+        flex-direction: column;
+        gap: 16px;
+        align-items: center;
+        padding: 16px 8px;
+    }
+
+    .paginationBtn {
+        font-size: 14px;
+        padding: 6px;
+    }
+
+    .pageNumbers {
+        gap: 8px;
+        font-size: 14px;
+    }
+
+    .activePage {
+        padding: 4px 8px;
+    }
+}

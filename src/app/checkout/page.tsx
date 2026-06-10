@@ -7,6 +7,7 @@ import { useToast } from '@/context/ToastContext';
 import { AlertCircle, Truck, MapPin, CreditCard, QrCode, Plus, User } from 'lucide-react';
 import MapPicker from '@/components/ui/MapPicker';
 import { maskZip } from '@/utils/masks';
+import styles from './Checkout.module.css';
 
 function CheckoutContent() {
     const router = useRouter();
@@ -517,15 +518,15 @@ function CheckoutContent() {
     }
 
     return (
-        <div className="container" style={{ padding: '2rem 0' }}>
+        <div className={`container ${styles.checkoutContainer}`}>
             <h1 className="section-title">Finalizar Pedido</h1>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
+            <div className={styles.checkoutGrid}>
                 <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '1.5rem' }}>
                     {/* Delivery Option */}
                     <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
                         <h3 style={{ marginBottom: '1.2rem', color: '#333' }}>Opção de Entrega</h3>
-                        <div style={{ display: 'flex', gap: '1rem' }}>
+                        <div className={styles.deliverySelectorArea}>
                             <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', padding: '1.2rem', border: !isPickup ? '2px solid #3BB77E' : '1px solid #E5E7EB', borderRadius: '10px', flex: 1, background: !isPickup ? '#F3FAF6' : 'white', boxShadow: !isPickup ? '0 4px 10px rgba(59, 183, 126, 0.1)' : 'none', transition: 'all 0.2s' }}>
                                 <input
                                     type="radio"
@@ -622,7 +623,7 @@ function CheckoutContent() {
                                         )}
                                     </div>
 
-                                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                                    <div className={styles.addressFormGrid3}>
                                         <div>
                                             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 500, color: '#374151' }}>Rua</label>
                                             <input
@@ -656,7 +657,7 @@ function CheckoutContent() {
                                         </div>
                                     </div>
 
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                                    <div className={styles.addressFormGrid2}>
                                         <div>
                                             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 500, color: '#374151' }}>Cidade</label>
                                             <input
@@ -808,7 +809,7 @@ function CheckoutContent() {
                     {/* Payment Method Selection */}
                     <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
                         <h3 style={{ marginBottom: '1.2rem', color: '#333' }}>Método de Pagamento</h3>
-                        <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap' }}>
+                        <div className={styles.paymentSelectorArea}>
                             <label style={{
                                 display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer',
                                 padding: '1.2rem', border: paymentMethod === 'pix_cartao' ? '2px solid #3BB77E' : '1px solid #E5E7EB',

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
-import { ShoppingCart, User, Bell, X, MapPin, ChevronDown, Package, UserCircle, LogOut, Edit2, Trash2, Plus } from 'lucide-react';
+import { ShoppingCart, User, Bell, X, MapPin, ChevronDown, Package, UserCircle, LogOut, Edit2, Trash2, Plus, Check, CheckCheck } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useSession, signOut } from 'next-auth/react';
 import { useToast } from '@/context/ToastContext';
@@ -27,6 +27,69 @@ export default function Header() {
     const [userProfile, setUserProfile] = useState<any>(null);
     const [userImage, setUserImage] = useState<string | null>(null);
     const [editingIndex, setEditingIndex] = useState<number | null>(null); // null = new or primary, -1 = new, 0+ = deliveryAddresses index
+    
+    // States for mobile profile & notification modal
+    const [isMobile, setIsMobile] = useState(false);
+    const [showMobileProfileModal, setShowMobileProfileModal] = useState(false);
+    const [notifications, setNotifications] = useState<any[]>([]);
+    const [unreadCount, setUnreadCount] = useState(0);
+    const [notificationsLoading, setNotificationsLoading] = useState(false);
+
+    // Track screen width to determine mobile view (<= 768px)
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth <= 768);
+        };
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    const fetchNotifications = () => {
+        if (!session) return;
+        setNotificationsLoading(true);
+        fetch(`/api/notifications?t=${Date.now()}`)
+            .then(res => res.json())
+            .then(data => {
+                setNotifications(data.notifications || []);
+                setUnreadCount(data.unreadCount || 0);
+                setNotificationsLoading(false);
+            })
+            .catch(() => setNotificationsLoading(false));
+    };
+
+    // Auto-fetch notifications when modal opens or session shifts
+    useEffect(() => {
+        if (showMobileProfileModal && session) {
+            fetchNotifications();
+        }
+    }, [showMobileProfileModal, session]);
+
+    const handleMarkAsRead = async (notificationId: string) => {
+        setNotifications(prev => prev.map(n =>
+            n._id === notificationId ? { ...n, read: true } : n
+        ));
+        setUnreadCount(prev => Math.max(0, prev - 1));
+
+        try {
+            await fetch(`/api/notifications?id=${notificationId}`, { method: 'PUT' });
+            fetchNotifications();
+        } catch (error) {
+            fetchNotifications();
+        }
+    };
+
+    const handleMarkAllAsRead = async () => {
+        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+        setUnreadCount(0);
+
+        try {
+            await fetch('/api/notifications', { method: 'PUT' });
+            fetchNotifications();
+        } catch (error) {
+            fetchNotifications();
+        }
+    };
 
     const [addressForm, setAddressForm] = useState({
         street: '',
@@ -396,7 +459,13 @@ export default function Header() {
                                 >
                                     <div
                                         className={styles.profileCircle}
-                                        onClick={() => router.push(getProfileLink())}
+                                        onClick={() => {
+                                            if (isMobile) {
+                                                setShowMobileProfileModal(true);
+                                            } else {
+                                                router.push(getProfileLink());
+                                            }
+                                        }}
                                         style={{ cursor: 'pointer' }}
                                     >
                                         {userImage ? (
@@ -599,6 +668,192 @@ export default function Header() {
                                     Salvar Endereço
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Mobile Profile & Notifications Modal */}
+            {showMobileProfileModal && (
+                <div 
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'rgba(0,0,0,0.6)',
+                        display: 'flex',
+                        alignItems: 'stretch',
+                        justifyContent: 'flex-end',
+                        zIndex: 9999,
+                    }} 
+                    onClick={() => setShowMobileProfileModal(false)}
+                >
+                    <style>{`
+                        @keyframes slideInRight {
+                            from { transform: translateX(100%); }
+                            to { transform: translateX(0); }
+                        }
+                    `}</style>
+                    <div 
+                        style={{
+                            background: 'white',
+                            borderTopLeftRadius: '24px',
+                            borderBottomLeftRadius: '24px',
+                            padding: '24px 20px',
+                            width: '85%',
+                            maxWidth: '380px',
+                            height: '100%',
+                            maxHeight: '100vh',
+                            overflowY: 'auto',
+                            position: 'relative',
+                            animation: 'slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                        }} 
+                        onClick={e => e.stopPropagation()}
+                    >
+                        {/* Header */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <div style={{ width: '48px', height: '48px', borderRadius: '50%', overflow: 'hidden', background: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                                    {userImage ? (
+                                        <Image src={userImage} alt="Profile" width={48} height={48} style={{ objectFit: 'cover' }} />
+                                    ) : (
+                                        <User size={24} color="#3BB77E" />
+                                    )}
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                    <span style={{ fontWeight: 700, fontSize: '16px', color: '#272727', fontFamily: "'Baloo 2', sans-serif" }}>
+                                        {userProfile?.name || 'Seu Perfil'}
+                                    </span>
+                                    <span style={{ fontSize: '12px', color: '#878787' }}>
+                                        {userProfile?.email || ''}
+                                    </span>
+                                </div>
+                            </div>
+                            <button 
+                                onClick={() => setShowMobileProfileModal(false)} 
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}
+                            >
+                                <X size={24} color="#272727" />
+                            </button>
+                        </div>
+ 
+                        {/* Profile Menu Links */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
+                            <button 
+                                onClick={() => {
+                                    router.push(getProfileLink());
+                                    setShowMobileProfileModal(false);
+                                }}
+                                style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '12px', border: '1px solid #DDE1E6', background: 'white', fontFamily: "'Baloo 2', sans-serif", fontWeight: 600, fontSize: '15px', color: '#272727', cursor: 'pointer', textAlign: 'left' }}
+                            >
+                                <UserCircle size={20} color="#3BB77E" />
+                                Ver Perfil
+                            </button>
+                            <button 
+                                onClick={() => {
+                                    router.push('/orders');
+                                    setShowMobileProfileModal(false);
+                                }}
+                                style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '12px', border: '1px solid #DDE1E6', background: 'white', fontFamily: "'Baloo 2', sans-serif", fontWeight: 600, fontSize: '15px', color: '#272727', cursor: 'pointer', textAlign: 'left' }}
+                            >
+                                <Package size={20} color="#3BB77E" />
+                                Meus Pedidos
+                            </button>
+                            <button 
+                                onClick={() => {
+                                    signOut({ callbackUrl: '/' });
+                                    setShowMobileProfileModal(false);
+                                }}
+                                style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '12px', border: '1px solid #FF3B30', background: 'rgba(255, 59, 48, 0.05)', fontFamily: "'Baloo 2', sans-serif", fontWeight: 600, fontSize: '15px', color: '#FF3B30', cursor: 'pointer', textAlign: 'left' }}
+                            >
+                                <LogOut size={20} color="#FF3B30" />
+                                Sair da Conta
+                            </button>
+                        </div>
+ 
+                        <hr style={{ border: 'none', height: '1px', background: '#DDE1E6', margin: '0 0 20px 0' }} />
+ 
+                        {/* Notifications Section */}
+                        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                                <span style={{ fontFamily: "'Baloo 2', sans-serif", fontWeight: 700, fontSize: '18px', color: '#272727' }}>
+                                    Notificações {unreadCount > 0 && <span style={{ background: '#FF3B30', color: 'white', fontSize: '11px', fontWeight: 'bold', padding: '2px 8px', borderRadius: '12px', marginLeft: '6px' }}>{unreadCount}</span>}
+                                </span>
+                                {unreadCount > 0 && (
+                                    <button 
+                                        onClick={handleMarkAllAsRead}
+                                        style={{ background: 'none', border: 'none', color: '#3BB77E', fontWeight: 600, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                    >
+                                        Marcar lidas
+                                    </button>
+                                )}
+                            </div>
+ 
+                            {notificationsLoading ? (
+                                <div style={{ textAlign: 'center', padding: '20px 0', color: '#878787' }}>Carregando notificações...</div>
+                            ) : notifications.length === 0 ? (
+                                <div style={{ textAlign: 'center', padding: '30px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+                                    <Bell size={32} color="#DDE1E6" />
+                                    <span style={{ fontSize: '14px', color: '#878787' }}>Nenhuma notificação no momento</span>
+                                </div>
+                            ) : (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', overflowY: 'auto', maxHeight: 'calc(100vh - 330px)', paddingRight: '4px' }}>
+                                    {notifications.map(n => (
+                                        <div 
+                                            key={n._id}
+                                            onClick={() => {
+                                                if (!n.read) handleMarkAsRead(n._id);
+                                                if (n.link) {
+                                                    router.push(n.link);
+                                                    setShowMobileProfileModal(false);
+                                                }
+                                            }}
+                                            style={{
+                                                display: 'flex',
+                                                gap: '12px',
+                                                padding: '12px',
+                                                borderRadius: '12px',
+                                                background: n.read ? '#fdfdfd' : 'rgba(59, 183, 126, 0.05)',
+                                                border: n.read ? '1px solid #eee' : '1px solid rgba(59, 183, 126, 0.2)',
+                                                cursor: n.link ? 'pointer' : 'default',
+                                                position: 'relative'
+                                            }}
+                                        >
+                                            {!n.read && (
+                                                <div style={{ width: '8px', height: '8px', background: '#3BB77E', borderRadius: '50%', position: 'absolute', top: '12px', right: '12px' }} />
+                                            )}
+                                            <div style={{
+                                                width: '36px',
+                                                height: '36px',
+                                                borderRadius: '50%',
+                                                background: n.type === 'order' ? 'rgba(59, 183, 126, 0.1)' : 'rgba(237, 128, 42, 0.1)',
+                                                color: n.type === 'order' ? '#3BB77E' : '#ED802A',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                flexShrink: 0
+                                            }}>
+                                                {n.type === 'order' ? <Package size={18} /> : <Bell size={18} />}
+                                            </div>
+                                            <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0, textAlign: 'left' }}>
+                                                <span style={{ fontWeight: 700, fontSize: '13px', color: '#272727', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                                                    {n.title}
+                                                </span>
+                                                <span style={{ fontSize: '12px', color: '#878787', marginTop: '2px', lineHeight: 1.3 }}>
+                                                    {n.message}
+                                                </span>
+                                                <span style={{ fontSize: '10px', color: '#a0a0a0', marginTop: '6px' }}>
+                                                    {new Date(n.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

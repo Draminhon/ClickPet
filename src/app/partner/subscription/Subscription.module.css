@@ -438,6 +438,22 @@
 }
 
 @media (max-width: 768px) {
+    .container {
+        padding: 16px !important;
+    }
+
+    .planName {
+        font-size: 30px !important;
+    }
+
+    .planCardName {
+        font-size: 28px !important;
+    }
+
+    .planCardPrice {
+        font-size: 36px !important;
+    }
+
     .plansGrid {
         flex-direction: column;
     }
@@ -448,13 +464,23 @@
         min-height: 400px;
     }
 
+    .featureItem {
+        margin-bottom: 16px !important;
+    }
+
     .statusActions {
         flex-direction: column;
     }
 
     .upgradeBtn,
     .managePaymentBtn {
-        width: 100%;
+        min-width: 0 !important;
+        width: 100% !important;
+    }
+
+    .plansSectionTitle {
+        margin-top: 30px !important;
+        margin-bottom: 30px !important;
     }
 
     .customPlanCta {
@@ -462,5 +488,10 @@
         height: auto;
         padding: 16px;
         text-align: center;
+        gap: 12px;
+    }
+
+    .ctaBtn {
+        width: 100% !important;
     }
 }

@@ -8,15 +8,16 @@ import { Minus, Plus, ChevronUp, ChevronDown, QrCode, Upload } from 'lucide-reac
 import { maskPhone, maskPrice, maskCPF, maskCNPJ, maskZip } from '@/utils/masks';
 import MapPicker from '@/components/ui/MapPicker';
 import ImageCropModal from '@/components/modals/ImageCropModal';
+import styles from './Settings.module.css';
 
 // ... (InputContainer, WorkingHoursToggle, TimeSelector omitted)
 // I'll re-add the imports correctly
 
-const InputContainer = ({ label, value, onChange, type = "text", selector = false, onIncrement, onDecrement, placeholder = "", width = '450px', error = false }: any) => (
-    <div style={{ marginBottom: '24px', width: width === '100%' ? '100%' : 'auto' }}>
+const InputContainer = ({ label, value, onChange, type = "text", selector = false, onIncrement, onDecrement, placeholder = "", width = '100%', error = false }: any) => (
+    <div style={{ marginBottom: '24px', width: '100%' }}>
         <label style={{ display: 'block', fontSize: '14px', color: '#757575', marginBottom: '10px', textTransform: 'uppercase', fontWeight: 500 }}>{label}</label>
         <div style={{ 
-            width: width, 
+            width: '100%', 
             height: '52px', 
             borderRadius: '8px', 
             border: error ? '1.5px solid #FF4D4D' : '1px solid #D1D9E2', 
@@ -457,6 +458,7 @@ export default function PartnerSettings() {
         if (!formData.address.city) errors.push('city');
         if (!formData.address.neighborhood) errors.push('neighborhood');
         if (!formData.address.zip || formData.address.zip.length < 9) errors.push('zip');
+        if (!formData.pixConfig.key?.trim()) errors.push('pixKey');
 
         if (errors.length > 0) {
             setValidationErrors(errors);
@@ -537,7 +539,7 @@ export default function PartnerSettings() {
     };
 
     return (
-        <div style={{ padding: '32px', background: 'white', minHeight: '100vh' }}>
+        <div className={styles.settingsContainer}>
             {showWelcomeModal && (
                 <WelcomeModal 
                     onClose={() => {
@@ -550,9 +552,9 @@ export default function PartnerSettings() {
             )}
             
             {/* Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '48px' }}>
+            <div className={styles.headerRow}>
                 <h1 style={{ fontSize: '14px', color: '#253D4E', fontWeight: 400, margin: 0, letterSpacing: '0.05em' }}>CONFIGURAÇÕES</h1>
-                <div style={{ display: 'flex', gap: '16px' }}>
+                <div className={styles.headerButtons}>
                     <button 
                         onClick={handleDiscard}
                         style={{ 
@@ -593,25 +595,12 @@ export default function PartnerSettings() {
             </div>
 
             <div style={{ marginBottom: '64px' }}>
-                <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#253D4E', marginBottom: '32px' }}>IDENTIDADE VISUAL</h2>
-                <div style={{ display: 'flex', gap: '48px', alignItems: 'flex-start' }}>
+                <h2 className={styles.sectionTitle}>IDENTIDADE VISUAL</h2>
+                <div className={styles.visualIdentitySection}>
                     {/* Logo Upload */}
-                    <div>
+                    <div className={styles.logoContainer}>
                         <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#757575', marginBottom: '12px' }}>FOTO DE PERFIL (200X200)</label>
-                        <label style={{
-                            width: '150px',
-                            height: '150px',
-                            border: '2px dashed #D1D9E2',
-                            borderRadius: '12px',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            cursor: 'pointer',
-                            overflow: 'hidden',
-                            position: 'relative',
-                            backgroundColor: '#F9FBFD'
-                        }}>
+                        <label className={styles.logoUploadBox}>
                             {formData.shopLogo ? (
                                 <img src={formData.shopLogo} alt="Logo Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                             ) : (
@@ -625,22 +614,9 @@ export default function PartnerSettings() {
                     </div>
 
                     {/* Banner Upload */}
-                    <div style={{ flex: 1 }}>
+                    <div className={styles.bannerContainer}>
                         <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#757575', marginBottom: '12px' }}>BANNER DA VITRINE (1920X300)</label>
-                        <label style={{
-                            width: '100%',
-                            height: '150px',
-                            border: '2px dashed #D1D9E2',
-                            borderRadius: '12px',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            cursor: 'pointer',
-                            overflow: 'hidden',
-                            position: 'relative',
-                            backgroundColor: '#F9FBFD'
-                        }}>
+                        <label className={styles.bannerUploadBox}>
                             {formData.bannerImage ? (
                                 <img src={formData.bannerImage} alt="Banner Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                             ) : (
@@ -656,9 +632,9 @@ export default function PartnerSettings() {
                 </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '64px', marginBottom: '64px' }}>
+            <div className={styles.formSectionRow}>
                 {/* Left Column: Business Info */}
-                <div style={{ flex: 1 }}>
+                <div className={styles.colHalf}>
                     <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#253D4E', marginBottom: '32px' }}>INFORMAÇÕES DO NEGÓCIO</h2>
                     
                     <InputContainer 
@@ -697,11 +673,11 @@ export default function PartnerSettings() {
                 </div>
 
                 {/* Right Column: Delivery Config */}
-                <div style={{ flex: 1 }}>
+                <div className={styles.colHalf}>
                     <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#253D4E', marginBottom: '32px' }}>CONFIGURAÇÃO DE ENTREGA</h2>
 
-                    <div style={{ display: 'flex', gap: '24px' }}>
-                        <div style={{ flex: 1 }}>
+                    <div className={styles.nestedFlexRow}>
+                        <div className={styles.nestedCol}>
                             <InputContainer 
                                 label="RAIO DE ENTREGA (KM)"
                                 value={formData.deliveryRadius}
@@ -713,7 +689,7 @@ export default function PartnerSettings() {
                                 placeholder="0"
                             />
                         </div>
-                        <div style={{ flex: 1 }}>
+                        <div className={styles.nestedCol}>
                             <InputContainer 
                                 label="TAXA POR KM (R$)"
                                 value={formData.deliveryFeePerKm}
@@ -744,14 +720,8 @@ export default function PartnerSettings() {
             <div>
                 <h3 style={{ fontSize: '12px', fontWeight: 400, color: '#253D4E', marginBottom: '24px' }}>HORÁRIO DE FUNCIONAMENTO</h3>
                 
-                <div style={{ 
-                    border: '1px solid #D1D9E2', 
-                    borderRadius: '10px', 
-                    background: '#F9FBFD', 
-                    overflow: 'hidden',
-                    padding: '0 24px'
-                }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'auto' }}>
+                <div className={styles.tableWrapper}>
+                    <table className={styles.workingHoursTable}>
                         <thead>
                             <tr style={{ textAlign: 'left', borderBottom: '1px solid #D1D9E2' }}>
                                 <th style={{ padding: '24px 0', fontSize: '12px', fontWeight: 700, color: '#757575' }}>DIA DA SEMANA</th>
@@ -800,27 +770,18 @@ export default function PartnerSettings() {
             <div style={{ marginTop: '64px' }}>
                 <h3 style={{ fontSize: '12px', fontWeight: 400, color: '#253D4E', marginBottom: '32px' }}>OPÇÕES DE PAGAMENTO</h3>
                 
-                <div style={{ display: 'flex', gap: '64px', alignItems: 'flex-start' }}>
+                <div className={styles.paymentRow}>
                     {/* Column 1: Accepted Methods */}
-                    <div style={{ width: '450px' }}>
+                    <div className={styles.acceptedMethodsCol}>
                         <h4 style={{ fontSize: '12px', fontWeight: 700, color: '#253D4E', marginBottom: '24px' }}>MÉTODOS ACEITOS</h4>
                         
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+                        <div className={styles.acceptedMethodsList}>
                             {[
                                 { id: 'creditCard', label: 'CARTÃO DE CRÉDITO' },
                                 { id: 'debitCard', label: 'CARTÃO DE DÉBITO' },
                                 { id: 'cash', label: 'DINHEIRO' }
                             ].map((method) => (
-                                <div key={method.id} style={{ 
-                                    width: '450px', 
-                                    height: '64px', 
-                                    borderRadius: '10px', 
-                                    border: '1px solid #D1D9E2', 
-                                    display: 'flex', 
-                                    alignItems: 'center', 
-                                    padding: '0 20px',
-                                    justifyContent: 'space-between'
-                                }}>
+                                <div key={method.id} className={styles.methodCard}>
                                     <span style={{ fontSize: '14px', fontWeight: 400, color: '#253D4E' }}>{method.label}</span>
                                     <WorkingHoursToggle 
                                         active={(formData.paymentConfig as any)[method.id]} 
@@ -836,14 +797,7 @@ export default function PartnerSettings() {
                             ))}
                         </div>
 
-                        <div style={{ 
-                            width: '450px', 
-                            height: '238px', 
-                            borderRadius: '10px', 
-                            border: '1px solid #D1D9E2', 
-                            background: 'white',
-                            overflow: 'hidden'
-                        }}>
+                        <div className={styles.methodsFeeTableWrapper}>
                             <table style={{ width: '100%', height: '100%', borderCollapse: 'collapse' }}>
                                 <thead>
                                     <tr style={{ textAlign: 'left', borderBottom: '1px solid #D1D9E2' }}>
@@ -866,10 +820,10 @@ export default function PartnerSettings() {
                     </div>
 
                     {/* Column 2: Receipt Config */}
-                    <div style={{ flex: 1 }}>
+                    <div className={styles.receiptConfigCol}>
                         <h4 style={{ fontSize: '12px', fontWeight: 700, color: '#253D4E', marginBottom: '32px' }}>CONFIGURAÇÃO DE RECEBIMENTO</h4>
                         
-                        <div style={{ display: 'flex', gap: '24px', marginBottom: '24px' }}>
+                        <div className={styles.nestedFlexRow}>
                             <div style={{ flex: 1, position: 'relative' }}>
                                 <label style={{ display: 'block', fontSize: '13px', fontWeight: 400, color: '#757575', marginBottom: '8px' }}>TIPO DE CHAVE</label>
                                 <div 
@@ -920,14 +874,18 @@ export default function PartnerSettings() {
                                 )}
                             </div>
                             <div style={{ flex: 2 }}>
-                                <label style={{ display: 'block', fontSize: '13px', fontWeight: 400, color: '#757575', marginBottom: '8px' }}>CHAVE PIX</label>
+                                <label style={{ display: 'block', fontSize: '13px', fontWeight: 400, color: '#757575', marginBottom: '8px' }}>
+                                    CHAVE PIX <span style={{ color: '#FF4D4D' }}>*</span>
+                                </label>
                                 <div style={{ 
                                     height: '52px', 
                                     borderRadius: '8px', 
-                                    border: '1px solid #D1D9E2', 
+                                    border: validationErrors.includes('pixKey') ? '1.5px solid #FF4D4D' : '1px solid #D1D9E2', 
                                     display: 'flex', 
                                     alignItems: 'center', 
-                                    padding: '0 16px'
+                                    padding: '0 16px',
+                                    background: 'white',
+                                    boxShadow: validationErrors.includes('pixKey') ? '0 0 0 1px rgba(255, 77, 77, 0.1)' : 'none'
                                 }}>
                                     <input 
                                         type="text"
@@ -953,6 +911,7 @@ export default function PartnerSettings() {
                                         }
                                     />
                                 </div>
+                                {validationErrors.includes('pixKey') && <span style={{ color: '#FF4D4D', fontSize: '10px', marginTop: '4px', display: 'block', fontWeight: 500 }}>Campo Obrigatório</span>}
                             </div>
                         </div>
 
@@ -980,16 +939,7 @@ export default function PartnerSettings() {
                         </div>
 
                         {/* Dynamic Pix Integration Banner */}
-                        <div style={{ 
-                            width: '100%', 
-                            height: '108px', 
-                            borderRadius: '10px', 
-                            border: '1px solid #D1D9E2', 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            padding: '0 24px',
-                            gap: '24px'
-                        }}>
+                        <div className={styles.pixIntegrationBanner}>
                             <div style={{ width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <QrCode size={48} color="#253D4E" />
                             </div>
@@ -1018,11 +968,11 @@ export default function PartnerSettings() {
                 <div style={{ marginTop: '64px', marginBottom: '64px' }}>
                     <h3 style={{ fontSize: '12px', fontWeight: 400, color: '#253D4E', marginBottom: '32px' }}>ENDEREÇO</h3>
                     
-                    <div style={{ display: 'flex', gap: '64px' }}>
+                    <div className={styles.addressSectionRow}>
                         {/* Column 1: Form */}
-                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                        <div className={styles.colHalf} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                             {/* Row 1: Street and Number */}
-                            <div style={{ display: 'flex', gap: '24px' }}>
+                            <div className={styles.nestedFlexRow}>
                                 <div style={{ flex: 3 }}>
                                     <label style={{ display: 'block', fontSize: '13px', fontWeight: 400, color: '#757575', marginBottom: '8px' }}>
                                         RUA <span style={{ color: '#FF4D4D' }}>*</span>
@@ -1080,7 +1030,7 @@ export default function PartnerSettings() {
                             </div>
 
                             {/* Row 2: Neighborhood and City */}
-                            <div style={{ display: 'flex', gap: '24px' }}>
+                            <div className={styles.nestedFlexRow}>
                                 <div style={{ flex: 1 }}>
                                     <label style={{ display: 'block', fontSize: '13px', fontWeight: 400, color: '#757575', marginBottom: '8px' }}>
                                         BAIRRO <span style={{ color: '#FF4D4D' }}>*</span>
@@ -1138,7 +1088,7 @@ export default function PartnerSettings() {
                             </div>
 
                             {/* Row 3: CEP */}
-                            <div style={{ display: 'flex', gap: '24px' }}>
+                            <div className={styles.nestedFlexRow}>
                                 <div style={{ flex: 1 }}>
                                     <label style={{ display: 'block', fontSize: '13px', fontWeight: 400, color: '#757575', marginBottom: '8px' }}>
                                         CEP <span style={{ color: '#FF4D4D' }}>*</span>
@@ -1221,7 +1171,7 @@ export default function PartnerSettings() {
                         </div>
 
                         {/* Column 2: Map */}
-                        <div style={{ flex: 1 }}>
+                        <div className={styles.colHalf}>
                             <MapPicker 
                                 lat={formData.address.coordinates.lat}
                                 lng={formData.address.coordinates.lng}
@@ -1298,13 +1248,7 @@ export default function PartnerSettings() {
                 </div>
 
                 {/* Footer Save Button */}
-                <div style={{ 
-                    display: 'flex', 
-                    justifyContent: 'flex-end', 
-                    padding: '48px 0', 
-                    marginTop: '48px',
-                    borderTop: '1px solid #F0F0F0'
-                }}>
+                <div className={styles.footerRow}>
                     <button 
                         onClick={handleSubmit}
                         disabled={loading}

@@ -114,6 +114,9 @@ export async function PUT(req: Request) {
             updateData.paymentMethods = user.paymentMethods;
         }
         if (body.pixConfig !== undefined) {
+            if (user.role === 'partner' && (!body.pixConfig.key || !body.pixConfig.key.trim())) {
+                return NextResponse.json({ message: 'A chave PIX é obrigatória para parceiros.' }, { status: 400 });
+            }
             user.pixConfig = body.pixConfig;
             updateData.pixConfig = body.pixConfig;
         }

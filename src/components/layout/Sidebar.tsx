@@ -77,6 +77,12 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
         }
     }, [session]);
 
+    useEffect(() => {
+        if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+            setIsCollapsed(true);
+        }
+    }, [pathname, setIsCollapsed]);
+
     const isActive = (path: string) => pathname === path ? styles.active : '';
 
     const toggleSidebar = () => {

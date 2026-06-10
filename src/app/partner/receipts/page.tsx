@@ -205,6 +205,75 @@ export default function PartnerReceipts() {
                         print-color-adjust: exact !important;
                     }
                 }
+
+                @media (max-width: 768px) {
+                    .receipts-toolbar {
+                        flex-direction: column !important;
+                        align-items: stretch !important;
+                        gap: 0.75rem !important;
+                    }
+                    .receipts-tabs-container {
+                        width: 100% !important;
+                    }
+                    .receipts-search-container {
+                        width: 100% !important;
+                    }
+                    .receipts-table-container {
+                        border: none !important;
+                        background: transparent !important;
+                        padding: 0 !important;
+                    }
+                    .receipts-table, 
+                    .receipts-table tbody, 
+                    .receipts-table-row, 
+                    .receipts-table-cell {
+                        display: block !important;
+                        width: 100% !important;
+                    }
+                    .receipts-table-header {
+                        display: none !important;
+                    }
+                    .receipts-table-row {
+                        background: #F9FBFD !important;
+                        border: 1px solid rgba(209, 217, 226, 1) !important;
+                        border-radius: 12px !important;
+                        padding: 1rem !important;
+                        margin-bottom: 1rem !important;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important;
+                        text-align: left !important;
+                    }
+                    .receipts-table-cell {
+                        display: flex !important;
+                        justify-content: space-between !important;
+                        align-items: center !important;
+                        padding: 10px 0 !important;
+                        border-bottom: 1px dashed rgba(209, 217, 226, 0.4) !important;
+                        text-align: right !important;
+                        font-size: 14px !important;
+                    }
+                    .receipts-table-cell:last-child {
+                        border-bottom: none !important;
+                    }
+                    .receipts-table-cell::before {
+                        content: attr(data-label) !important;
+                        font-weight: 700 !important;
+                        color: #757575 !important;
+                        text-transform: uppercase !important;
+                        font-size: 11px !important;
+                        text-align: left !important;
+                        margin-right: 16px !important;
+                    }
+                    .receipts-table-cell:first-child {
+                        border-bottom: 1px solid rgba(209, 217, 226, 1) !important;
+                        padding-bottom: 12px !important;
+                        margin-bottom: 8px !important;
+                        justify-content: flex-start !important;
+                        padding-top: 0 !important;
+                    }
+                    .receipts-table-cell:first-child::before {
+                        display: none !important;
+                    }
+                }
             ` }} />
 
             {/* Painel Geral (Oculto na impressão) */}
@@ -296,9 +365,9 @@ export default function PartnerReceipts() {
                 </div>
 
                 {/* Filtros e Toolbar */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                <div className="receipts-toolbar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
                     {/* Tabs */}
-                    <div style={{
+                    <div className="receipts-tabs-container" style={{
                         display: 'flex',
                         width: '450px',
                         height: '40px',
@@ -332,7 +401,7 @@ export default function PartnerReceipts() {
                     </div>
 
                     {/* Pesquisar por ID */}
-                    <div style={{
+                    <div className="receipts-search-container" style={{
                         display: 'flex',
                         alignItems: 'center',
                         width: '280px',
@@ -362,16 +431,16 @@ export default function PartnerReceipts() {
                 </div>
 
                 {/* Tabela de Comprovantes */}
-                <div style={{
+                <div className="receipts-table-container" style={{
                     background: '#F9FBFD',
                     borderRadius: '12px',
                     padding: '1.5rem 0',
                     border: '1px solid rgba(209, 217, 226, 1)',
                     overflowX: 'auto'
                 }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                    <table className="receipts-table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                         <thead>
-                            <tr style={{ borderBottom: '1px solid rgba(209, 217, 226, 1)', color: '#757575', fontSize: '13px' }}>
+                            <tr className="receipts-table-header" style={{ borderBottom: '1px solid rgba(209, 217, 226, 1)', color: '#757575', fontSize: '13px' }}>
                                 <th style={{ padding: '1rem', fontWeight: 700, width: '15%', textAlign: 'center' }}>ID PEDIDO</th>
                                 <th style={{ padding: '1rem', fontWeight: 700, width: '15%', textAlign: 'center' }}>DATA REPASSE</th>
                                 <th style={{ padding: '1rem', fontWeight: 700, width: '15%', textAlign: 'center' }}>VALOR DA COMPRA</th>
@@ -407,6 +476,7 @@ export default function PartnerReceipts() {
                                     return (
                                         <tr 
                                             key={order._id}
+                                            className="receipts-table-row"
                                             style={{
                                                 fontSize: '14px',
                                                 color: '#475569',
@@ -418,24 +488,24 @@ export default function PartnerReceipts() {
                                             onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(230, 244, 238, 0.3)'}
                                             onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                                         >
-                                            <td style={{ padding: '1rem 0', fontWeight: 600, color: '#3BB77E' }}>
+                                            <td className="receipts-table-cell" data-label="ID Pedido" style={{ padding: '1rem 0', fontWeight: 600, color: '#3BB77E' }}>
                                                 #{order._id.slice(-6).toUpperCase()}
                                             </td>
-                                            <td style={{ padding: '1rem 0' }}>
+                                            <td className="receipts-table-cell" data-label="Data" style={{ padding: '1rem 0' }}>
                                                 {order.splitProcessedAt 
                                                     ? new Date(order.splitProcessedAt).toLocaleDateString('pt-BR') 
                                                     : new Date(order.createdAt).toLocaleDateString('pt-BR')}
                                             </td>
-                                            <td style={{ padding: '1rem 0' }}>
+                                            <td className="receipts-table-cell" data-label="Valor Compra" style={{ padding: '1rem 0' }}>
                                                 R$ {order.total?.toFixed(2).replace('.', ',')}
                                             </td>
-                                            <td style={{ padding: '1rem 0', color: '#888' }}>
+                                            <td className="receipts-table-cell" data-label="Comissão" style={{ padding: '1rem 0', color: '#888' }}>
                                                 R$ {order.platformFee?.toFixed(2).replace('.', ',') || (order.total * 0.15).toFixed(2).replace('.', ',')}
                                             </td>
-                                            <td style={{ padding: '1rem 0', fontWeight: 700, color: '#253D4E' }}>
+                                            <td className="receipts-table-cell" data-label="Valor Repasse" style={{ padding: '1rem 0', fontWeight: 700, color: '#253D4E' }}>
                                                 R$ {order.splitAmount?.toFixed(2).replace('.', ',') || (order.total * 0.85).toFixed(2).replace('.', ',')}
                                             </td>
-                                            <td style={{ padding: '1rem 0' }}>
+                                            <td className="receipts-table-cell" data-label="Status Pix" style={{ padding: '1rem 0' }}>
                                                 <span style={{
                                                     background: getSplitStatusColor(order.splitStatus) + '1A',
                                                     color: getSplitStatusColor(order.splitStatus),
@@ -448,7 +518,7 @@ export default function PartnerReceipts() {
                                                     {getSplitStatusLabel(order.splitStatus)}
                                                 </span>
                                             </td>
-                                            <td style={{ padding: '1rem 0' }}>
+                                            <td className="receipts-table-cell" data-label="Comprovante" style={{ padding: '1rem 0' }}>
                                                 {order.splitStatus === 'completed' ? (
                                                     <button
                                                         onClick={() => {

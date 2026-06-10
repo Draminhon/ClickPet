@@ -327,6 +327,285 @@
     }
 }
 
+/* ---- Address Section Styles ---- */
+.addressSection {
+    margin-top: 30px;
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.addressSectionHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 0.8rem;
+    gap: 12px;
+}
+
+.addressSectionTitle {
+    margin: 0;
+    color: #333;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.addAddressBtn {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: #3BB77E;
+    color: white;
+    border: none;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.addAddressBtn:hover {
+    background: #2D9E68;
+}
+
+.addressEmptyState {
+    text-align: center;
+    padding: 2rem 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 2px dashed #ddd;
+}
+
+.addressEmptyText {
+    color: #555;
+    margin-bottom: 1.2rem;
+    font-weight: 500;
+}
+
+.addressEmptyBtn {
+    background: #253D4E;
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.2s;
+}
+
+.addressEmptyBtn:hover {
+    background: #1a2f3d;
+}
+
+.addressList {
+    display: grid;
+    gap: 1rem;
+    margin-bottom: 20px;
+}
+
+.addressCard {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.2rem;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.addressCardPrimary {
+    border: 1px solid #3BB77E;
+    background: #F8FFF9;
+}
+
+.addressCardSecondary {
+    border: 1px solid #E5E7EB;
+    background: white;
+}
+
+.addressCardContent {
+    flex: 1;
+    min-width: 0;
+}
+
+.addressCardTitle {
+    font-weight: 600;
+    color: #333;
+    font-size: 1.05rem;
+    margin-bottom: 0.2rem;
+    word-break: break-word;
+}
+
+.addressBadgePrimary {
+    display: inline-block;
+    margin-left: 10px;
+    font-size: 0.7rem;
+    background: #3BB77E;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    font-weight: 700;
+    vertical-align: middle;
+}
+
+.addressCardSubtitle {
+    font-size: 0.95rem;
+    color: #555;
+    margin-bottom: 0.2rem;
+}
+
+.addressCardZip {
+    font-size: 0.85rem;
+    color: #888;
+}
+
+.addressDeleteBtn {
+    background: #FEE2E2;
+    border: none;
+    color: #EF4444;
+    padding: 0.6rem;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    transition: background 0.2s;
+}
+
+.addressDeleteBtn:hover {
+    background: #fecaca;
+}
+
+/* New Address Form */
+.newAddressForm {
+    background: #F9FAFB;
+    padding: 1.5rem;
+    border-radius: 10px;
+    border: 1px solid #E5E7EB;
+    margin-bottom: 20px;
+}
+
+.newAddressFormHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.2rem;
+}
+
+.newAddressFormTitle {
+    margin: 0;
+    color: #253D4E;
+    font-size: 1.1rem;
+}
+
+.cancelFormBtn {
+    background: none;
+    border: none;
+    color: #6B7280;
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.addressFormGrid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    border: none;
+}
+
+.addressFormRow3 {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 1rem;
+}
+
+.addressFormRow2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.addressFieldLabel {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #374151;
+}
+
+.addressFieldInput {
+    padding: 0.8rem;
+    border-radius: 8px;
+    border: 1px solid #D1D5DB;
+    width: 100%;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+}
+
+.addressFieldInput:focus {
+    border-color: #3BB77E;
+}
+
+.mapSection {
+    margin-bottom: 1.5rem;
+    background: white;
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid #E5E7EB;
+}
+
+.mapLabel {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.8rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+.mapHint {
+    font-size: 0.8rem;
+    color: #6B7280;
+    margin-top: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.addToListBtn {
+    background: #253D4E;
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background 0.2s;
+    width: auto;
+}
+
+.addToListBtn:hover {
+    background: #1a2f3d;
+}
+
+/* ---- Responsive ---- */
 @media (max-width: 768px) {
     .headerCard {
         flex-direction: column;
@@ -341,5 +620,109 @@
     .grid2Col,
     .grid3Col {
         grid-template-columns: 1fr;
+    }
+
+    .addressSection {
+        padding: 1rem;
+    }
+
+    .addressSectionTitle {
+        font-size: 16px;
+    }
+
+    .addressFormRow3 {
+        grid-template-columns: 1fr;
+    }
+
+    .addressFormRow2 {
+        grid-template-columns: 1fr;
+    }
+
+    .addressCardTitle {
+        font-size: 0.95rem;
+    }
+
+    .addressBadgePrimary {
+        display: block;
+        margin-left: 0;
+        margin-top: 4px;
+        width: fit-content;
+    }
+
+    .addressCardSubtitle {
+        font-size: 0.85rem;
+    }
+
+    .addToListBtn {
+        width: 100%;
+        text-align: center;
+    }
+
+    .newAddressForm {
+        padding: 1rem;
+    }
+
+    .mapSection {
+        padding: 0.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 20px 12px;
+    }
+
+    .title {
+        font-size: 24px;
+        margin-bottom: 20px;
+    }
+
+    .card {
+        padding: 16px;
+        margin-bottom: 20px;
+    }
+
+    .addressSection {
+        padding: 0.75rem;
+        margin-top: 20px;
+    }
+
+    .addressSectionHeader {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .addAddressBtn {
+        width: 100%;
+        justify-content: center;
+        padding: 0.6rem;
+    }
+
+    .addressCard {
+        padding: 0.8rem;
+        gap: 0.6rem;
+    }
+
+    .addressEmptyState {
+        padding: 1.5rem 0.75rem;
+    }
+
+    .logoutBtn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .petGrid {
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .petCard {
+        padding: 14px;
+    }
+
+    .sectionTitle {
+        font-size: 17px;
     }
 }

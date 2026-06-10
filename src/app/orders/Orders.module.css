@@ -1,0 +1,183 @@
+.ordersContainer {
+    padding: 2rem 0;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    box-sizing: border-box;
+}
+
+.orderCard {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.orderHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #eee;
+}
+
+.timelineScroll {
+    margin-bottom: 2rem;
+    width: 100%;
+    max-width: 100%;
+}
+
+.timelineFlex {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    width: 100%;
+}
+
+.stepContainer {
+    flex: 1;
+    position: relative;
+    text-align: center;
+}
+
+.stepCircle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    margin: 0 auto 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 0.9rem;
+    z-index: 2;
+    position: relative;
+}
+
+.stepLabel {
+    font-size: 0.75rem;
+    margin: 0;
+}
+
+.timelineLine {
+    position: absolute;
+    top: 16px;
+    left: 50%;
+    width: 100%;
+    height: 2px;
+    z-index: 1;
+}
+
+.itemRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.itemName {
+    flex: 1;
+    min-width: 0;
+    word-break: break-word;
+}
+
+.itemPrice {
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.discountRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    color: #6CC551;
+}
+
+.totalRow {
+    border-top: 1px solid #ddd;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.totalPriceText {
+    color: #6CC551;
+    flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+    .ordersContainer {
+        padding: 1.5rem 16px;
+    }
+    
+    .orderCard {
+        padding: 1.25rem;
+    }
+    
+    .timelineScroll {
+        margin-bottom: 1.5rem;
+    }
+    
+    .timelineFlex {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0;
+    }
+
+    .stepContainer {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        text-align: left;
+        gap: 16px;
+        margin-bottom: 24px;
+        position: relative;
+        flex: none;
+    }
+
+    .stepContainer:last-child {
+        margin-bottom: 0;
+    }
+
+    .stepCircle {
+        margin: 0;
+        flex-shrink: 0;
+    }
+
+    .stepLabel {
+        font-size: 0.9rem;
+        text-align: left;
+    }
+
+    .timelineLine {
+        top: 32px;
+        left: 15px;
+        width: 2px;
+        height: 24px;
+        z-index: 1;
+    }
+}
+
+@media (max-width: 480px) {
+    .orderHeader {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+}

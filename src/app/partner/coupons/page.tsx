@@ -227,7 +227,7 @@ export default function CouponsPage() {
 
                             return (
                                 <tr key={c._id} className={styles.tableRow} style={{ borderBottom: showDivider ? '1px solid rgba(209, 217, 226, 1)' : 'none' }}>
-                                    <td className={styles.tableCell}>
+                                    <td className={styles.tableCell} data-label="Ações">
                                         <button
                                             onClick={() => openDeleteModal(c._id, c.code)}
                                             className={styles.deleteIconBtn}
@@ -237,33 +237,33 @@ export default function CouponsPage() {
                                             <Trash2 size={18} />
                                         </button>
                                     </td>
-                                    <td className={styles.tableCell}>
+                                    <td className={styles.tableCell} data-label="ID">
                                         <span className={styles.couponIdText}>
                                             {c._id?.slice(-6).toUpperCase()}
                                         </span>
                                     </td>
-                                    <td className={styles.tableCell}>
+                                    <td className={styles.tableCell} data-label="Cupom">
                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                             <span className={styles.serviceNameText}>{c.code}</span>
                                         </div>
                                     </td>
-                                    <td className={styles.tableCell}>
+                                    <td className={styles.tableCell} data-label="Desconto">
                                         <span className={styles.tableCellDefault}>
                                             {c.type === 'percentage' ? `${c.discount}%` : `R$ ${c.discount?.toFixed(2)}`}
                                         </span>
                                     </td>
-                                    <td className={styles.tableCell}>
+                                    <td className={styles.tableCell} data-label="Mínimo">
                                         <span className={styles.tableCellDefault}>R$ {c.minPurchase?.toFixed(2) || '0.00'}</span>
                                     </td>
-                                    <td className={styles.tableCell}>
+                                    <td className={styles.tableCell} data-label="Data de Validade">
                                         <span className={styles.tableCellDefault}>
                                             {new Date(c.expiresAt).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
                                         </span>
                                     </td>
-                                    <td className={styles.tableCell}>
+                                    <td className={styles.tableCell} data-label="Uso Máximo">
                                         <span className={styles.tableCellDefault}>{c.usedCount || 0} / {c.maxUses || '∞'}</span>
                                     </td>
-                                    <td className={styles.tableCell}>
+                                    <td className={styles.tableCell} data-label="Status">
                                         <span className={styles.statusBadge} style={{ backgroundColor: status.bg, color: status.color }}>
                                             {status.label}
                                         </span>

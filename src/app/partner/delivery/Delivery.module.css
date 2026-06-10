@@ -393,3 +393,88 @@
     max-height: 90vh;
     overflow-y: auto;
 }
+
+.modalFlexRow {
+    display: flex;
+    gap: 32px;
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 16px !important;
+    }
+
+    .formContainer {
+        flex-direction: column !important;
+        gap: 24px !important;
+        padding: 20px !important;
+    }
+
+    .photoUploadSection {
+        align-self: center !important;
+    }
+
+    .formGrid {
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+    }
+
+    .inputContainer {
+        height: 48px !important;
+    }
+
+    .submitBtn {
+        height: 48px !important;
+    }
+
+    .listHeader {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 16px !important;
+    }
+
+    .searchAndFilter {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 12px !important;
+    }
+
+    .searchAndFilter > div {
+        flex-direction: column !important;
+        width: 100% !important;
+        gap: 8px !important;
+    }
+
+    .searchContainer {
+        width: 100% !important;
+    }
+
+    .filterBtn {
+        width: 100% !important;
+        min-width: unset !important;
+    }
+
+    .grid {
+        justify-content: center !important;
+        gap: 20px !important;
+    }
+
+    .modalFlexRow {
+        flex-direction: column !important;
+        gap: 24px !important;
+    }
+
+    .editModalContent {
+        padding: 20px !important;
+        width: 92% !important;
+    }
+
+    .modalActions {
+        flex-direction: column !important;
+        gap: 10px !important;
+    }
+
+    .modalActions button {
+        width: 100% !important;
+    }
+}

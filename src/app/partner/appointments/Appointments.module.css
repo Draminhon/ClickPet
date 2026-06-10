@@ -246,3 +246,157 @@
     padding: 4px 10px;
     font-weight: 600;
 }
+
+/* Toolbar & Tabs Classes */
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.tabsContainer {
+    display: flex;
+    width: 600px;
+    height: 40px;
+    border-radius: 5px;
+    border: 1px solid #D1D9E2;
+    overflow: hidden;
+}
+
+.tabBtn {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: #757575;
+    font-weight: 600;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+.tabBtnActive {
+    background: #3BB77E !important;
+    color: #FEFEFE !important;
+    font-weight: bold !important;
+}
+
+@media (max-width: 768px) {
+    .appointmentsContainer {
+        padding: 16px;
+    }
+
+    .toolbar {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.75rem !important;
+    }
+
+    .tabsContainer {
+        width: 100% !important;
+        height: auto !important;
+        flex-wrap: wrap !important;
+    }
+
+    .tabBtn {
+        flex: unset !important;
+        width: 50% !important;
+        height: 40px !important;
+        border-bottom: 1px solid #D1D9E2 !important;
+    }
+
+    .tableContainer {
+        border: none !important;
+        background: transparent !important;
+        padding: 0 !important;
+    }
+
+    .table, 
+    .table tbody, 
+    .tableRow, 
+    .tableCell {
+        display: block !important;
+        width: 100% !important;
+    }
+
+    .tableHeaderRow {
+        display: none !important;
+    }
+
+    .tableRow {
+        background: #F9FBFD !important;
+        border: 1px solid rgba(209, 217, 226, 1) !important;
+        border-radius: 12px !important;
+        padding: 1rem !important;
+        margin-bottom: 1rem !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important;
+        text-align: left !important;
+    }
+
+    .tableCell {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        padding: 10px 0 !important;
+        border-bottom: 1px dashed rgba(209, 217, 226, 0.4) !important;
+        text-align: right !important;
+        font-size: 14px !important;
+    }
+
+    .tableCell:last-child {
+        border-bottom: none !important;
+    }
+
+    .tableCell::before {
+        content: attr(data-label) !important;
+        font-weight: 700 !important;
+        color: #757575 !important;
+        text-transform: uppercase !important;
+        font-size: 11px !important;
+        text-align: left !important;
+        margin-right: 16px !important;
+    }
+
+    .tableCell:first-child {
+        border-bottom: 1px solid rgba(209, 217, 226, 1) !important;
+        padding-bottom: 12px !important;
+        margin-bottom: 8px !important;
+        justify-content: flex-start !important;
+        padding-top: 0 !important;
+    }
+
+    .tableCell:first-child::before {
+        display: none !important;
+    }
+
+    .productCell {
+        justify-content: flex-start !important;
+    }
+
+    .chartsRow {
+        flex-direction: column !important;
+        gap: 20px !important;
+    }
+
+    .upcomingContainer {
+        width: 100% !important;
+    }
+
+    .chartWithLegend {
+        flex-direction: column !important;
+        gap: 16px !important;
+    }
+
+    .customLegend {
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        max-width: 100% !important;
+    }
+}

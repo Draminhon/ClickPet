@@ -602,3 +602,155 @@
     min-width: 60px;
     text-align: center;
 }
+
+/* ──────────────────────────────────────────────────────────────────────────
+   RESPONSIVE DESIGN RULES
+   ────────────────────────────────────────────────────────────────────────── */
+
+@media (max-width: 992px) {
+    .searchWrapper {
+        padding: 20px 40px;
+        margin-top: 60px;
+    }
+    .catalogSection {
+        padding-left: 40px;
+        padding-right: 40px;
+        margin-top: 36px;
+    }
+}
+
+@media (max-width: 768px) {
+    .bannerWrapper, .emptyBannerPlaceholder {
+        height: 180px;
+    }
+    .avatarOverlapContainer {
+        width: 120px;
+        height: 120px;
+        top: -60px;
+        left: 20px;
+        border: 3px solid #FFFFFF;
+    }
+    .storeStatusContainer {
+        top: 72px;
+        left: 20px;
+        width: 120px;
+        height: 28px;
+    }
+    .statusText {
+        font-size: 13px;
+    }
+    .shopInfoSection {
+        padding-left: 0;
+        margin-top: 115px;
+    }
+    .shopName {
+        font-size: 24px;
+    }
+    .badgeIcon {
+        width: 20px !important;
+        height: 20px !important;
+    }
+    .metaRow {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        margin-top: 12px;
+    }
+    .metaLeft {
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+    .specializationText, .ratingText {
+        font-size: 14px;
+    }
+    .metaWaitTime {
+        font-size: 13px;
+    }
+    .searchWrapper {
+        padding: 15px 20px;
+        margin-top: 40px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+    .catalogSection {
+        padding-left: 20px;
+        padding-right: 20px;
+        margin-top: 24px;
+    }
+    .deliverySelector {
+        width: 100%;
+    }
+    .deliveryDropdownMenu {
+        width: 100%;
+    }
+}
+
+@media (max-width: 600px) {
+    .catalogItemRow {
+        flex-wrap: wrap;
+    }
+    .productImageFrame {
+        width: 90px;
+        height: 90px;
+    }
+    .productDetailsCol {
+        margin-left: 16px;
+    }
+    .productName {
+        font-size: 16px;
+    }
+    .productDesc {
+        font-size: 13px;
+    }
+    .priceCol {
+        display: grid !important;
+        grid-template-columns: 1fr auto !important;
+        grid-template-rows: auto auto !important;
+        gap: 4px !important;
+        width: 100% !important;
+        margin-left: 0 !important;
+        margin-top: 16px !important;
+        padding-top: 12px !important;
+        border-top: 1px dashed #EAEAEA !important;
+        justify-content: stretch !important;
+        align-items: stretch !important;
+        min-width: 0 !important;
+    }
+    .oldPriceBlock {
+        grid-column: 1;
+        grid-row: 1;
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        margin-bottom: 0;
+    }
+    .mainPriceBlock {
+        grid-column: 1;
+        grid-row: 2;
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 0;
+    }
+    .pricePrefix {
+        font-size: 12px;
+        margin-bottom: 0;
+    }
+    .currentPrice {
+        font-size: 16px;
+    }
+    .buyBtn {
+        grid-column: 2;
+        grid-row: 1 / span 2;
+        align-self: center;
+        width: 120px !important;
+        height: 36px !important;
+        font-size: 15px !important;
+    }
+    .emptyStateContainer {
+        padding: 40px 0;
+    }
+    .emptyStateText {
+        font-size: 16px;
+    }
+}

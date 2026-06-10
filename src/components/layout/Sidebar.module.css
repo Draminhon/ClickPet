@@ -10,7 +10,7 @@
     position: fixed;
     left: 0;
     top: 0;
-    transition: width 0.3s ease;
+    transition: width 0.3s ease, left 0.3s ease, transform 0.3s ease;
     z-index: 1000;
 }
 
@@ -233,4 +233,26 @@
 .collapsed .logoutBtn span,
 .collapsed .chevron {
     display: none;
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        width: 250px !important;
+        left: 0;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+        border-radius: 0 12px 12px 0;
+    }
+
+    .collapsed {
+        left: -250px;
+    }
+
+    .toggleBtn {
+        right: -32px;
+        width: 32px;
+        height: 36px;
+        border-radius: 0 8px 8px 0;
+        border-left: none;
+        box-shadow: 4px 2px 6px rgba(0, 0, 0, 0.08);
+    }
 }

@@ -437,16 +437,16 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
-                    <div style={{ marginTop: '30px', background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid #f0f0f0', paddingBottom: '0.8rem' }}>
-                            <h4 style={{ margin: 0, color: '#333', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div className={styles.addressSection}>
+                        <div className={styles.addressSectionHeader}>
+                            <h4 className={styles.addressSectionTitle}>
                                 <MapPin size={20} color="#3BB77E" /> Meus Locais de Entrega
                             </h4>
                             {!showAddressForm && (
                                 <button
                                     type="button"
                                     onClick={() => setShowAddressForm(true)}
-                                    style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: '#3BB77E', color: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '0.9rem', transition: 'all 0.2s' }}
+                                    className={styles.addAddressBtn}
                                 >
                                     <Plus size={16} /> Adicionar Endereço
                                 </button>
@@ -454,15 +454,15 @@ export default function ProfilePage() {
                         </div>
 
                         {formData.deliveryAddresses.length === 0 && !formData.address?.street && !showAddressForm && (
-                            <div style={{ textAlign: 'center', padding: '2rem 1rem', background: '#f8f9fa', borderRadius: '8px', border: '2px dashed #ddd' }}>
+                            <div className={styles.addressEmptyState}>
                                 <MapPin size={40} color="#b0bec5" style={{ margin: '0 auto 1rem' }} />
-                                <p style={{ color: '#555', marginBottom: '1.2rem', fontWeight: 500 }}>
+                                <p className={styles.addressEmptyText}>
                                     Você ainda não possui nenhum endereço para entrega salvo.
                                 </p>
                                 <button 
                                     type="button" 
                                     onClick={() => setShowAddressForm(true)}
-                                    style={{ background: '#253D4E', color: 'white', border: 'none', padding: '0.8rem 1.5rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '1rem', transition: 'all 0.2s' }}
+                                    className={styles.addressEmptyBtn}
                                 >
                                     Cadastrar Meu Endereço
                                 </button>
@@ -470,26 +470,22 @@ export default function ProfilePage() {
                         )}
                         
                         {!showAddressForm && (
-                            <div style={{ display: 'grid', gap: '1rem', marginBottom: '20px' }}>
+                            <div className={styles.addressList}>
                                 {/* Primary Address */}
                                 {formData.address?.street && (
-                                    <div style={{ 
-                                        display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', padding: '1.2rem', 
-                                        border: '1px solid #3BB77E', borderRadius: '10px', background: '#F8FFF9',
-                                        transition: 'all 0.2s ease', position: 'relative'
-                                    }}>
-                                        <div style={{ flex: 1 }}>
-                                            <div style={{ fontWeight: 600, color: '#333', fontSize: '1.05rem', marginBottom: '0.2rem' }}>
+                                    <div className={`${styles.addressCard} ${styles.addressCardPrimary}`}>
+                                        <div className={styles.addressCardContent}>
+                                            <div className={styles.addressCardTitle}>
                                                 {formData.address.street}, {formData.address.number}
-                                                <span style={{ marginLeft: '10px', fontSize: '0.7rem', background: '#3BB77E', color: 'white', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase', fontWeight: 700 }}>Principal</span>
+                                                <span className={styles.addressBadgePrimary}>Principal</span>
                                             </div>
-                                            <div style={{ fontSize: '0.95rem', color: '#555', marginBottom: '0.2rem' }}>{formData.address.neighborhood} - {formData.address.city}/{formData.address.state}</div>
-                                            <div style={{ fontSize: '0.85rem', color: '#888' }}>CEP: {maskZip(formData.address.zip)} {formData.address.complement ? `| Cpl: ${formData.address.complement}` : ''}</div>
+                                            <div className={styles.addressCardSubtitle}>{formData.address.neighborhood} - {formData.address.city}/{formData.address.state}</div>
+                                            <div className={styles.addressCardZip}>CEP: {maskZip(formData.address.zip)} {formData.address.complement ? `| Cpl: ${formData.address.complement}` : ''}</div>
                                         </div>
                                         <button
                                             type="button"
                                             onClick={() => handleDeleteAddress(null)}
-                                            style={{ background: '#FEE2E2', border: 'none', color: '#EF4444', padding: '0.6rem', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                                            className={styles.addressDeleteBtn}
                                             title="Excluir"
                                         >
                                             <Trash2 size={16} />
@@ -499,22 +495,18 @@ export default function ProfilePage() {
 
                                 {/* Delivery Addresses */}
                                 {formData.deliveryAddresses.map((addr, idx) => (
-                                    <div key={idx} style={{ 
-                                        display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', padding: '1.2rem', 
-                                        border: '1px solid #E5E7EB', borderRadius: '10px', background: 'white',
-                                        transition: 'all 0.2s ease', position: 'relative'
-                                    }}>
-                                        <div style={{ flex: 1 }}>
-                                            <div style={{ fontWeight: 600, color: '#333', fontSize: '1.05rem', marginBottom: '0.2rem' }}>
+                                    <div key={idx} className={`${styles.addressCard} ${styles.addressCardSecondary}`}>
+                                        <div className={styles.addressCardContent}>
+                                            <div className={styles.addressCardTitle}>
                                                 {addr.street}, {addr.number}
                                             </div>
-                                            <div style={{ fontSize: '0.95rem', color: '#555', marginBottom: '0.2rem' }}>{addr.neighborhood} - {addr.city}/{addr.state}</div>
-                                            <div style={{ fontSize: '0.85rem', color: '#888' }}>CEP: {maskZip(addr.zip)} {addr.complement ? `| Cpl: ${addr.complement}` : ''}</div>
+                                            <div className={styles.addressCardSubtitle}>{addr.neighborhood} - {addr.city}/{addr.state}</div>
+                                            <div className={styles.addressCardZip}>CEP: {maskZip(addr.zip)} {addr.complement ? `| Cpl: ${addr.complement}` : ''}</div>
                                         </div>
                                         <button
                                             type="button"
                                             onClick={() => handleDeleteAddress(idx)}
-                                            style={{ background: '#FEE2E2', border: 'none', color: '#EF4444', padding: '0.6rem', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                                            className={styles.addressDeleteBtn}
                                             title="Excluir"
                                         >
                                             <Trash2 size={16} />
@@ -525,96 +517,97 @@ export default function ProfilePage() {
                         )}
 
                         {showAddressForm && (
-                            <div style={{ background: '#F9FAFB', padding: '1.5rem', borderRadius: '10px', border: '1px solid #E5E7EB', marginBottom: '20px' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem' }}>
-                                    <h4 style={{ margin: 0, color: '#253D4E', fontSize: '1.1rem' }}>Novo Endereço</h4>
+                            <div className={styles.newAddressForm}>
+                                <div className={styles.newAddressFormHeader}>
+                                    <h4 className={styles.newAddressFormTitle}>Novo Endereço</h4>
                                     {formData.deliveryAddresses.length > 0 && (
-                                        <button type="button" onClick={() => setShowAddressForm(false)} style={{ background: 'none', border: 'none', color: '#6B7280', fontSize: '0.9rem', cursor: 'pointer', textDecoration: 'underline' }}>
+                                        <button type="button" onClick={() => setShowAddressForm(false)} className={styles.cancelFormBtn}>
                                             Cancelar
                                         </button>
                                     )}
                                 </div>
 
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem', marginBottom: '1rem', border: 'none' }}>
-                                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '1rem' }}>
+                                <div className={styles.addressFormGrid}>
+                                    <div className={styles.addressFormRow3}>
                                         <div>
-                                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 500, color: '#374151' }}>Rua *</label>
+                                            <label className={styles.addressFieldLabel}>Rua *</label>
                                             <input
                                                 required
                                                 placeholder="Nome da rua"
                                                 value={addressForm.street}
                                                 onChange={e => setAddressForm({ ...addressForm, street: e.target.value })}
-                                                style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #D1D5DB', width: '100%', fontSize: '0.95rem' }}
+                                                className={styles.addressFieldInput}
                                             />
                                         </div>
                                         <div>
-                                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 500, color: '#374151' }}>Número *</label>
+                                            <label className={styles.addressFieldLabel}>Número *</label>
                                             <input
                                                 type="text"
                                                 required
                                                 value={addressForm.number}
                                                 onChange={e => setAddressForm({ ...addressForm, number: e.target.value })}
                                                 placeholder="Ex: 123"
-                                                style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #D1D5DB', width: '100%', fontSize: '0.95rem' }}
+                                                className={styles.addressFieldInput}
                                             />
                                         </div>
                                         <div>
-                                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 500, color: '#374151' }}>Complemento</label>
+                                            <label className={styles.addressFieldLabel}>Complemento</label>
                                             <input
                                                 type="text"
                                                 value={addressForm.complement}
                                                 onChange={e => setAddressForm({ ...addressForm, complement: e.target.value })}
                                                 placeholder="Apto, bloco"
-                                                style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #D1D5DB', width: '100%', fontSize: '0.95rem' }}
+                                                className={styles.addressFieldInput}
                                             />
                                         </div>
                                     </div>
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                    <div className={styles.addressFormRow2}>
                                         <div>
-                                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 500, color: '#374151' }}>Bairro</label>
+                                            <label className={styles.addressFieldLabel}>Bairro</label>
                                             <input
                                                 value={addressForm.neighborhood}
                                                 onChange={e => setAddressForm({ ...addressForm, neighborhood: e.target.value })}
-                                                style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #D1D5DB', width: '100%', fontSize: '0.95rem' }}
+                                                className={styles.addressFieldInput}
                                             />
                                         </div>
                                         <div>
-                                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 500, color: '#374151' }}>Estado (UF)</label>
+                                            <label className={styles.addressFieldLabel}>Estado (UF)</label>
                                             <input
                                                 maxLength={2}
                                                 placeholder="UF"
-                                                style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #D1D5DB', width: '100%', fontSize: '0.95rem', textTransform: 'uppercase' }}
+                                                className={styles.addressFieldInput}
+                                                style={{ textTransform: 'uppercase' }}
                                                 value={addressForm.state}
                                                 onChange={e => setAddressForm({ ...addressForm, state: e.target.value.toUpperCase() })}
                                             />
                                         </div>
                                     </div>
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                    <div className={styles.addressFormRow2}>
                                         <div>
-                                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 500, color: '#374151' }}>Cidade *</label>
+                                            <label className={styles.addressFieldLabel}>Cidade *</label>
                                             <input
                                                 required
                                                 placeholder="Sua cidade"
                                                 value={addressForm.city}
                                                 onChange={e => setAddressForm({ ...addressForm, city: e.target.value })}
-                                                style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #D1D5DB', width: '100%', fontSize: '0.95rem' }}
+                                                className={styles.addressFieldInput}
                                             />
                                         </div>
                                         <div>
-                                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 500, color: '#374151' }}>CEP *</label>
+                                            <label className={styles.addressFieldLabel}>CEP *</label>
                                             <input
                                                 required
                                                 placeholder="00000-000"
                                                 value={addressForm.zip}
                                                 onChange={e => setAddressForm({ ...addressForm, zip: maskZip(e.target.value) })}
-                                                style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #D1D5DB', width: '100%', fontSize: '0.95rem' }}
+                                                className={styles.addressFieldInput}
                                             />
                                         </div>
                                     </div>
                                 </div>
 
-                                <div style={{ marginBottom: '1.5rem', background: 'white', padding: '1rem', borderRadius: '8px', border: '1px solid #E5E7EB' }}>
-                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.8rem', fontWeight: 600, color: '#374151' }}>
+                                <div className={styles.mapSection}>
+                                    <label className={styles.mapLabel}>
                                         <MapPin size={18} color="#3BB77E" /> Localização no Mapa (Recomendado)
                                     </label>
                                     <MapPicker
@@ -630,7 +623,7 @@ export default function ProfilePage() {
                                         }}
                                         height="250px"
                                     />
-                                    <p style={{ fontSize: '0.8rem', color: '#6B7280', marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                                    <p className={styles.mapHint}>
                                         <AlertCircle size={14} /> Confirme o pino exato para evitar erros em entregas parceiras.
                                     </p>
                                 </div>
@@ -638,7 +631,7 @@ export default function ProfilePage() {
                                 <button 
                                     type="button" 
                                     onClick={handleAddAddress} 
-                                    style={{ background: '#253D4E', color: 'white', border: 'none', padding: '0.8rem 1.5rem', borderRadius: '8px', fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer', transition: 'background 0.2s' }}
+                                    className={styles.addToListBtn}
                                 >
                                     Adicionar à Lista
                                 </button>

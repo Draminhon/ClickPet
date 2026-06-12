@@ -253,6 +253,7 @@ export default function PartnerSettings() {
     const { data: session, update } = useSession();
     const { showToast } = useToast();
     const [loading, setLoading] = useState(false);
+    const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
     const [initialData, setInitialData] = useState<any>(null);
     const [showKeyTypeDropdown, setShowKeyTypeDropdown] = useState(false);
     const [showWelcomeModal, setShowWelcomeModal] = useState(false);
@@ -406,6 +407,7 @@ export default function PartnerSettings() {
     const handleDiscard = () => {
         if (initialData) {
             setFormData(initialData);
+            setSaveStatus('idle');
             showToast('Alterações descartadas');
         }
     };
@@ -513,6 +515,117 @@ export default function PartnerSettings() {
         }
     };
 
+    const saveProfileData = async (data: any) => {
+        setSaveStatus('saving');
+        try {
+            const cleanCNPJ = data.cnpj.replace(/\D/g, '');
+            const updatePayload: any = {
+                phone: data.phone,
+                specialization: data.specialization,
+                shopLogo: data.shopLogo,
+                bannerImage: data.bannerImage,
+                minimumOrderValue: parseFloat(data.minimumOrderValue.toString().replace(',', '.')),
+                deliveryRadius: parseFloat(data.deliveryRadius),
+                deliveryFeePerKm: parseFloat(data.deliveryFeePerKm.toString().replace(',', '.')),
+                freeDeliveryMinimum: parseFloat(data.freeDeliveryMinimum.toString().replace(',', '.')),
+                workingHours: data.workingHours,
+                paymentConfig: data.paymentConfig,
+                paymentMethodsTable: data.paymentMethodsTable,
+                address: {
+                    ...data.address,
+                    coordinates: {
+                        type: 'Point',
+                        coordinates: [data.address.coordinates.lng, data.address.coordinates.lat]
+                    }
+                },
+            };
+
+            if (cleanCNPJ && cleanCNPJ.length === 14) {
+                updatePayload.cnpj = cleanCNPJ;
+            }
+
+            if (data.pixConfig && data.pixConfig.key && data.pixConfig.key.trim()) {
+                updatePayload.pixConfig = data.pixConfig;
+            }
+
+            const res = await fetch('/api/profile', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatePayload),
+            });
+
+            if (res.ok) {
+                setSaveStatus('saved');
+                setInitialData(data);
+                setValidationErrors(prev => {
+                    const nextErrors = [...prev];
+                    if (cleanCNPJ && cleanCNPJ.length === 14) {
+                        const idx = nextErrors.indexOf('cnpj');
+                        if (idx !== -1) nextErrors.splice(idx, 1);
+                    }
+                    if (data.phone && data.phone.length >= 14) {
+                        const idx = nextErrors.indexOf('phone');
+                        if (idx !== -1) nextErrors.splice(idx, 1);
+                    }
+                    if (data.specialization) {
+                        const idx = nextErrors.indexOf('specialization');
+                        if (idx !== -1) nextErrors.splice(idx, 1);
+                    }
+                    if (data.address.street) {
+                        const idx = nextErrors.indexOf('street');
+                        if (idx !== -1) nextErrors.splice(idx, 1);
+                    }
+                    if (data.address.number) {
+                        const idx = nextErrors.indexOf('number');
+                        if (idx !== -1) nextErrors.splice(idx, 1);
+                    }
+                    if (data.address.city) {
+                        const idx = nextErrors.indexOf('city');
+                        if (idx !== -1) nextErrors.splice(idx, 1);
+                    }
+                    if (data.address.neighborhood) {
+                        const idx = nextErrors.indexOf('neighborhood');
+                        if (idx !== -1) nextErrors.splice(idx, 1);
+                    }
+                    if (data.address.zip && data.address.zip.length >= 9) {
+                        const idx = nextErrors.indexOf('zip');
+                        if (idx !== -1) nextErrors.splice(idx, 1);
+                    }
+                    if (data.pixConfig.key?.trim()) {
+                        const idx = nextErrors.indexOf('pixKey');
+                        if (idx !== -1) nextErrors.splice(idx, 1);
+                    }
+                    return nextErrors;
+                });
+                localStorage.removeItem('partner_settings_draft');
+                await update();
+            } else {
+                setSaveStatus('error');
+            }
+        } catch (error) {
+            setSaveStatus('error');
+        }
+    };
+
+    useEffect(() => {
+        if (!hasLoaded || !initialData) return;
+
+        if (JSON.stringify(formData) === JSON.stringify(initialData)) {
+            return;
+        }
+
+        const cleanCNPJ = formData.cnpj.replace(/\D/g, '');
+        if (cleanCNPJ && cleanCNPJ.length < 14) return;
+        if (formData.phone && formData.phone.length < 14) return;
+        if (formData.address.zip && formData.address.zip.replace(/\D/g, '').length < 8) return;
+
+        const timer = setTimeout(() => {
+            saveProfileData(formData);
+        }, 1200);
+
+        return () => clearTimeout(timer);
+    }, [formData, hasLoaded, initialData]);
+
     const updateValue = (field: keyof typeof formData, delta: number, isPrice = false) => {
         setFormData(prev => {
             if (field === 'workingHours') return prev;
@@ -554,43 +667,44 @@ export default function PartnerSettings() {
             {/* Header */}
             <div className={styles.headerRow}>
                 <h1 style={{ fontSize: '14px', color: '#253D4E', fontWeight: 400, margin: 0, letterSpacing: '0.05em' }}>CONFIGURAÇÕES</h1>
-                <div className={styles.headerButtons}>
+                <div className={styles.headerButtons} style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                     <button 
                         onClick={handleDiscard}
                         style={{ 
-                            width: '200px', 
+                            width: '140px', 
                             height: '48px', 
                             borderRadius: '8px', 
                             border: '1px solid #D1D9E2', 
                             background: 'white', 
                             color: '#253D4E', 
-                            fontSize: '14px', 
+                            fontSize: '13px', 
                             fontWeight: 700,
                             cursor: 'pointer',
                             transition: 'all 0.2s'
                         }}
                     >
-                        DESCARTAR
+                        RECOMPOR
                     </button>
-                    <button 
-                        onClick={handleSubmit}
-                        disabled={loading}
-                        style={{ 
-                            width: '280px', 
-                            height: '48px', 
-                            borderRadius: '8px', 
-                            border: 'none', 
-                            background: '#3BB77E', 
-                            color: '#F9FBFD', 
-                            fontSize: '14px', 
-                            fontWeight: 700,
-                            cursor: 'pointer',
-                            transition: 'all 0.2s',
-                            opacity: loading ? 0.7 : 1
-                        }}
-                    >
-                        {loading ? 'SALVANDO...' : 'SALVAR INFORMAÇÕES'}
-                    </button>
+                    {saveStatus === 'saving' && (
+                        <div className={`${styles.autoSaveStatus} ${styles.statusSaving}`}>
+                            Salvando...
+                        </div>
+                    )}
+                    {saveStatus === 'saved' && (
+                        <div className={`${styles.autoSaveStatus} ${styles.statusSaved}`}>
+                            ✓ Salvo
+                        </div>
+                    )}
+                    {saveStatus === 'error' && (
+                        <div className={`${styles.autoSaveStatus} ${styles.statusError}`}>
+                            ⚠ Erro ao salvar
+                        </div>
+                    )}
+                    {saveStatus === 'idle' && (
+                        <div className={`${styles.autoSaveStatus} ${styles.statusSaved}`}>
+                            ✓ Tudo Salvo
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -1247,30 +1361,11 @@ export default function PartnerSettings() {
                     </div>
                 </div>
 
-                {/* Footer Save Button */}
-                <div className={styles.footerRow}>
-                    <button 
-                        onClick={handleSubmit}
-                        disabled={loading}
-                        style={{ 
-                            width: '280px', 
-                            height: '48px', 
-                            borderRadius: '8px', 
-                            border: 'none', 
-                            background: '#3BB77E', 
-                            color: '#F9FBFD', 
-                            fontSize: '14px', 
-                            fontWeight: 700,
-                            cursor: 'pointer',
-                            transition: 'all 0.2s',
-                            opacity: loading ? 0.7 : 1,
-                            boxShadow: '0 4px 12px rgba(59, 183, 126, 0.2)'
-                        }}
-                        onMouseEnter={(e) => (e.currentTarget.style.background = '#35a570')}
-                        onMouseLeave={(e) => (e.currentTarget.style.background = '#3BB77E')}
-                    >
-                        {loading ? 'SALVANDO...' : 'SALVAR INFORMAÇÕES'}
-                    </button>
+                {/* Footer Save Status */}
+                <div className={styles.footerRow} style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+                    <span style={{ fontSize: '13px', color: '#757575', fontWeight: 600, letterSpacing: '0.05em' }}>
+                        ✓ AS ALTERAÇÕES SÃO SALVAS AUTOMATICAMENTE
+                    </span>
                 </div>
             {/* Image Crop Modal */}
             {cropConfig.isOpen && (

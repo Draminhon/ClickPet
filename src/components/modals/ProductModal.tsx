@@ -71,6 +71,17 @@ export default function ProductModal({ isOpen, onClose, partnerId, onSuccess, pr
         }
     }, [isOpen, product]);
 
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [isOpen]);
+
     if (!isOpen) return null;
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {

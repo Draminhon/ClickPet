@@ -79,58 +79,19 @@ export default function LoggedInHomeContent({ defaultPartners }: LoggedInHomeCon
     const hasLocation = lat && lng;
 
     const NoLocationMessage = () => (
-        <div style={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            padding: '60px 20px',
-            backgroundColor: '#FFFFFF',
-            borderRadius: '16px',
-            border: '1px dashed #3BB77E',
-            margin: '20px 0',
-            textAlign: 'center'
-        }}>
-            <div style={{ 
-                width: '64px', 
-                height: '64px', 
-                backgroundColor: '#eef7f2', 
-                borderRadius: '50%', 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center',
-                marginBottom: '20px'
-            }}>
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#3BB77E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <div className={styles.noLocationContainer}>
+            <div className={styles.noLocationIconContainer}>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#5CA87C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                     <circle cx="12" cy="10" r="3"></circle>
                 </svg>
             </div>
-            <p style={{ 
-                fontFamily: "'Baloo 2', sans-serif", 
-                fontSize: '18px', 
-                fontWeight: 600, 
-                color: '#253D4E',
-                maxWidth: '400px',
-                lineHeight: '1.4'
-            }}>
+            <p className={styles.noLocationTitle}>
                 Informe seu endereço para ter a experiência completa ClickPet
             </p>
             <button 
                 onClick={() => setLocationFromGPS()}
-                style={{
-                    marginTop: '20px',
-                    padding: '10px 24px',
-                    backgroundColor: '#3BB77E',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease'
-                }}
-                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#2d9063'}
-                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#3BB77E'}
+                className={styles.noLocationButton}
             >
                 Usar minha localização atual
             </button>

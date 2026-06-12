@@ -4,7 +4,8 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import ProductOfferCard from '@/components/home/ProductOfferCard';
-import { Filter, ChevronDown, Scissors } from 'lucide-react';
+import { Filter, ChevronDown, Scissors, X, Search as SearchIcon } from 'lucide-react';
+import { useLocation } from '@/context/LocationContext';
 import styles from './Search.module.css';
 
 function SearchContent() {
@@ -12,10 +13,14 @@ function SearchContent() {
     const initialCategory = searchParams.get('cat') || '';
     const initialSearch = searchParams.get('q') || '';
 
+    const { lat, lng } = useLocation();
+
     const [products, setProducts] = useState<any[]>([]);
     const [services, setServices] = useState<any[]>([]);
+    
     const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
     const [filteredServices, setFilteredServices] = useState<any[]>([]);
+
     const [category, setCategory] = useState(initialCategory);
     const [search, setSearch] = useState(initialSearch);
 
@@ -27,23 +32,38 @@ function SearchContent() {
     const [age, setAge] = useState('');
     const [foodType, setFoodType] = useState('');
     const [breedType, setBreedType] = useState('');
+    const [showMobileFilters, setShowMobileFilters] = useState(false);
 
     useEffect(() => {
         let productUrl = '/api/products?';
-        if (category && category !== 'bath') productUrl += `category=${category}&`;
-        if (search) productUrl += `search=${search}`;
+        let shouldFetchProducts = category !== 'bath';
+        if (category && shouldFetchProducts) productUrl += `category=${category}&`;
+        if (search) productUrl += `search=${search}&`;
+        if (lat && lng) productUrl += `lat=${lat}&lng=${lng}&`;
 
         let serviceUrl = '/api/services?';
+        let shouldFetchServices = category === '' || category === 'bath';
         if (category === 'bath') serviceUrl += `category=bath&`;
+        if (lat && lng) serviceUrl += `lat=${lat}&lng=${lng}&`;
 
-        Promise.all([
-            fetch(productUrl).then(res => res.json()),
-            fetch(serviceUrl).then(res => res.json())
-        ]).then(([prodData, servData]) => {
+        const fetches = [];
+        if (shouldFetchProducts) {
+            fetches.push(fetch(productUrl).then(res => res.json()));
+        } else {
+            fetches.push(Promise.resolve([]));
+        }
+
+        if (shouldFetchServices) {
+            fetches.push(fetch(serviceUrl).then(res => res.json()));
+        } else {
+            fetches.push(Promise.resolve([]));
+        }
+
+        Promise.all(fetches).then(([prodData, servData]) => {
             setProducts(Array.isArray(prodData) ? prodData : []);
             setServices(Array.isArray(servData) ? servData : []);
         });
-    }, [category, search]);
+    }, [category, search, lat, lng]);
 
     useEffect(() => {
         // Filter Products
@@ -118,8 +138,42 @@ function SearchContent() {
 
     return (
         <div className={styles.container}>
+            {/* Mobile Filter Toggle Button */}
+            <div className={styles.mobileFilterHeader}>
+                <button 
+                    onClick={() => setShowMobileFilters(true)} 
+                    className={styles.mobileFilterToggle}
+                >
+                    <Filter size={18} />
+                    <span>Filtrar & Ordenar</span>
+                </button>
+            </div>
+
+            {/* Overlay for Mobile Sidebar */}
+            {showMobileFilters && (
+                <div 
+                    className={styles.overlay} 
+                    onClick={() => setShowMobileFilters(false)}
+                />
+            )}
+
             {/* Sidebar Filters */}
-            <aside className={styles.sidebar}>
+            <aside className={`${styles.sidebar} ${showMobileFilters ? styles.sidebarOpen : ''}`}>
+                <div className={styles.sidebarHeader}>
+                    <div className={styles.sidebarHeaderTitle}>
+                        <Filter className={styles.filterIconMobile} size={20} />
+                        <span>Filtros</span>
+                    </div>
+                    <button 
+                        type="button" 
+                        onClick={() => setShowMobileFilters(false)} 
+                        className={styles.closeButton}
+                        aria-label="Fechar filtros"
+                    >
+                        <X size={24} />
+                    </button>
+                </div>
+
                 <Filter className={styles.filterIcon} size={32} />
 
                 {/* Categorias */}
@@ -282,6 +336,30 @@ function SearchContent() {
 
             {/* Results Grid */}
             <main className={styles.mainContent}>
+                {/* Search Input Bar */}
+                <div className={styles.searchBarContainer}>
+                    <div className={styles.searchBarWrapper}>
+                        <SearchIcon className={styles.searchBarIcon} size={20} />
+                        <input
+                            type="text"
+                            placeholder="Buscar produtos e serviços..."
+                            className={styles.searchBarInput}
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                        />
+                        {search && (
+                            <button 
+                                type="button"
+                                className={styles.searchBarClear}
+                                onClick={() => setSearch('')}
+                                aria-label="Limpar pesquisa"
+                            >
+                                <X size={18} />
+                            </button>
+                        )}
+                    </div>
+                </div>
+
                 {filteredProducts.length === 0 && filteredServices.length === 0 ? (
                     <div className={styles.noResults}>
                         <p>Nenhum produto ou serviço encontrado com os filtros selecionados.</p>
@@ -291,6 +369,7 @@ function SearchContent() {
                     </div>
                 ) : (
                     <div className={styles.resultsWrapper}>
+
                         {filteredServices.length > 0 && (
                             <section className={styles.servicesSection}>
                                 <h2 className={styles.resultTitle}>Serviços Disponíveis</h2>

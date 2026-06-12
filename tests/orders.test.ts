@@ -30,6 +30,25 @@ describe('Orders API Security', () => {
         partnerId = new mongoose.Types.ObjectId();
         productId = new mongoose.Types.ObjectId();
 
+        // Create a real partner user in memory DB
+        await User.create({
+            _id: partnerId,
+            name: 'Petshop Central',
+            email: 'partner@example.com',
+            role: 'partner',
+            address: {
+                street: 'Rua Principal',
+                number: '123',
+                city: 'Sao Paulo',
+                neighborhood: 'Centro',
+                zip: '01001-000',
+                coordinates: {
+                    type: 'Point',
+                    coordinates: [-46.6333, -23.5505]
+                }
+            }
+        });
+
         // Create a real product in memory DB
         await Product.create({
             _id: productId,

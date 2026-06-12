@@ -182,7 +182,7 @@
 }
 
 .openTheme {
-    color: #34C759;
+    color: #5CA87C;
 }
 
 .closedTheme {
@@ -337,7 +337,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #34C759;
+    color: #5CA87C;
 }
 
 .optionInfo {
@@ -503,7 +503,7 @@
     font-weight: 700;
     /* Bold */
     font-size: 18px;
-    color: #34C759;
+    color: #5CA87C;
 }
 
 
@@ -511,7 +511,7 @@
     width: 160px;
     height: 42px;
     border-radius: 6px;
-    background-color: #34C759;
+    background-color: #5CA87C;
     color: #FFFFFF;
     border: none;
     font-family: inherit;
@@ -586,7 +586,7 @@
 
 .navBtn:hover:not(:disabled) {
     background-color: #FFFFFF;
-    color: #34C759;
+    color: #5CA87C;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 

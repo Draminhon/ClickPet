@@ -47,8 +47,8 @@
     min-width: 121px;
     height: 42px;
     border-radius: 8px;
-    border: 1px solid #34C759;
-    background-color: #34C759;
+    border: 1px solid #5CA87C;
+    background-color: #5CA87C;
     cursor: pointer;
     transition: all 0.2s ease;
     gap: 6px;
@@ -342,5 +342,15 @@
     .imageWrapper {
         width: 88px;
         height: 88px;
+    }
+
+    .shopName {
+        font-size: 15px;
+    }
+
+    .infoLine,
+    .ratingLine,
+    .statusLine {
+        font-size: 13px;
     }
 }

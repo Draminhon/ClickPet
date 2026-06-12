@@ -1,12 +1,17 @@
-"use client";
+'use client';
 
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
-import { MapPin, Navigation, Loader2, X } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import { MapPin, Navigation, Loader2, X, Search } from 'lucide-react';
 import { useLocation } from '@/context/LocationContext';
 import styles from './HeroBanner.module.css';
 
 export default function HeroBanner() {
+    const { data: session } = useSession();
+    const router = useRouter();
+
     const {
         address,
         isLoading,
@@ -17,6 +22,7 @@ export default function HeroBanner() {
         clearLocation
     } = useLocation();
 
+    // Location state for guests
     const [isEditing, setIsEditing] = useState(false);
     const [inputValue, setInputValue] = useState('');
     const [suggestions, setSuggestions] = useState<any[]>([]);
@@ -25,6 +31,9 @@ export default function HeroBanner() {
     const debounceRef = useRef<NodeJS.Timeout | null>(null);
     const searchBarRef = useRef<HTMLDivElement>(null);
     const prevAddressRef = useRef(address);
+
+    // Search state for logged-in users
+    const [searchQuery, setSearchQuery] = useState('');
 
     // Keep local input in sync with context address when it changes (e.g. via GPS)
     useEffect(() => {
@@ -85,7 +94,6 @@ export default function HeroBanner() {
         const lng = parseFloat(suggestion.lon);
         const displayName = suggestion.display_name.split(',').slice(0, 3).join(',');
 
-        // Extract city from the result
         const parts = suggestion.display_name.split(',').map((s: string) => s.trim());
         const city = parts.length > 2 ? parts[2] : parts[1] || '';
 
@@ -128,6 +136,77 @@ export default function HeroBanner() {
         }
     };
 
+    const handleSearchSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (searchQuery.trim()) {
+            router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+        }
+    };
+
+    // Logged In Search Banner layout
+    if (session) {
+        return (
+            <div className={styles.heroBanner}>
+                {/* Background Image */}
+                <div className={styles.imageWrapper}>
+                    <Image
+                        src="/banner/hero_pets.png"
+                        alt="ClickPet Banner"
+                        fill
+                        sizes="100vw"
+                        className={styles.bannerImage}
+                        priority
+                    />
+                    <div className={styles.imageOverlay} />
+                </div>
+
+                {/* Search Bar */}
+                <div className={styles.searchBarContainer}>
+                    <form
+                        onSubmit={handleSearchSubmit}
+                        className={styles.searchBar}
+                    >
+                        {/* Search Icon (Interactive) */}
+                        <button
+                            type="submit"
+                            className={styles.searchIconButton}
+                            title="Pesquisar"
+                        >
+                            <Search size={18} strokeWidth={2} color="#272727" />
+                        </button>
+
+                        {/* Divider */}
+                        <div className={styles.divider} />
+
+                        {/* Input Area */}
+                        <div className={styles.inputArea}>
+                            <input
+                                type="text"
+                                className={styles.locationInput}
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder="Busque ração, banho, tosa, veterinários..."
+                            />
+                        </div>
+
+                        {/* Clear Button */}
+                        {searchQuery && (
+                            <button
+                                type="button"
+                                className={styles.clearButton}
+                                onClick={() => setSearchQuery('')}
+                                title="Limpar busca"
+                            >
+                                <X size={16} color="#878787" />
+                            </button>
+                        )}
+                    </form>
+                </div>
+            </div>
+        );
+    }
+
+    // Guest Location Banner layout
     return (
         <div className={styles.heroBanner}>
             {/* Background Image */}

@@ -3,7 +3,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { BadgeCheck } from 'lucide-react';
+import { BadgeCheck, ChevronLeft, ChevronRight } from 'lucide-react';
 import styles from './TrendingPartnersCarousel.module.css';
 import { isShopOpen } from '@/utils/shopUtils';
 
@@ -14,7 +14,6 @@ interface Partner {
     specialization?: string;
     distance?: number;
     workingHours?: any[];
-    // Mock attributes for UI representation since they are not fully developed in DB yet
     averageResponseTime?: string;
     isOpen?: boolean;
 }
@@ -25,17 +24,16 @@ interface TrendingPartnersCarouselProps {
 
 export default function TrendingPartnersCarousel({ partners }: TrendingPartnersCarouselProps) {
     const scrollRef = useRef<HTMLDivElement>(null);
-    const [isPaused, setIsPaused] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
     const [hasMoved, setHasMoved] = useState(false);
     const isMouseDown = useRef(false);
     const startX = useRef(0);
     const scrollLeft = useRef(0);
+    const [showArrows, setShowArrows] = useState(false);
 
     const handleMouseDown = (e: React.MouseEvent) => {
         isMouseDown.current = true;
         setHasMoved(false);
-        setIsPaused(true);
         startX.current = e.pageX - (scrollRef.current?.offsetLeft || 0);
         scrollLeft.current = scrollRef.current?.scrollLeft || 0;
     };
@@ -43,19 +41,14 @@ export default function TrendingPartnersCarousel({ partners }: TrendingPartnersC
     const handleMouseLeave = () => {
         isMouseDown.current = false;
         setIsDragging(false);
-        setIsPaused(false);
     };
 
     const handleMouseUp = () => {
         isMouseDown.current = false;
-        // Usamos um pequeno timeout para garantir que o evento de clique do Link
-        // ocorra ANTES de resetarmos o isDragging/hasMoved se necessário,
-        // ou simplesmente resetamos aqui e confiamos no hasMoved no Link.
         setTimeout(() => {
             setIsDragging(false);
             setHasMoved(false);
         }, 10);
-        setIsPaused(false);
     };
 
     const handleMouseMove = (e: React.MouseEvent) => {
@@ -77,36 +70,49 @@ export default function TrendingPartnersCarousel({ partners }: TrendingPartnersC
         }
     };
 
-    useEffect(() => {
+    const scrollNext = () => {
         const container = scrollRef.current;
         if (!container) return;
 
-        let animationFrame: number;
-        
-        let accumulator = 0;
-        
-        // Auto-scroll logic
-        const scroll = () => {
-            if (!isPaused && !isDragging && container) {
-                // CONFIGURAÇÃO DE VELOCIDADE:
-                // Altere o valor abaixo (ex: 0.2). Valores maiores = mais rápido.
-                accumulator += 0.5; 
-                
-                if (accumulator >= 1) {
-                    container.scrollLeft += Math.floor(accumulator);
-                    accumulator -= Math.floor(accumulator);
-                }
-                
-                // Infinite loop reset
-                // Since we extended the array (partners * 4), we reset when halfway
-                if (container.scrollLeft >= container.scrollWidth / 2) {
-                    container.scrollLeft = 0;
-                }
-            }
-            animationFrame = requestAnimationFrame(scroll);
-        };
+        const firstCard = container.querySelector(`.${styles.card}`);
+        if (!firstCard) return;
 
-        animationFrame = requestAnimationFrame(scroll);
+        const cardWidth = firstCard.clientWidth;
+        const style = window.getComputedStyle(container);
+        const gap = parseInt(style.columnGap || style.gap || '32', 10) || 32;
+        const scrollAmount = cardWidth + gap;
+        const maxScroll = container.scrollWidth - container.clientWidth;
+
+        if (container.scrollLeft >= maxScroll - 15) {
+            container.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+            container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+        }
+    };
+
+    const scrollPrev = () => {
+        const container = scrollRef.current;
+        if (!container) return;
+
+        const firstCard = container.querySelector(`.${styles.card}`);
+        if (!firstCard) return;
+
+        const cardWidth = firstCard.clientWidth;
+        const style = window.getComputedStyle(container);
+        const gap = parseInt(style.columnGap || style.gap || '32', 10) || 32;
+        const scrollAmount = cardWidth + gap;
+        const maxScroll = container.scrollWidth - container.clientWidth;
+
+        if (container.scrollLeft <= 15) {
+            container.scrollTo({ left: maxScroll, behavior: 'smooth' });
+        } else {
+            container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+        }
+    };
+
+    useEffect(() => {
+        const container = scrollRef.current;
+        if (!container) return;
         
         // Manual wheel handling (translate vertical to horizontal)
         const handleWheel = (e: WheelEvent) => {
@@ -119,24 +125,49 @@ export default function TrendingPartnersCarousel({ partners }: TrendingPartnersC
         container.addEventListener('wheel', handleWheel, { passive: false });
 
         return () => {
-            cancelAnimationFrame(animationFrame);
             container.removeEventListener('wheel', handleWheel);
         };
-    }, [isPaused]);
+    }, []);
+
+    useEffect(() => {
+        const container = scrollRef.current;
+        if (!container) return;
+
+        const resizeObserver = new ResizeObserver(() => {
+            setShowArrows(container.scrollWidth > container.clientWidth);
+        });
+        resizeObserver.observe(container);
+
+        setShowArrows(container.scrollWidth > container.clientWidth);
+
+        return () => {
+            resizeObserver.disconnect();
+        };
+    }, [partners]);
 
     if (!partners || partners.length === 0) return null;
 
     return (
-        <section 
-            className={styles.carouselContainer}
-            onMouseEnter={() => setIsPaused(true)}
-            onMouseLeave={handleMouseLeave}
-            onMouseDown={handleMouseDown}
-            onMouseUp={handleMouseUp}
-            onMouseMove={handleMouseMove}
-            style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
-        >
-            <div className={styles.carouselTrack} ref={scrollRef} style={isDragging ? { pointerEvents: 'none' } : {}}>
+        <section className={styles.carouselContainer} style={{ position: 'relative' }}>
+            {/* Left Arrow */}
+            {showArrows && (
+                <button className={`${styles.navBtn} ${styles.navBtnLeft}`} onClick={scrollPrev} aria-label="Anterior">
+                    <ChevronLeft size={24} />
+                </button>
+            )}
+
+            <div 
+                className={styles.carouselTrack} 
+                ref={scrollRef} 
+                style={{ 
+                    pointerEvents: isDragging ? 'none' : 'auto',
+                    cursor: isDragging ? 'grabbing' : 'grab'
+                }}
+                onMouseDown={handleMouseDown}
+                onMouseUp={handleMouseUp}
+                onMouseMove={handleMouseMove}
+                onMouseLeave={handleMouseLeave}
+            >
                 {partners.map((partner, index) => {
                     const shopType = partner.specialization || 'Petshop';
                     const distanceStr = partner.distance != null 
@@ -144,8 +175,6 @@ export default function TrendingPartnersCarousel({ partners }: TrendingPartnersC
                         : 'Calculando...';
                     
                     const responseTime = partner.averageResponseTime || '30-60 min';
-                    
-                    // Real status check
                     const isOpen = partner.workingHours ? isShopOpen(partner.workingHours) : false;
 
                     return (
@@ -201,6 +230,13 @@ export default function TrendingPartnersCarousel({ partners }: TrendingPartnersC
                     )
                 })}
             </div>
+
+            {/* Right Arrow */}
+            {showArrows && (
+                <button className={`${styles.navBtn} ${styles.navBtnRight}`} onClick={scrollNext} aria-label="Próximo">
+                    <ChevronRight size={24} />
+                </button>
+            )}
         </section>
     );
 }

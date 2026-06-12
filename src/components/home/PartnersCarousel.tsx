@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 import Image from 'next/image';
-import { BadgeCheck } from 'lucide-react';
+import { BadgeCheck, ChevronLeft, ChevronRight } from 'lucide-react';
 import styles from './PartnersCarousel.module.css';
 
 interface Partner {
@@ -22,17 +22,16 @@ export default function PartnersCarousel({
     title = "Conheça alguns de nossos parceiros" 
 }: PartnersCarouselProps) {
     const scrollRef = useRef<HTMLDivElement>(null);
-    const [isPaused, setIsPaused] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
     const [hasMoved, setHasMoved] = useState(false);
     const isMouseDown = useRef(false);
     const startX = useRef(0);
     const scrollLeft = useRef(0);
+    const [showArrows, setShowArrows] = useState(false);
 
     const handleMouseDown = (e: React.MouseEvent) => {
         isMouseDown.current = true;
         setHasMoved(false);
-        setIsPaused(true);
         startX.current = e.pageX - (scrollRef.current?.offsetLeft || 0);
         scrollLeft.current = scrollRef.current?.scrollLeft || 0;
     };
@@ -40,7 +39,6 @@ export default function PartnersCarousel({
     const handleMouseLeave = () => {
         isMouseDown.current = false;
         setIsDragging(false);
-        setIsPaused(false);
     };
 
     const handleMouseUp = () => {
@@ -49,7 +47,6 @@ export default function PartnersCarousel({
             setIsDragging(false);
             setHasMoved(false);
         }, 10);
-        setIsPaused(false);
     };
 
     const handleMouseMove = (e: React.MouseEvent) => {
@@ -71,36 +68,49 @@ export default function PartnersCarousel({
         }
     };
 
-    useEffect(() => {
+    const scrollNext = () => {
         const container = scrollRef.current;
         if (!container) return;
 
-        let animationFrame: number;
-        
-        let accumulator = 0;
-        
-        // Auto-scroll logic
-        const scroll = () => {
-            if (!isPaused && !isDragging && container) {
-                // CONFIGURAÇÃO DE VELOCIDADE:
-                // Altere o valor abaixo (ex: 0.2). Valores maiores = mais rápido.
-                accumulator += 0.5; 
-                
-                if (accumulator >= 1) {
-                    container.scrollLeft += Math.floor(accumulator);
-                    accumulator -= Math.floor(accumulator);
-                }
-                
-                // Infinite loop reset
-                // Since we extended the array (partners * 4), we reset when halfway
-                if (container.scrollLeft >= container.scrollWidth / 2) {
-                    container.scrollLeft = 0;
-                }
-            }
-            animationFrame = requestAnimationFrame(scroll);
-        };
+        const firstCard = container.querySelector(`.${styles.itemContainer}`);
+        if (!firstCard) return;
 
-        animationFrame = requestAnimationFrame(scroll);
+        const cardWidth = firstCard.clientWidth;
+        const style = window.getComputedStyle(container.querySelector(`.${styles.carouselTrack}`) || container);
+        const gap = parseInt(style.columnGap || style.gap || '32', 10) || 32;
+        const scrollAmount = cardWidth + gap;
+        const maxScroll = container.scrollWidth - container.clientWidth;
+
+        if (container.scrollLeft >= maxScroll - 15) {
+            container.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+            container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+        }
+    };
+
+    const scrollPrev = () => {
+        const container = scrollRef.current;
+        if (!container) return;
+
+        const firstCard = container.querySelector(`.${styles.itemContainer}`);
+        if (!firstCard) return;
+
+        const cardWidth = firstCard.clientWidth;
+        const style = window.getComputedStyle(container.querySelector(`.${styles.carouselTrack}`) || container);
+        const gap = parseInt(style.columnGap || style.gap || '32', 10) || 32;
+        const scrollAmount = cardWidth + gap;
+        const maxScroll = container.scrollWidth - container.clientWidth;
+
+        if (container.scrollLeft <= 15) {
+            container.scrollTo({ left: maxScroll, behavior: 'smooth' });
+        } else {
+            container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+        }
+    };
+
+    useEffect(() => {
+        const container = scrollRef.current;
+        if (!container) return;
         
         // Manual wheel handling (translate vertical to horizontal)
         const handleWheel = (e: WheelEvent) => {
@@ -113,10 +123,25 @@ export default function PartnersCarousel({
         container.addEventListener('wheel', handleWheel, { passive: false });
 
         return () => {
-            cancelAnimationFrame(animationFrame);
             container.removeEventListener('wheel', handleWheel);
         };
-    }, [isPaused]);
+    }, []);
+
+    useEffect(() => {
+        const container = scrollRef.current;
+        if (!container) return;
+
+        const resizeObserver = new ResizeObserver(() => {
+            setShowArrows(container.scrollWidth > container.clientWidth);
+        });
+        resizeObserver.observe(container);
+
+        setShowArrows(container.scrollWidth > container.clientWidth);
+
+        return () => {
+            resizeObserver.disconnect();
+        };
+    }, [partners]);
 
     if (!partners || partners.length === 0) {
         return null;
@@ -126,45 +151,60 @@ export default function PartnersCarousel({
         <section className={styles.sectionContainer}>
             <h2 className={styles.title}>{title}</h2>
             
-            <div 
-                className={styles.carouselWrapper}
-                ref={scrollRef}
-                onMouseEnter={() => setIsPaused(true)}
-                onMouseLeave={handleMouseLeave}
-                onMouseDown={handleMouseDown}
-                onMouseUp={handleMouseUp}
-                onMouseMove={handleMouseMove}
-                style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
-            >
-                <div className={styles.carouselTrack} style={isDragging ? { pointerEvents: 'none' } : {}}>
-                    {partners.map((partner, index) => (
-                        <div key={`${partner._id}-${index}`} className={styles.itemContainer}>
-                            <div className={styles.logoContainer}>
-                                <Image
-                                    src={partner.shopLogo || '/placeholder-petshop.png'}
-                                    alt={partner.name}
-                                    width={50}
-                                    height={50}
-                                    className={styles.logo}
-                                />
-                            </div>
-                            
-                            <div className={styles.infoColumn}>
-                                <div className={styles.nameRow}>
-                                    <span className={styles.name}>{partner.name}</span>
-                                    <BadgeCheck 
-                                        size={18} 
-                                        strokeWidth={2} 
-                                        className={styles.checkIcon}
+            <div className={styles.carouselContainer}>
+                {/* Left Arrow */}
+                {showArrows && (
+                    <button className={`${styles.navBtn} ${styles.navBtnLeft}`} onClick={scrollPrev} aria-label="Anterior">
+                        <ChevronLeft size={24} />
+                    </button>
+                )}
+
+                <div 
+                    className={styles.carouselWrapper}
+                    ref={scrollRef}
+                    onMouseDown={handleMouseDown}
+                    onMouseUp={handleMouseUp}
+                    onMouseMove={handleMouseMove}
+                    onMouseLeave={handleMouseLeave}
+                    style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+                >
+                    <div className={styles.carouselTrack} style={isDragging ? { pointerEvents: 'none' } : {}}>
+                        {partners.map((partner, index) => (
+                            <div key={`${partner._id}-${index}`} className={styles.itemContainer}>
+                                <div className={styles.logoContainer}>
+                                    <Image
+                                        src={partner.shopLogo || '/placeholder-petshop.png'}
+                                        alt={partner.name}
+                                        width={50}
+                                        height={50}
+                                        className={styles.logo}
                                     />
                                 </div>
-                                <span className={styles.specialization} style={partner.specialization ? { color: '#ED802A', fontWeight: 400, fontSize: '14px' } : {}}>
-                                    {partner.specialization || 'Petshop'}
-                                </span>
+                                
+                                <div className={styles.infoColumn}>
+                                    <div className={styles.nameRow}>
+                                        <span className={styles.name}>{partner.name}</span>
+                                        <BadgeCheck 
+                                            size={18} 
+                                            strokeWidth={2} 
+                                            className={styles.checkIcon}
+                                        />
+                                    </div>
+                                    <span className={styles.specialization} style={partner.specialization ? { color: '#ED802A', fontWeight: 400, fontSize: '14px' } : {}}>
+                                        {partner.specialization || 'Petshop'}
+                                    </span>
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        ))}
+                    </div>
                 </div>
+
+                {/* Right Arrow */}
+                {showArrows && (
+                    <button className={`${styles.navBtn} ${styles.navBtnRight}`} onClick={scrollNext} aria-label="Próximo">
+                        <ChevronRight size={24} />
+                    </button>
+                )}
             </div>
         </section>
     );

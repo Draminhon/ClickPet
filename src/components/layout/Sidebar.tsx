@@ -104,7 +104,6 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
         { href: '/partner/appointments', label: 'Agendamentos', icon: Calendar },
         { href: '/partner/coupons', label: 'Cupons', icon: Ticket },
         { href: '/partner/delivery', label: 'Entregadores', icon: Truck },
-        { href: '/partner/subscription', label: 'Minha assinatura', icon: Zap, type: 'subscription' },
     ];
 
     return (
@@ -149,18 +148,12 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                                 <Link
                                     href={item.href}
                                     className={`${styles.navItem} ${isActive(item.href)} ${
-                                        !session?.user?.isProfileComplete && item.href !== '/partner/subscription' ? styles.disabledNavItem : ''
+                                        !session?.user?.isProfileComplete ? styles.disabledNavItem : ''
                                     }`}
-                                    onClick={() => item.type === 'subscription' && dismissNotification('subscription')}
                                 >
                                     <item.icon className={styles.navIcon} />
                                     {!isCollapsed && <span>{item.label}</span>}
                                 </Link>
-                                {item.href === '/partner/subscription' && 
-                                 !dismissedNotifs.subscription &&
-                                 (session?.user?.subscriptionStatus !== 'active' || !session?.user?.isProfileComplete) && (
-                                    <div className={styles.notificationDot} title="Confira nossos planos" />
-                                 )}
                             </div>
                         ))}
                     </nav>

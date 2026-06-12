@@ -1,6 +1,6 @@
 :root {
-  --primary-green: #34C759;
-  --primary-green-dark: #2BA84A;
+  --primary-green: #5CA87C;
+  --primary-green-dark: #478761;
   --secondary-yellow: #FFC107;
   --secondary-yellow-dark: #e0a800;
   --text-dark: #272727;
@@ -11,7 +11,7 @@
   --white: #FFFFFF;
   --border-color: #E0E0E0;
   --border-light: #DDE1E6;
-  --green-primary: rgba(52, 199, 89, 1);
+  --green-primary: rgba(92, 168, 124, 1);
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
   --radius-sm: 8px;

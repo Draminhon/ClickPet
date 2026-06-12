@@ -60,14 +60,39 @@ export async function GET(req: Request) {
         const { searchParams } = new URL(req.url);
         const category = searchParams.get('category');
         const partnerId = searchParams.get('partnerId');
+        const lat = parseFloat(searchParams.get('lat') || '');
+        const lng = parseFloat(searchParams.get('lng') || '');
 
         let query: any = {};
         if (category) query.category = category;
-        if (partnerId) query.partnerId = partnerId;
-
-        // For public listing, only show active services
-        if (!partnerId) {
+        
+        if (partnerId) {
+            query.partnerId = partnerId;
+        } else {
             query.isActive = true;
+            if (!isNaN(lat) && !isNaN(lng)) {
+                // Find all active partners within 15km
+                const User = (await import('@/models/User')).default;
+                const realPartners = await User.find({ 
+                    status: { $ne: 'suspended' },
+                    role: { $in: ['partner', 'veterinarian'] }
+                });
+                const nearbyRealIds = [];
+                const { calculateDistance } = await import('@/lib/distance');
+                for (const partner of realPartners) {
+                    const coords = partner.address?.coordinates?.coordinates;
+                    if (coords && coords.length === 2) {
+                        const [partnerLng, partnerLat] = coords;
+                        if (!isNaN(partnerLat) && !isNaN(partnerLng)) {
+                            const dist = calculateDistance(lat, lng, partnerLat, partnerLng);
+                            if (dist <= 15) { // 15km radius
+                                nearbyRealIds.push(partner._id);
+                            }
+                        }
+                    }
+                }
+                query.partnerId = { $in: nearbyRealIds };
+            }
         }
 
         const services = await Service.find(query).populate('partnerId', 'name');

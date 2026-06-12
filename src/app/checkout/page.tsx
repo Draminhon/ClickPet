@@ -524,10 +524,10 @@ function CheckoutContent() {
             <div className={styles.checkoutGrid}>
                 <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '1.5rem' }}>
                     {/* Delivery Option */}
-                    <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
+                    <div className={styles.checkoutCard}>
                         <h3 style={{ marginBottom: '1.2rem', color: '#333' }}>Opção de Entrega</h3>
                         <div className={styles.deliverySelectorArea}>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', padding: '1.2rem', border: !isPickup ? '2px solid #3BB77E' : '1px solid #E5E7EB', borderRadius: '10px', flex: 1, background: !isPickup ? '#F3FAF6' : 'white', boxShadow: !isPickup ? '0 4px 10px rgba(59, 183, 126, 0.1)' : 'none', transition: 'all 0.2s' }}>
+                            <label className={`${styles.deliveryLabel} ${!isPickup ? styles.deliveryLabelActive : ''}`}>
                                 <input
                                     type="radio"
                                     checked={!isPickup}
@@ -535,9 +535,9 @@ function CheckoutContent() {
                                     style={{ accentColor: '#3BB77E', width: '18px', height: '18px' }}
                                 />
                                 <Truck size={22} color={!isPickup ? '#3BB77E' : '#9CA3AF'} />
-                                <span style={{ fontWeight: !isPickup ? 600 : 500, color: !isPickup ? '#111827' : '#4B5563' }}>Entrega</span>
+                                <span className={`${styles.deliveryLabelText} ${!isPickup ? styles.deliveryLabelTextActive : ''}`}>Entrega</span>
                             </label>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', padding: '1.2rem', border: isPickup ? '2px solid #3BB77E' : '1px solid #E5E7EB', borderRadius: '10px', flex: 1, background: isPickup ? '#F3FAF6' : 'white', boxShadow: isPickup ? '0 4px 10px rgba(59, 183, 126, 0.1)' : 'none', transition: 'all 0.2s' }}>
+                            <label className={`${styles.deliveryLabel} ${isPickup ? styles.deliveryLabelActive : ''}`}>
                                 <input
                                     type="radio"
                                     checked={isPickup}
@@ -545,15 +545,15 @@ function CheckoutContent() {
                                     style={{ accentColor: '#3BB77E', width: '18px', height: '18px' }}
                                 />
                                 <MapPin size={22} color={isPickup ? '#3BB77E' : '#9CA3AF'} />
-                                <span style={{ fontWeight: isPickup ? 600 : 500, color: isPickup ? '#111827' : '#4B5563' }}>Retirar na Loja</span>
+                                <span className={`${styles.deliveryLabelText} ${isPickup ? styles.deliveryLabelTextActive : ''}`}>Retirar na Loja</span>
                             </label>
                         </div>
                     </div>
 
                     {/* Address UI Block */}
                     {!isPickup && (
-                        <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid #f0f0f0', paddingBottom: '0.8rem' }}>
+                        <div className={styles.checkoutCard}>
+                            <div className={styles.cardHeader}>
                                 <h3 style={{ margin: 0, color: '#333' }}>Local de Entrega</h3>
                                 {deliveryAddresses.length > 0 && !showAddressForm && (
                                     <button 
@@ -585,13 +585,7 @@ function CheckoutContent() {
                             {deliveryAddresses.length > 0 && !showAddressForm && (
                                 <div style={{ display: 'grid', gap: '1rem' }}>
                                     {deliveryAddresses.map((addr, idx) => (
-                                        <label key={idx} style={{ 
-                                            display: 'flex', alignItems: 'flex-start', gap: '1rem', padding: '1.2rem', 
-                                            border: selectedAddressIndex === idx ? '2px solid #3BB77E' : '1px solid #E5E7EB', 
-                                            borderRadius: '10px', cursor: 'pointer', transition: 'all 0.2s ease',
-                                            background: selectedAddressIndex === idx ? '#F3FAF6' : 'white',
-                                            boxShadow: selectedAddressIndex === idx ? '0 4px 10px rgba(59, 183, 126, 0.1)' : 'none'
-                                        }}>
+                                        <label key={idx} className={`${styles.addressLabel} ${selectedAddressIndex === idx ? styles.addressLabelActive : ''}`}>
                                             <input 
                                                 type="radio" 
                                                 name="selectedAddress" 
@@ -716,8 +710,8 @@ function CheckoutContent() {
 
                     {/* Loyalty Points */}
                     {pointsBalance > 0 && (
-                        <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem' }}>
+                        <div className={styles.checkoutCard}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.2rem' }}>
                                 <h3 style={{ margin: 0, color: '#333' }}>Pontos de Fidelidade</h3>
                                 <span style={{ background: '#f0fdf4', color: '#16a34a', padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.9rem', fontWeight: 600 }}>
                                     {pointsBalance} disponíveis
@@ -766,19 +760,19 @@ function CheckoutContent() {
                     )}
 
                     {/* Coupon */}
-                    <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
+                    <div className={styles.checkoutCard}>
                         <h3 style={{ marginBottom: '1.2rem', color: '#333' }}>Cupom de Desconto</h3>
-                        <div style={{ display: 'flex', gap: '0.6rem' }}>
+                        <div className={styles.couponInputArea}>
                             <input
                                 placeholder="Digite seu código"
                                 value={couponCode}
                                 onChange={e => setCouponCode(e.target.value.toUpperCase())}
-                                style={{ flex: 1, padding: '0.8rem 1rem', borderRadius: '8px', border: '1px solid #D1D5DB', fontSize: '1rem' }}
+                                className={styles.couponInput}
                             />
                             <button
                                 type="button"
                                 onClick={() => handleApplyCoupon()}
-                                style={{ padding: '0.8rem 2rem', background: '#3BB77E', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '1rem', transition: 'background 0.2s' }}
+                                className={styles.couponBtn}
                             >
                                 Aplicar
                             </button>
@@ -807,44 +801,26 @@ function CheckoutContent() {
                     </div>
 
                     {/* Payment Method Selection */}
-                    <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
+                    <div className={styles.checkoutCard}>
                         <h3 style={{ marginBottom: '1.2rem', color: '#333' }}>Método de Pagamento</h3>
                         <div className={styles.paymentSelectorArea}>
-                            <label style={{
-                                display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer',
-                                padding: '1.2rem', border: paymentMethod === 'pix_cartao' ? '2px solid #3BB77E' : '1px solid #E5E7EB',
-                                borderRadius: '10px', flex: 1, minWidth: '150px',
-                                background: paymentMethod === 'pix_cartao' ? '#F3FAF6' : 'white', transition: 'all 0.2s'
-                            }}>
+                            <label className={`${styles.paymentLabel} ${paymentMethod === 'pix_cartao' ? styles.paymentLabelActive : ''}`}>
                                 <input type="radio" checked={paymentMethod === 'pix_cartao'} onChange={() => setPaymentMethod('pix_cartao')} style={{ accentColor: '#3BB77E' }}/>
                                 <QrCode size={20} color={paymentMethod === 'pix_cartao' ? '#3BB77E' : '#6B7280'}/>
                                 <CreditCard size={20} color={paymentMethod === 'pix_cartao' ? '#3BB77E' : '#6B7280'}/>
-                                <span style={{ fontSize: '0.95rem', fontWeight: paymentMethod === 'pix_cartao' ? 600 : 500, color: paymentMethod === 'pix_cartao' ? '#111827' : '#4B5563' }}>PIX ou Cartão</span>
+                                <span className={`${styles.paymentLabelText} ${paymentMethod === 'pix_cartao' ? styles.paymentLabelTextActive : ''}`}>PIX ou Cartão</span>
                             </label>
-                            <label style={{
-                                display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer',
-                                padding: '1.2rem', border: paymentMethod === 'pix' ? '2px solid #3BB77E' : '1px solid #E5E7EB',
-                                borderRadius: '10px', flex: 1, minWidth: '150px',
-                                background: paymentMethod === 'pix' ? '#F3FAF6' : 'white', transition: 'all 0.2s'
-                            }}>
+                            <label className={`${styles.paymentLabel} ${paymentMethod === 'pix' ? styles.paymentLabelActive : ''}`}>
                                 <input type="radio" checked={paymentMethod === 'pix'} onChange={() => setPaymentMethod('pix')} style={{ accentColor: '#3BB77E' }}/>
                                 <QrCode size={20} color={paymentMethod === 'pix' ? '#3BB77E' : '#6B7280'}/>
-                                <span style={{ fontSize: '0.95rem', fontWeight: paymentMethod === 'pix' ? 600 : 500, color: paymentMethod === 'pix' ? '#111827' : '#4B5563' }}>Somente PIX</span>
+                                <span className={`${styles.paymentLabelText} ${paymentMethod === 'pix' ? styles.paymentLabelTextActive : ''}`}>Somente PIX</span>
                             </label>
-                            <label style={{
-                                display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer',
-                                padding: '1.2rem', border: paymentMethod === 'cartao' ? '2px solid #3BB77E' : '1px solid #E5E7EB',
-                                borderRadius: '10px', flex: 1, minWidth: '150px',
-                                background: paymentMethod === 'cartao' ? '#F3FAF6' : 'white', transition: 'all 0.2s'
-                            }}>
+                            <label className={`${styles.paymentLabel} ${paymentMethod === 'cartao' ? styles.paymentLabelActive : ''}`}>
                                 <input type="radio" checked={paymentMethod === 'cartao'} onChange={() => setPaymentMethod('cartao')} style={{ accentColor: '#3BB77E' }}/>
                                 <CreditCard size={20} color={paymentMethod === 'cartao' ? '#3BB77E' : '#6B7280'}/>
-                                <span style={{ fontSize: '0.95rem', fontWeight: paymentMethod === 'cartao' ? 600 : 500, color: paymentMethod === 'cartao' ? '#111827' : '#4B5563' }}>Somente Cartão</span>
+                                <span className={`${styles.paymentLabelText} ${paymentMethod === 'cartao' ? styles.paymentLabelTextActive : ''}`}>Somente Cartão</span>
                             </label>
                         </div>
-                        <p style={{ fontSize: '0.8rem', color: '#999', marginTop: '0.75rem' }}>
-                            💡 Você será redirecionado para uma página segura de pagamento
-                        </p>
                     </div>
 
                     <button
@@ -871,7 +847,7 @@ function CheckoutContent() {
 
                 {/* Summary */}
                 <div>
-                    <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', position: 'sticky', top: '2rem' }}>
+                    <div className={styles.summaryCard}>
                         <h3 style={{ marginBottom: '1.5rem' }}>Resumo do Pedido</h3>
 
                         {partnerIds.map((pId) => {
@@ -887,9 +863,9 @@ function CheckoutContent() {
                                     </h4>
 
                                     {pItems.map((item: any, idx: number) => (
-                                        <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
-                                            <span>{item.quantity}x {item.title}</span>
-                                            <span>R$ {(item.price * item.quantity).toFixed(2)}</span>
+                                        <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+                                            <span style={{ minWidth: 0, flex: 1, wordBreak: 'break-word' }}>{item.quantity}x {item.title}</span>
+                                            <span style={{ flexShrink: 0, fontWeight: 500 }}>R$ {(item.price * item.quantity).toFixed(2)}</span>
                                         </div>
                                     ))}
 

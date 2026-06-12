@@ -20,6 +20,9 @@
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
     overflow: hidden;
     animation: slideUp 0.25s ease-out;
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
 }
 
 @keyframes slideUp {
@@ -73,6 +76,8 @@
 
 .modalBody {
     padding: 1.5rem;
+    overflow-y: auto;
+    flex: 1;
 }
 
 .formContainer {

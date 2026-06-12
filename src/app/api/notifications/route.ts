@@ -69,3 +69,29 @@ export async function PUT(req: Request) {
         return NextResponse.json({ message: error.message }, { status: 500 });
     }
 }
+
+export async function DELETE(req: Request) {
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session) {
+            return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+        }
+
+        const { searchParams } = new URL(req.url);
+        const notificationId = searchParams.get('id');
+
+        await dbConnect();
+
+        if (notificationId) {
+            // Delete specific notification
+            await Notification.deleteOne({ _id: notificationId, userId: session.user.id });
+        } else {
+            // Delete all notifications
+            await Notification.deleteMany({ userId: session.user.id });
+        }
+
+        return NextResponse.json({ message: 'Notifications deleted successfully' });
+    } catch (error: any) {
+        return NextResponse.json({ message: error.message }, { status: 500 });
+    }
+}

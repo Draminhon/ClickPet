@@ -4,7 +4,7 @@
 }
 
 .main {
-    padding-top: 20px;
+    padding-top: 0;
 }
 
 .container {
@@ -158,19 +158,91 @@
 }
 
 @media (max-width: 968px) {
+    .container {
+        padding: 0 24px;
+    }
+
+    .heroSection {
+        padding: 60px 0;
+    }
+
     .heroTitle {
         font-size: 36px;
     }
 
+    .heroSubtitle {
+        margin-bottom: 24px;
+    }
+
+    .benefitsSection {
+        padding: 50px 0;
+    }
+
+    .sectionTitle {
+        font-size: 28px;
+        margin-bottom: 40px;
+    }
+
     .benefitsGrid {
         grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .benefitCard {
+        padding: 24px;
+        border-radius: 16px;
+    }
+
+    .ctaSection {
+        padding: 40px 0;
     }
 
     .ctaCard {
         padding: 40px 20px;
+        border-radius: 20px;
     }
 
     .ctaCard h2 {
         font-size: 28px;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 0 16px;
+    }
+
+    .heroTitle {
+        font-size: 28px;
+    }
+
+    .heroSubtitle {
+        font-size: 16px;
+    }
+
+    .primaryBtn {
+        padding: 14px 28px;
+        font-size: 16px;
+        width: 100%;
+        text-align: center;
+    }
+
+    .sectionTitle {
+        font-size: 24px;
+    }
+
+    .ctaCard h2 {
+        font-size: 22px;
+    }
+
+    .ctaCard p {
+        font-size: 15px;
+    }
+
+    .whiteBtn {
+        padding: 14px 28px;
+        font-size: 16px;
+        width: 100%;
+        text-align: center;
     }
 }

@@ -134,12 +134,12 @@ export const authOptions: NextAuthOptions = {
                             const Subscription = (await import('@/models/Subscription')).default;
                             await Subscription.create({
                                 partnerId: dbUser._id,
-                                plan: 'free',
+                                plan: 'enterprise',
                                 status: 'active',
                                 startDate: new Date(),
                                 endDate: new Date(Date.now() + 50 * 365 * 24 * 60 * 60 * 1000), // 50 years
                                 amount: 0,
-                                features: Subscription.getPlanFeatures('free'),
+                                features: Subscription.getPlanFeatures('enterprise'),
                             });
                         }
                         cookieStore.delete('clickpet_register_intent');
@@ -167,12 +167,8 @@ export const authOptions: NextAuthOptions = {
                         token.role = dbUser.role;
                         token.tokenVersion = dbUser.tokenVersion || 0;
                         if (dbUser.role === 'partner') {
-                            const Subscription = (await import('@/models/Subscription')).default;
-                            const sub = await Subscription.findOne({ partnerId: dbUser._id }).lean() as any;
-                            if (sub) {
-                                token.subscriptionStatus = sub.status;
-                                token.subscriptionPlan = sub.plan;
-                            }
+                            token.subscriptionStatus = 'active';
+                            token.subscriptionPlan = 'enterprise';
                             const a = dbUser.address;
                             token.isProfileComplete = !!(dbUser.cnpj && dbUser.phone && a?.street && a?.number && a?.city && a?.neighborhood && (a?.zip || a?.zipCode));
                         } else if (dbUser.role === 'veterinarian') {
@@ -185,13 +181,9 @@ export const authOptions: NextAuthOptions = {
                     token.id = user.id;
                     token.tokenVersion = user.tokenVersion;
                     if (user.role === 'partner') {
-                        const Subscription = (await import('@/models/Subscription')).default;
-                        const sub = await Subscription.findOne({ partnerId: user.id }).lean() as any;
                         const dbUser = await User.findById(user.id).lean() as any;
-                        if (sub) {
-                            token.subscriptionStatus = sub.status;
-                            token.subscriptionPlan = sub.plan;
-                        }
+                        token.subscriptionStatus = 'active';
+                        token.subscriptionPlan = 'enterprise';
                         const a = dbUser?.address;
                         token.isProfileComplete = !!(dbUser?.cnpj && dbUser?.phone && a?.street && a?.number && a?.city && a?.neighborhood && (a?.zip || a?.zipCode));
                     } else if (user.role === 'veterinarian') {
@@ -224,12 +216,8 @@ export const authOptions: NextAuthOptions = {
                         token.lastRefreshed = now;
                         
                         if (dbUser.role === 'partner') {
-                            const Subscription = (await import('@/models/Subscription')).default;
-                            const sub = await Subscription.findOne({ partnerId: dbUser._id }).lean() as any;
-                            if (sub) {
-                                token.subscriptionStatus = sub.status;
-                                token.subscriptionPlan = sub.plan;
-                            }
+                            token.subscriptionStatus = 'active';
+                            token.subscriptionPlan = 'enterprise';
                             const a = dbUser.address;
                             token.isProfileComplete = !!(dbUser.cnpj && dbUser.phone && a?.street && a?.number && a?.city && a?.neighborhood && (a?.zip || a?.zipCode));
                         } else if (dbUser.role === 'veterinarian') {

@@ -1,5 +1,4 @@
 import dbConnect from './db';
-import Subscription from '@/models/Subscription';
 import Product from '@/models/Product';
 import Service from '@/models/Service';
 
@@ -7,19 +6,7 @@ import Service from '@/models/Service';
  * Check if a partner's subscription is active
  */
 export async function isSubscriptionActive(partnerId: string): Promise<boolean> {
-    try {
-        await dbConnect();
-        const subscription = await Subscription.findOne({ partnerId });
-
-        if (!subscription) {
-            return false;
-        }
-
-        return subscription.isActive();
-    } catch (error) {
-        console.error('Error checking subscription status:', error);
-        return false;
-    }
+    return true;
 }
 
 /**
@@ -28,38 +15,11 @@ export async function isSubscriptionActive(partnerId: string): Promise<boolean> 
 export async function canAddProduct(partnerId: string): Promise<{ allowed: boolean; message?: string; current?: number; limit?: number }> {
     try {
         await dbConnect();
-        const subscription = await Subscription.findOne({ partnerId });
-
-        if (!subscription) {
-            return { allowed: false, message: 'Nenhuma assinatura encontrada' };
-        }
-
-        if (!subscription.isActive()) {
-            return { allowed: false, message: 'Assinatura inativa ou expirada' };
-        }
-
-        const maxProducts = subscription.features.maxProducts;
-
-        // -1 means unlimited
-        if (maxProducts === -1) {
-            return { allowed: true };
-        }
-
         const currentProductCount = await Product.countDocuments({ partnerId });
-
-        if (currentProductCount >= maxProducts) {
-            return {
-                allowed: false,
-                message: `Limite de produtos atingido. Seu plano permite até ${maxProducts} produtos.`,
-                current: currentProductCount,
-                limit: maxProducts
-            };
-        }
-
-        return { allowed: true, current: currentProductCount, limit: maxProducts };
+        return { allowed: true, current: currentProductCount, limit: -1 };
     } catch (error) {
         console.error('Error checking product limit:', error);
-        return { allowed: false, message: 'Erro ao verificar limite de produtos' };
+        return { allowed: true, current: 0, limit: -1 };
     }
 }
 
@@ -69,38 +29,11 @@ export async function canAddProduct(partnerId: string): Promise<{ allowed: boole
 export async function canAddService(partnerId: string): Promise<{ allowed: boolean; message?: string; current?: number; limit?: number }> {
     try {
         await dbConnect();
-        const subscription = await Subscription.findOne({ partnerId });
-
-        if (!subscription) {
-            return { allowed: false, message: 'Nenhuma assinatura encontrada' };
-        }
-
-        if (!subscription.isActive()) {
-            return { allowed: false, message: 'Assinatura inativa ou expirada' };
-        }
-
-        const maxServices = subscription.features.maxServices;
-
-        // -1 means unlimited
-        if (maxServices === -1) {
-            return { allowed: true };
-        }
-
         const currentServiceCount = await Service.countDocuments({ partnerId });
-
-        if (currentServiceCount >= maxServices) {
-            return {
-                allowed: false,
-                message: `Limite de serviços atingido. Seu plano permite até ${maxServices} serviços.`,
-                current: currentServiceCount,
-                limit: maxServices
-            };
-        }
-
-        return { allowed: true, current: currentServiceCount, limit: maxServices };
+        return { allowed: true, current: currentServiceCount, limit: -1 };
     } catch (error) {
         console.error('Error checking service limit:', error);
-        return { allowed: false, message: 'Erro ao verificar limite de serviços' };
+        return { allowed: true, current: 0, limit: -1 };
     }
 }
 
@@ -108,52 +41,30 @@ export async function canAddService(partnerId: string): Promise<{ allowed: boole
  * Check if a partner has access to a specific feature
  */
 export async function hasFeature(partnerId: string, feature: string): Promise<boolean> {
-    try {
-        await dbConnect();
-        const subscription = await Subscription.findOne({ partnerId });
-
-        if (!subscription || !subscription.isActive()) {
-            return false;
-        }
-
-        // Check if feature exists in subscription features
-        if (feature in subscription.features) {
-            return subscription.features[feature] === true || subscription.features[feature] === -1;
-        }
-
-        return false;
-    } catch (error) {
-        console.error('Error checking feature access:', error);
-        return false;
-    }
+    return true;
 }
 
 /**
  * Get subscription details for a partner
  */
 export async function getSubscriptionDetails(partnerId: string) {
-    try {
-        await dbConnect();
-        const subscription = await Subscription.findOne({ partnerId });
-
-        if (!subscription) {
-            return null;
-        }
-
-        return {
-            plan: subscription.plan,
-            status: subscription.status,
-            isActive: subscription.isActive(),
-            isExpiringSoon: subscription.isExpiringSoon(),
-            startDate: subscription.startDate,
-            endDate: subscription.endDate,
-            features: subscription.features,
-            autoRenew: subscription.autoRenew,
-        };
-    } catch (error) {
-        console.error('Error getting subscription details:', error);
-        return null;
-    }
+    return {
+        plan: 'enterprise',
+        status: 'active',
+        isActive: true,
+        isExpiringSoon: false,
+        startDate: new Date(),
+        endDate: new Date(Date.now() + 50 * 365 * 24 * 60 * 60 * 1000), // 50 years (permanent)
+        features: {
+            maxProducts: -1,
+            maxServices: -1,
+            maxImages: -1, // Unlimited images per product
+            hasAnalytics: true,
+            hasPrioritySupport: true,
+            hasAdvancedReports: true,
+        },
+        autoRenew: true,
+    };
 }
 
 /**
@@ -162,12 +73,6 @@ export async function getSubscriptionDetails(partnerId: string) {
 export async function getUsageStats(partnerId: string) {
     try {
         await dbConnect();
-        const subscription = await Subscription.findOne({ partnerId });
-
-        if (!subscription) {
-            return null;
-        }
-
         const [productCount, serviceCount] = await Promise.all([
             Product.countDocuments({ partnerId }),
             Service.countDocuments({ partnerId }),
@@ -176,17 +81,20 @@ export async function getUsageStats(partnerId: string) {
         return {
             products: {
                 current: productCount,
-                limit: subscription.features.maxProducts,
-                percentage: subscription.features.maxProducts === -1 ? 0 : (productCount / subscription.features.maxProducts) * 100,
+                limit: -1,
+                percentage: 0,
             },
             services: {
                 current: serviceCount,
-                limit: subscription.features.maxServices,
-                percentage: subscription.features.maxServices === -1 ? 0 : (serviceCount / subscription.features.maxServices) * 100,
+                limit: -1,
+                percentage: 0,
             },
         };
     } catch (error) {
         console.error('Error getting usage stats:', error);
-        return null;
+        return {
+            products: { current: 0, limit: -1, percentage: 0 },
+            services: { current: 0, limit: -1, percentage: 0 },
+        };
     }
 }

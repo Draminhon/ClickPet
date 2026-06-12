@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
-import { ShoppingCart, User, Bell, X, MapPin, ChevronDown, Package, UserCircle, LogOut, Edit2, Trash2, Plus, Check, CheckCheck } from 'lucide-react';
+import { ShoppingCart, User, Bell, X, MapPin, ChevronDown, Package, UserCircle, LogOut, Edit2, Trash2, Plus, Check, CheckCheck, Minus } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useSession, signOut } from 'next-auth/react';
 import { useToast } from '@/context/ToastContext';
@@ -13,8 +13,8 @@ import MapPicker from '@/components/ui/MapPicker';
 import styles from './Header.module.css';
 
 export default function Header() {
-    const { count } = useCart();
-    const { data: session } = useSession();
+    const { count, items: cartItems, updateQuantity, removeFromCart, total: cartTotal } = useCart();
+    const { data: session, status } = useSession();
     const { showToast } = useToast();
     const router = useRouter();
     const pathname = usePathname();
@@ -27,6 +27,8 @@ export default function Header() {
     const [userProfile, setUserProfile] = useState<any>(null);
     const [userImage, setUserImage] = useState<string | null>(null);
     const [editingIndex, setEditingIndex] = useState<number | null>(null); // null = new or primary, -1 = new, 0+ = deliveryAddresses index
+    const [showCartDrawer, setShowCartDrawer] = useState(false);
+    const [showNotificationsDrawer, setShowNotificationsDrawer] = useState(false);
     
     // States for mobile profile & notification modal
     const [isMobile, setIsMobile] = useState(false);
@@ -91,6 +93,36 @@ export default function Header() {
         }
     };
 
+    const handleDeleteNotification = async (notificationId: string) => {
+        setNotifications(prev => prev.filter(n => n._id !== notificationId));
+        setUnreadCount(prev => {
+            const deletedNotif = notifications.find(n => n._id === notificationId);
+            if (deletedNotif && !deletedNotif.read) {
+                return Math.max(0, prev - 1);
+            }
+            return prev;
+        });
+
+        try {
+            await fetch(`/api/notifications?id=${notificationId}`, { method: 'DELETE' });
+            fetchNotifications();
+        } catch (error) {
+            fetchNotifications();
+        }
+    };
+
+    const handleClearAllNotifications = async () => {
+        setNotifications([]);
+        setUnreadCount(0);
+
+        try {
+            await fetch('/api/notifications', { method: 'DELETE' });
+            fetchNotifications();
+        } catch (error) {
+            fetchNotifications();
+        }
+    };
+
     const [addressForm, setAddressForm] = useState({
         street: '',
         number: '',
@@ -104,6 +136,7 @@ export default function Header() {
     useEffect(() => {
         if (session) {
             fetchUserAddress();
+            fetchNotifications();
         }
     }, [session]);
 
@@ -317,7 +350,14 @@ export default function Header() {
             <header className={`${styles.header} ${!session ? styles.headerTransparent : ''}`}>
                 <div className={styles.headerContent}>
                     {/* Logo */}
-                    <Link href="/" className={`${styles.logo} ${!session ? styles.logoWhite : ''}`}>
+                    <Link 
+                        href="/" 
+                        className={`${styles.logo} ${
+                            pathname === '/about' || pathname === '/partner-about' 
+                                ? styles.logoBlack 
+                                : (!session ? styles.logoWhite : '')
+                        }`}
+                    >
                         ClickPet.
                     </Link>
 
@@ -335,8 +375,28 @@ export default function Header() {
                             <ChevronDown color="#272727" size={16} strokeWidth={2} style={{ width: '6px', height: '6px', transform: 'scale(2.5)' }} />
 
                             {showLocationDropdown && (
-                                <div className={styles.locationDropdown} onClick={(e) => e.stopPropagation()}>
-                                    <div className={styles.dropdownSection}>
+                                <>
+                                    <div 
+                                        className={styles.locationBackdrop} 
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setShowLocationDropdown(false);
+                                        }}
+                                    />
+                                    <div className={styles.locationDropdown} onClick={(e) => e.stopPropagation()}>
+                                        <div className={styles.mobileModalHeader}>
+                                            <span className={styles.mobileModalTitle}>Seus Endereços</span>
+                                            <button 
+                                                className={styles.mobileModalClose} 
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setShowLocationDropdown(false);
+                                                }}
+                                            >
+                                                <X size={20} />
+                                            </button>
+                                        </div>
+                                        <div className={styles.dropdownSection}>
                                         <span className={styles.sectionTitle}>Seus Endereços</span>
                                         <div className={styles.addressList}>
                                             {/* Primary Address */}
@@ -432,25 +492,42 @@ export default function Header() {
                                         </button>
                                     </div>
                                 </div>
+                                </>
                             )}
                         </div>
                     )}
 
                     {/* Right Actions */}
                     <div className={styles.headerActions}>
-                        {session ? (
+                        {status === 'loading' ? (
+                            <div style={{ opacity: 0, width: '150px' }} />
+                        ) : session ? (
                             <>
                                 {/* Logged in: notifications, cart, profile */}
-                                <Link href="/notifications" className={styles.notificationWrapper}>
+                                <div 
+                                    className={styles.notificationWrapper}
+                                    onClick={() => {
+                                        fetchNotifications();
+                                        setShowNotificationsDrawer(true);
+                                    }}
+                                    style={{ cursor: 'pointer' }}
+                                >
                                     <Bell className={styles.notificationIcon} size={24} />
-                                </Link>
+                                    {unreadCount > 0 && (
+                                        <span className={styles.badge}>{unreadCount}</span>
+                                    )}
+                                </div>
 
-                                <Link href="/cart" className={styles.cartWrapper}>
+                                <div 
+                                    className={styles.cartWrapper}
+                                    onClick={() => setShowCartDrawer(true)}
+                                    style={{ cursor: 'pointer' }}
+                                >
                                     <ShoppingCart className={styles.cartIcon} size={24} />
                                     {count > 0 && (
                                         <span className={styles.badge}>{count}</span>
                                     )}
-                                </Link>
+                                </div>
 
                                 <div 
                                     className={styles.profileMenuWrapper}
@@ -536,98 +613,69 @@ export default function Header() {
 
             {/* Address Edit Modal */}
             {showAddressModal && (
-                <div style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: 'rgba(0,0,0,0.5)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    zIndex: 9999,
-                    padding: '1rem',
-                }}>
-                    <div style={{
-                        background: 'white',
-                        borderRadius: '12px',
-                        padding: '2rem',
-                        maxWidth: '600px',
-                        width: '100%',
-                        maxHeight: '90vh',
-                        overflowY: 'auto',
-                        position: 'relative',
-                    }}>
+                <div className={styles.modalOverlay}>
+                    <div className={styles.modalCard}>
                         <button
                             onClick={() => setShowAddressModal(false)}
-                            style={{
-                                position: 'absolute',
-                                top: '1rem',
-                                right: '1rem',
-                                background: 'none',
-                                border: 'none',
-                                cursor: 'pointer',
-                                padding: '0.5rem',
-                            }}
+                            className={styles.modalCloseBtn}
                         >
                             <X size={24} />
                         </button>
 
-                        <h2 style={{ marginBottom: '1.5rem', fontSize: '1.5rem', fontWeight: 700 }}>
+                        <h2 className={styles.modalTitle}>
                             {editingIndex === -1 ? 'Novo Endereço' : 'Editar Endereço'}
                         </h2>
 
-                        <div style={{ display: 'grid', gap: '1rem' }}>
-                            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '1rem' }}>
-                                <div>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Rua</label>
+                        <div className={styles.modalForm}>
+                            <div className={styles.formGrid3}>
+                                <div className={styles.formField}>
+                                    <label className={styles.formLabel}>Rua</label>
                                     <input
                                         value={addressForm.street}
                                         onChange={e => setAddressForm({ ...addressForm, street: e.target.value })}
-                                        style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
+                                        className={styles.formInput}
                                     />
                                 </div>
-                                <div>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Número</label>
+                                <div className={styles.formField}>
+                                    <label className={styles.formLabel}>Número</label>
                                     <input
                                         value={addressForm.number}
                                         onChange={e => setAddressForm({ ...addressForm, number: e.target.value })}
-                                        style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
+                                        className={styles.formInput}
                                     />
                                 </div>
-                                <div>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Complemento</label>
+                                <div className={styles.formField}>
+                                    <label className={styles.formLabel}>Complemento</label>
                                     <input
                                         value={addressForm.complement}
                                         onChange={e => setAddressForm({ ...addressForm, complement: e.target.value })}
-                                        style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
+                                        className={styles.formInput}
                                         placeholder="Opcional"
                                     />
                                 </div>
                             </div>
 
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                                <div>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Cidade</label>
+                            <div className={styles.formGrid2}>
+                                <div className={styles.formField}>
+                                    <label className={styles.formLabel}>Cidade</label>
                                     <input
                                         value={addressForm.city}
                                         onChange={e => setAddressForm({ ...addressForm, city: e.target.value })}
-                                        style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
+                                        className={styles.formInput}
                                     />
                                 </div>
-                                <div>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>CEP</label>
+                                <div className={styles.formField}>
+                                    <label className={styles.formLabel}>CEP</label>
                                     <input
                                         value={addressForm.zip}
                                         onChange={e => setAddressForm({ ...addressForm, zip: e.target.value })}
-                                        style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
+                                        className={styles.formInput}
                                     />
                                 </div>
                             </div>
 
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>
+                            <div className={styles.formField}>
+                                <label className={styles.formLabel}>
                                     Localização no Mapa (opcional)
                                 </label>
                                 <MapPicker
@@ -645,25 +693,16 @@ export default function Header() {
                                 />
                             </div>
 
-                            <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                            <div className={styles.modalButtonsRow}>
                                 <button
                                     onClick={() => setShowAddressModal(false)}
-                                    style={{
-                                        flex: 1,
-                                        padding: '0.8rem',
-                                        background: '#f0f0f0',
-                                        border: 'none',
-                                        borderRadius: '8px',
-                                        cursor: 'pointer',
-                                        fontWeight: 600,
-                                    }}
+                                    className={styles.cancelBtn}
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     onClick={handleSaveAddress}
-                                    className="btn btn-primary"
-                                    style={{ flex: 1 }}
+                                    className={styles.submitBtn}
                                 >
                                     Salvar Endereço
                                 </button>
@@ -850,6 +889,231 @@ export default function Header() {
                                                     {new Date(n.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                                                 </span>
                                             </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Cart Side Drawer */}
+            {showCartDrawer && (
+                <div 
+                    className={styles.drawerOverlay} 
+                    onClick={() => setShowCartDrawer(false)}
+                >
+                    <div 
+                        className={styles.drawerCard} 
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Header */}
+                        <div className={styles.drawerHeader}>
+                            <h3 className={styles.drawerTitle}>
+                                Carrinho {count > 0 && <span className={styles.drawerTitleBadge}>{count}</span>}
+                            </h3>
+                            <button 
+                                className={styles.drawerCloseBtn}
+                                onClick={() => setShowCartDrawer(false)}
+                            >
+                                <X size={24} />
+                            </button>
+                        </div>
+
+                        {/* Content */}
+                        <div className={styles.drawerContent}>
+                            {cartItems.length === 0 ? (
+                                <div className={styles.drawerEmptyState}>
+                                    <ShoppingCart size={48} color="#DDE1E6" />
+                                    <span className={styles.emptyText}>Seu carrinho está vazio</span>
+                                </div>
+                            ) : (
+                                cartItems.map((item) => (
+                                    <div key={item.id} className={styles.drawerCartItem}>
+                                        <div className={styles.drawerItemImgWrapper}>
+                                            <Image 
+                                                src={item.image || 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?w=80&h=80&fit=crop'} 
+                                                alt={item.title}
+                                                fill
+                                                sizes="80px"
+                                                className={styles.drawerItemImg}
+                                            />
+                                        </div>
+                                        <div className={styles.drawerItemDetails}>
+                                            <h4 className={styles.drawerItemTitle}>{item.title}</h4>
+                                            <span className={styles.drawerItemShop}>Vendido por: {item.shopName}</span>
+                                            
+                                            <div className={styles.drawerItemPriceRow}>
+                                                <span className={styles.drawerItemPrice}>
+                                                    R$ {item.price.toFixed(2)}
+                                                </span>
+                                                
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <div className={styles.qtySelector}>
+                                                        <button 
+                                                            className={styles.qtyBtn}
+                                                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                                            title="Diminuir quantidade"
+                                                        >
+                                                            <Minus size={14} />
+                                                        </button>
+                                                        <span className={styles.qtyValue}>{item.quantity}</span>
+                                                        <button 
+                                                            className={styles.qtyBtn}
+                                                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                                            title="Aumentar quantidade"
+                                                        >
+                                                            <Plus size={14} />
+                                                        </button>
+                                                    </div>
+                                                    
+                                                    <button 
+                                                        className={styles.itemRemoveBtn}
+                                                        onClick={() => removeFromCart(item.id)}
+                                                        title="Remover do carrinho"
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+
+                        {/* Footer (Sticky only when items exist) */}
+                        {cartItems.length > 0 && (
+                            <div className={styles.drawerFooter}>
+                                <div className={styles.drawerSubtotalRow}>
+                                    <span className={styles.subtotalLabel}>Subtotal:</span>
+                                    <span className={styles.subtotalVal}>
+                                        R$ {cartTotal.toFixed(2)}
+                                    </span>
+                                </div>
+                                <div className={styles.footerButtons}>
+                                    <button 
+                                        className={styles.viewCartBtn}
+                                        onClick={() => {
+                                            router.push('/cart');
+                                            setShowCartDrawer(false);
+                                        }}
+                                    >
+                                        Ver meu carrinho
+                                    </button>
+                                    <button 
+                                        className={styles.checkoutSolidBtn}
+                                        onClick={() => {
+                                            router.push('/checkout');
+                                            setShowCartDrawer(false);
+                                        }}
+                                    >
+                                        Finalizar Compra
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* Notifications Side Drawer */}
+            {showNotificationsDrawer && (
+                <div 
+                    className={styles.drawerOverlay} 
+                    onClick={() => setShowNotificationsDrawer(false)}
+                >
+                    <div 
+                        className={styles.drawerCard} 
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Header */}
+                        <div className={styles.drawerHeader}>
+                            <h3 className={styles.drawerTitle}>
+                                Notificações 
+                                {unreadCount > 0 && (
+                                    <span className={styles.drawerTitleBadge}>{unreadCount}</span>
+                                )}
+                            </h3>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                {unreadCount > 0 && (
+                                    <button 
+                                        className={styles.markAllReadBtn}
+                                        onClick={handleMarkAllAsRead}
+                                    >
+                                        Marcar todas como lidas
+                                    </button>
+                                )}
+                                {notifications.length > 0 && (
+                                    <button 
+                                        className={styles.clearAllBtn}
+                                        onClick={handleClearAllNotifications}
+                                    >
+                                        Limpar todas
+                                    </button>
+                                )}
+                                <button 
+                                    className={styles.drawerCloseBtn}
+                                    onClick={() => setShowNotificationsDrawer(false)}
+                                >
+                                    <X size={24} />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Content */}
+                        <div className={styles.drawerContent}>
+                            {notificationsLoading ? (
+                                <div style={{ textAlign: 'center', padding: '20px 0', color: '#878787' }}>
+                                    Carregando notificações...
+                                </div>
+                            ) : notifications.length === 0 ? (
+                                <div className={styles.drawerEmptyState}>
+                                    <Bell size={48} color="#DDE1E6" />
+                                    <span className={styles.emptyText}>Nenhuma notificação no momento</span>
+                                </div>
+                            ) : (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                    {notifications.map((n) => (
+                                        <div 
+                                            key={n._id}
+                                            onClick={() => {
+                                                if (!n.read) handleMarkAsRead(n._id);
+                                                if (n.link) {
+                                                    router.push(n.link);
+                                                    setShowNotificationsDrawer(false);
+                                                }
+                                            }}
+                                            className={`${styles.drawerNotificationItem} ${!n.read ? styles.drawerNotificationItemUnread : ''}`}
+                                            style={{ cursor: n.link ? 'pointer' : 'default' }}
+                                        >
+                                            {!n.read && <div className={styles.unreadDot} />}
+                                            <div className={`${styles.notifIconWrapper} ${n.type === 'order' ? styles.notifIconOrder : styles.notifIconPromo}`}>
+                                                {n.type === 'order' ? <Package size={18} /> : <Bell size={18} />}
+                                            </div>
+                                            <div className={styles.notifBody}>
+                                                <span className={styles.notifTitle}>{n.title}</span>
+                                                <span className={styles.notifMsg}>{n.message}</span>
+                                                <span className={styles.notifTime}>
+                                                    {new Date(n.createdAt).toLocaleDateString('pt-BR', { 
+                                                        day: '2-digit', 
+                                                        month: 'short', 
+                                                        hour: '2-digit', 
+                                                        minute: '2-digit' 
+                                                    })}
+                                                </span>
+                                            </div>
+                                            <button 
+                                                className={styles.deleteNotifBtn}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDeleteNotification(n._id);
+                                                }}
+                                                title="Excluir notificação"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
                                         </div>
                                     ))}
                                 </div>

@@ -323,3 +323,34 @@
         width: 100% !important;
     }
 }
+
+.autoSaveStatus {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.statusSaving {
+    color: #E65100;
+    background-color: #FFF3E0;
+    border: 1px solid #FFE0B2;
+}
+
+.statusSaved {
+    color: #1B5E20;
+    background-color: #E8F5E9;
+    border: 1px solid #C8E6C9;
+}
+
+.statusError {
+    color: #B71C1C;
+    background-color: #FFEBEE;
+    border: 1px solid #FFCDD2;
+}

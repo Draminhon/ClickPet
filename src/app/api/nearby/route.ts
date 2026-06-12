@@ -7,6 +7,10 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { MOCK_PARTNERS, MOCK_CLINICS } from '@/mock/partners';
 
+function escapeRegex(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 export async function GET(req: Request) {
     try {
         await dbConnect();
@@ -26,6 +30,7 @@ export async function GET(req: Request) {
         let radius = parseFloat(searchParams.get('radius') || '15');
         const category = searchParams.get('category');
         const role = searchParams.get('role') || 'partner';
+        const search = searchParams.get('search') || searchParams.get('q');
 
         const hasLocation = !isNaN(lat) && !isNaN(lng);
         
@@ -46,6 +51,16 @@ export async function GET(req: Request) {
             }
         }
 
+        if (search) {
+            const escaped = escapeRegex(search);
+            const searchRegex = new RegExp(escaped, 'i');
+            findQuery.$or = [
+                { name: searchRegex },
+                { specialization: searchRegex },
+                { bio: searchRegex }
+            ];
+        }
+
         const realPartners = await User.find(findQuery).limit(500);
 
         // Include mocks for logged-in users too if they are role 'partner' or if real results are low
@@ -55,9 +70,20 @@ export async function GET(req: Request) {
             ? [...realPartners, ...MOCK_PARTNERS, ...MOCK_CLINICS]
             : realPartners;
 
+        // Filter mocks/results if search query is provided
+        let filteredPartners = allPartnersToProcess;
+        if (search) {
+            const searchLower = search.toLowerCase();
+            filteredPartners = allPartnersToProcess.filter(p => 
+                p.name?.toLowerCase().includes(searchLower) ||
+                p.specialization?.toLowerCase().includes(searchLower) ||
+                p.bio?.toLowerCase().includes(searchLower)
+            );
+        }
+
         const nearbyPartners: any[] = [];
 
-        for (const partner of allPartnersToProcess) {
+        for (const partner of filteredPartners) {
             // Filter incomplete veterinarians
             if (partner.role === 'veterinarian') {
                 const a = partner.address;

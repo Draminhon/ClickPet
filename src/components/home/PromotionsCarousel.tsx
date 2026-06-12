@@ -2,6 +2,7 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 import Image from 'next/image';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import styles from './PromotionsCarousel.module.css';
 
 interface Promotion {
@@ -45,17 +46,16 @@ const DEMO_PROMOS: Promotion[] = [
 
 export default function PromotionsCarousel() {
     const scrollRef = useRef<HTMLDivElement>(null);
-    const [isPaused, setIsPaused] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
     const [hasMoved, setHasMoved] = useState(false);
     const isMouseDown = useRef(false);
     const startX = useRef(0);
     const scrollLeft = useRef(0);
+    const [showArrows, setShowArrows] = useState(false);
 
     const handleMouseDown = (e: React.MouseEvent) => {
         isMouseDown.current = true;
         setHasMoved(false);
-        setIsPaused(true);
         startX.current = e.pageX - (scrollRef.current?.offsetLeft || 0);
         scrollLeft.current = scrollRef.current?.scrollLeft || 0;
     };
@@ -63,7 +63,6 @@ export default function PromotionsCarousel() {
     const handleMouseLeave = () => {
         isMouseDown.current = false;
         setIsDragging(false);
-        setIsPaused(false);
     };
 
     const handleMouseUp = () => {
@@ -72,7 +71,6 @@ export default function PromotionsCarousel() {
             setIsDragging(false);
             setHasMoved(false);
         }, 10);
-        setIsPaused(false);
     };
 
     const handleMouseMove = (e: React.MouseEvent) => {
@@ -94,35 +92,49 @@ export default function PromotionsCarousel() {
         }
     };
 
-    useEffect(() => {
+    const scrollNext = () => {
         const container = scrollRef.current;
         if (!container) return;
 
-        let animationFrame: number;
-        
-        let accumulator = 0;
-        
-        // Auto-scroll logic
-        const scroll = () => {
-            if (!isPaused && !isDragging && container) {
-                // CONFIGURAÇÃO DE VELOCIDADE:
-                // Altere o valor abaixo (ex: 0.3). Valores maiores = mais rápido.
-                accumulator += 0.5; 
-                
-                if (accumulator >= 1) {
-                    container.scrollLeft += Math.floor(accumulator);
-                    accumulator -= Math.floor(accumulator);
-                }
-                
-                // Infinite loop reset
-                if (container.scrollLeft >= container.scrollWidth / 2) {
-                    container.scrollLeft = 0;
-                }
-            }
-            animationFrame = requestAnimationFrame(scroll);
-        };
+        const firstCard = container.querySelector(`.${styles.promoContainer}`);
+        if (!firstCard) return;
 
-        animationFrame = requestAnimationFrame(scroll);
+        const cardWidth = firstCard.clientWidth;
+        const style = window.getComputedStyle(container.querySelector(`.${styles.carouselTrack}`) || container);
+        const gap = parseInt(style.columnGap || style.gap || '32', 10) || 32;
+        const scrollAmount = cardWidth + gap;
+        const maxScroll = container.scrollWidth - container.clientWidth;
+
+        if (container.scrollLeft >= maxScroll - 15) {
+            container.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+            container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+        }
+    };
+
+    const scrollPrev = () => {
+        const container = scrollRef.current;
+        if (!container) return;
+
+        const firstCard = container.querySelector(`.${styles.promoContainer}`);
+        if (!firstCard) return;
+
+        const cardWidth = firstCard.clientWidth;
+        const style = window.getComputedStyle(container.querySelector(`.${styles.carouselTrack}`) || container);
+        const gap = parseInt(style.columnGap || style.gap || '32', 10) || 32;
+        const scrollAmount = cardWidth + gap;
+        const maxScroll = container.scrollWidth - container.clientWidth;
+
+        if (container.scrollLeft <= 15) {
+            container.scrollTo({ left: maxScroll, behavior: 'smooth' });
+        } else {
+            container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+        }
+    };
+
+    useEffect(() => {
+        const container = scrollRef.current;
+        if (!container) return;
         
         // Manual wheel handling (translate vertical to horizontal)
         const handleWheel = (e: WheelEvent) => {
@@ -135,40 +147,67 @@ export default function PromotionsCarousel() {
         container.addEventListener('wheel', handleWheel, { passive: false });
 
         return () => {
-            cancelAnimationFrame(animationFrame);
             container.removeEventListener('wheel', handleWheel);
         };
-    }, [isPaused]);
+    }, []);
 
-    // Double the array for seamless infinite scroll
-    const extendedPromos = [...DEMO_PROMOS, ...DEMO_PROMOS];
+    useEffect(() => {
+        const container = scrollRef.current;
+        if (!container) return;
+
+        const resizeObserver = new ResizeObserver(() => {
+            setShowArrows(container.scrollWidth > container.clientWidth);
+        });
+        resizeObserver.observe(container);
+
+        setShowArrows(container.scrollWidth > container.clientWidth);
+
+        return () => {
+            resizeObserver.disconnect();
+        };
+    }, []);
 
     return (
         <section className={styles.sectionContainer}>
-            <div 
-                className={styles.carouselWrapper}
-                ref={scrollRef}
-                onMouseEnter={() => setIsPaused(true)}
-                onMouseLeave={handleMouseLeave}
-                onMouseDown={handleMouseDown}
-                onMouseUp={handleMouseUp}
-                onMouseMove={handleMouseMove}
-                style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
-            >
-                <div className={styles.carouselTrack} style={isDragging ? { pointerEvents: 'none' } : {}}>
-                    {extendedPromos.map((promo, index) => (
-                        <div key={`${promo.id}-${index}`} className={styles.promoContainer}>
-                            <Image
-                                src={promo.image}
-                                alt={promo.title}
-                                width={500}
-                                height={200}
-                                className={styles.promoImage}
-                                priority
-                            />
-                        </div>
-                    ))}
+            <div className={styles.carouselContainer}>
+                {/* Left Arrow */}
+                {showArrows && (
+                    <button className={`${styles.navBtn} ${styles.navBtnLeft}`} onClick={scrollPrev} aria-label="Anterior">
+                        <ChevronLeft size={24} />
+                    </button>
+                )}
+
+                <div 
+                    className={styles.carouselWrapper}
+                    ref={scrollRef}
+                    onMouseDown={handleMouseDown}
+                    onMouseUp={handleMouseUp}
+                    onMouseMove={handleMouseMove}
+                    onMouseLeave={handleMouseLeave}
+                    style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+                >
+                    <div className={styles.carouselTrack} style={isDragging ? { pointerEvents: 'none' } : {}}>
+                        {DEMO_PROMOS.map((promo, index) => (
+                            <div key={`${promo.id}-${index}`} className={styles.promoContainer}>
+                                <Image
+                                    src={promo.image}
+                                    alt={promo.title}
+                                    width={500}
+                                    height={200}
+                                    className={styles.promoImage}
+                                    priority
+                                />
+                            </div>
+                        ))}
+                    </div>
                 </div>
+
+                {/* Right Arrow */}
+                {showArrows && (
+                    <button className={`${styles.navBtn} ${styles.navBtnRight}`} onClick={scrollNext} aria-label="Próximo">
+                        <ChevronRight size={24} />
+                    </button>
+                )}
             </div>
         </section>
     );

@@ -330,17 +330,294 @@
     cursor: pointer;
 }
 
+.mobileFilterHeader {
+    display: none;
+}
+
+.sidebarHeader {
+    display: none;
+}
+
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 1099;
+    backdrop-filter: blur(2px);
+    transition: opacity 0.2s ease-in-out;
+}
+
+.searchBarContainer {
+    margin-bottom: 30px;
+    width: 100%;
+}
+
+.searchBarWrapper {
+    display: flex;
+    align-items: center;
+    background-color: #F7FBFF;
+    border: 1px solid #D4D7E3;
+    border-radius: 12px;
+    padding: 0 16px;
+    height: 52px;
+    position: relative;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.searchBarWrapper:focus-within {
+    border-color: #5CA87C;
+    box-shadow: 0 0 0 3px rgba(92, 168, 124, 0.15);
+}
+
+.searchBarIcon {
+    color: #8897AD;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+.searchBarInput {
+    flex: 1;
+    border: none;
+    background: transparent;
+    outline: none;
+    font-size: 16px;
+    color: #253D4E;
+    width: 100%;
+}
+
+.searchBarInput::placeholder {
+    color: #8897AD;
+}
+
+.searchBarClear {
+    background: none;
+    border: none;
+    color: #8897AD;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    border-radius: 50%;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.searchBarClear:hover {
+    background-color: #DEF9EC;
+    color: #5CA87C;
+}
+
 @media (max-width: 1024px) {
     .container {
         flex-direction: column;
-        padding: 20px;
+        padding: 20px 16px;
+        gap: 20px;
+    }
+
+    .searchBarContainer {
+        margin-bottom: 20px;
+    }
+
+    .mobileFilterHeader {
+        display: flex;
+        justify-content: flex-end;
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .mobileFilterToggle {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: #DEF9EC;
+        border: 1px solid #3BB77E;
+        color: #3BB77E;
+        padding: 10px 16px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .mobileFilterToggle:hover {
+        background: #3BB77E;
+        color: white;
     }
 
     .sidebar {
-        width: 100%;
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: 320px;
+        max-width: 85%;
+        height: 100vh;
+        background: white;
+        z-index: 1100;
+        box-shadow: -4px 0 24px rgba(0, 0, 0, 0.15);
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        padding: 24px;
+        overflow-y: auto;
+        transform: translateX(100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        flex-shrink: 0;
+    }
+
+    .sidebarOpen {
+        transform: translateX(0);
+    }
+
+    .sidebar > .filterIcon {
+        display: none;
+    }
+
+    .sidebarHeader {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #ECECEC;
+        padding-bottom: 15px;
+        margin-bottom: 5px;
+    }
+
+    .sidebarHeaderTitle {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 18px;
+        font-weight: 700;
+        color: #253D4E;
+    }
+
+    .filterIconMobile {
+        color: #3BB77E;
+    }
+
+    .closeButton {
+        background: none;
+        border: none;
+        color: #7E7E7E;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 4px;
+        border-radius: 50%;
+        transition: background-color 0.2s;
+    }
+
+    .closeButton:hover {
+        background-color: #F7FBFF;
+        color: #253D4E;
     }
 
     .divider {
         width: 100%;
+        margin: 15px 0;
     }
+
+    .customSelect {
+        width: 100%;
+    }
+
+    .grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 12px;
+    }
+
+    .vetsGrid {
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 12px;
+    }
+}
+
+/* ---- Veterinarians Section ---- */
+.vetsSection {
+    margin-bottom: 20px;
+}
+
+.vetsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.vetCard {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid #DDE1E6;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+}
+
+.vetCard:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+.vetAvatarWrapper {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+    background-color: #f5f5f5;
+}
+
+.vetAvatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.vetInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.vetName {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: #272727;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.vetSpecialization {
+    font-size: 14px;
+    color: #ED802A;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.crmv {
+    font-size: 12px;
+    color: #878787;
+}
+
+.vetDistance {
+    font-size: 12px;
+    color: #878787;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
 }

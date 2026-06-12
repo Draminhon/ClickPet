@@ -11,7 +11,7 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(req: Request) {
     try {
-        const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || '127.0.0.1';
+        const ip = req.headers?.get('x-forwarded-for') || req.headers?.get('x-real-ip') || '127.0.0.1';
         const rateLimitResult = authRateLimiter.check(ip);
         
         if (!rateLimitResult.success) {
@@ -81,20 +81,20 @@ export async function POST(req: Request) {
 
         const user = await User.create(userData);
 
-        // If partner or veterinarian, create an automatic free active subscription
+        // If partner or veterinarian, create an automatic enterprise active subscription
         if (finalRole === 'partner' || finalRole === 'veterinarian') {
             const startDate = new Date();
             const endDate = new Date();
-            endDate.setFullYear(startDate.getFullYear() + 50); // Free plan is "permanent"
+            endDate.setFullYear(startDate.getFullYear() + 50); // permanent
 
             await Subscription.create({
                 partnerId: user._id,
-                plan: 'free',
+                plan: 'enterprise',
                 status: 'active',
                 startDate,
                 endDate,
                 amount: 0,
-                features: Subscription.getPlanFeatures('free'),
+                features: Subscription.getPlanFeatures('enterprise'),
             });
         }
 

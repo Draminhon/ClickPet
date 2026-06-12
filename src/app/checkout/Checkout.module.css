@@ -1,5 +1,5 @@
 .checkoutContainer {
-    padding: 2rem 0;
+    padding: 2rem 16px;
 }
 
 .checkoutGrid {
@@ -11,6 +11,53 @@
 .deliverySelectorArea {
     display: flex;
     gap: 1rem;
+}
+
+.deliveryLabel {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    cursor: pointer;
+    padding: 1.2rem;
+    border: 1px solid #E5E7EB;
+    border-radius: 10px;
+    flex: 1;
+    background: white;
+    transition: all 0.2s;
+}
+
+.deliveryLabelActive {
+    border: 2px solid #3BB77E;
+    background: #F3FAF6;
+    box-shadow: 0 4px 10px rgba(59, 183, 126, 0.1);
+}
+
+.deliveryLabelText {
+    font-weight: 500;
+    color: #4B5563;
+}
+
+.deliveryLabelTextActive {
+    font-weight: 600;
+    color: #111827;
+}
+
+.addressLabel {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.2rem;
+    border: 1px solid #E5E7EB;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.addressLabelActive {
+    border: 2px solid #3BB77E;
+    background: #F3FAF6;
+    box-shadow: 0 4px 10px rgba(59, 183, 126, 0.1);
 }
 
 .addressFormGrid3 {
@@ -27,10 +74,102 @@
     margin-bottom: 1.5rem;
 }
 
+.couponInputArea {
+    display: flex;
+    gap: 0.6rem;
+}
+
+.couponInput {
+    flex: 1;
+    padding: 0.8rem 1rem;
+    border-radius: 8px;
+    border: 1px solid #D1D5DB;
+    font-size: 1rem;
+    outline: none;
+    min-width: 0;
+}
+
+.couponInput:focus {
+    border-color: #3BB77E;
+}
+
+.couponBtn {
+    padding: 0.8rem 2rem;
+    background: #3BB77E;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: background 0.2s;
+}
+
+.couponBtn:hover {
+    background: #2d9063;
+}
+
 .paymentSelectorArea {
     display: flex;
     gap: 0.8rem;
     flex-wrap: wrap;
+}
+
+.paymentLabel {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    cursor: pointer;
+    padding: 1.2rem;
+    border: 1px solid #E5E7EB;
+    border-radius: 10px;
+    flex: 1;
+    min-width: 150px;
+    background: white;
+    transition: all 0.2s;
+}
+
+.paymentLabelActive {
+    border: 2px solid #3BB77E;
+    background: #F3FAF6;
+}
+
+.paymentLabelText {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #4B5563;
+}
+
+.paymentLabelTextActive {
+    font-weight: 600;
+    color: #111827;
+}
+
+.checkoutCard {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.cardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 0.8rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.summaryCard {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    position: sticky;
+    top: 2rem;
 }
 
 @media (max-width: 992px) {
@@ -38,32 +177,46 @@
         grid-template-columns: 1fr;
         gap: 1.5rem;
     }
+    .summaryCard {
+        position: static;
+    }
 }
 
 @media (max-width: 768px) {
     .checkoutContainer {
         padding: 1.5rem 16px;
     }
-}
-
-@media (max-width: 600px) {
-    .addressFormGrid3 {
+    .addressFormGrid3,
+    .addressFormGrid2 {
         grid-template-columns: 1fr;
         gap: 0.75rem;
     }
     .addressFormGrid2 {
-        grid-template-columns: 1fr;
-        gap: 0.75rem;
         margin-bottom: 1rem;
     }
-}
-
-@media (max-width: 480px) {
     .deliverySelectorArea {
         flex-direction: column;
         gap: 0.75rem;
     }
     .paymentSelectorArea {
         flex-direction: column;
+        gap: 0.75rem;
     }
 }
+
+@media (max-width: 480px) {
+    .couponInputArea {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    .couponBtn {
+        width: 100%;
+    }
+    .checkoutCard {
+        padding: 1rem;
+    }
+    .summaryCard {
+        padding: 1rem;
+    }
+}
+

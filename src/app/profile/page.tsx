@@ -652,7 +652,7 @@ export default function ProfilePage() {
             {/* Pets Section */}
             <div className={styles.card}>
                 <div id="pet-form" className={styles.petHeader}>
-                    <h3 className={styles.sectionTitle}>Meus Pets 🐾</h3>
+                    <h3 className={styles.sectionTitle}>Meus Pets</h3>
                     <button
                         onClick={() => {
                             if (showPetForm && editingPetId) {

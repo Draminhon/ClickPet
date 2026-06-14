@@ -47,9 +47,24 @@ export async function GET(req: Request) {
         await dbConnect();
 
         const favorites = await Favorite.find({ userId: session.user.id })
-            .populate('productId')
-            .populate('partnerId')
+            .populate({
+                path: 'productId',
+                populate: {
+                    path: 'partnerId',
+                    select: '-password'
+                }
+            })
+            .populate('partnerId', '-password')
             .sort({ createdAt: -1 });
+
+        favorites.forEach((fav: any) => {
+            if (fav.partnerId && typeof fav.partnerId.decryptFieldsSync === 'function') {
+                fav.partnerId.decryptFieldsSync();
+            }
+            if (fav.productId && fav.productId.partnerId && typeof fav.productId.partnerId.decryptFieldsSync === 'function') {
+                fav.productId.partnerId.decryptFieldsSync();
+            }
+        });
 
         return NextResponse.json(favorites);
     } catch (error: any) {

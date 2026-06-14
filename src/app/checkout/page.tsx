@@ -4,9 +4,10 @@ import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/context/ToastContext';
+import { useLocation } from '@/context/LocationContext';
 import { AlertCircle, Truck, MapPin, CreditCard, QrCode, Plus, User } from 'lucide-react';
 import MapPicker from '@/components/ui/MapPicker';
-import { maskZip } from '@/utils/masks';
+import { maskZip, formatAddress } from '@/utils/masks';
 import styles from './Checkout.module.css';
 
 function CheckoutContent() {
@@ -14,6 +15,7 @@ function CheckoutContent() {
     const searchParams = useSearchParams();
     const { items, total, clearCart } = useCart();
     const { showToast } = useToast();
+    const { setLocationManual } = useLocation();
 
     // Group items by partnerId
     const itemsByPartner = items.reduce((acc: any, item) => {
@@ -62,6 +64,9 @@ function CheckoutContent() {
     const [usePoints, setUsePoints] = useState(false);
     const [pointsToRedeem, setPointsToRedeem] = useState(0);
     const [userHasRequiredDocs, setUserHasRequiredDocs] = useState(false);
+    const [showErrorModal, setShowErrorModal] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
+    const [createdOrders, setCreatedOrders] = useState<any[]>([]);
 
     useEffect(() => {
         // Fetch user addresses from profile
@@ -321,60 +326,63 @@ function CheckoutContent() {
         setLoading(true);
 
         try {
-            // Submit separate orders for each partner
-            const orderResults = [];
+            // Submit separate orders for each partner if not already created
+            let orderResults = [...createdOrders];
 
-            for (const pId of partnerIds) {
-                const pInfo = partnerData[pId];
-                const partnerItems = itemsByPartner[pId];
-                const partnerSubtotal = partnerItems.reduce((sum: number, i: any) => sum + (i.price * i.quantity), 0);
+            if (orderResults.length === 0) {
+                for (const pId of partnerIds) {
+                    const pInfo = partnerData[pId];
+                    const partnerItems = itemsByPartner[pId];
+                    const partnerSubtotal = partnerItems.reduce((sum: number, i: any) => sum + (i.price * i.quantity), 0);
 
-                // Find coupon for this partner
-                const partnerCoupon = appliedCoupons.find(c => c.partnerId === pId);
-                const partnerDiscount = partnerCoupon ? partnerCoupon.amount : 0;
+                    // Find coupon for this partner
+                    const partnerCoupon = appliedCoupons.find(c => c.partnerId === pId);
+                    const partnerDiscount = partnerCoupon ? partnerCoupon.amount : 0;
 
-                const partnerDelivery = isPickup ? 0 : (pInfo?.deliveryFee || 0);
-                const partnerTotal = partnerSubtotal - partnerDiscount + partnerDelivery;
+                    const partnerDelivery = isPickup ? 0 : (pInfo?.deliveryFee || 0);
+                    const partnerTotal = partnerSubtotal - partnerDiscount + partnerDelivery;
 
-                const orderPayload: any = {
-                    items: partnerItems.map((item: any) => ({
-                        ...item,
-                        productId: item.id
-                    })),
-                    partnerId: pId === 'unknown' ? undefined : pId,
-                    total: partnerTotal,
-                    deliveryFee: partnerDelivery,
-                    distance: pInfo?.distance || 0,
-                    isPickup,
-                    paymentMethod,
-                    address: isPickup ? {} : {
-                        ...address,
-                        coordinates: address.lat && address.lng ? {
-                            type: 'Point',
-                            coordinates: [parseFloat(address.lng), parseFloat(address.lat)]
-                        } : undefined,
-                    },
-                    coupon: partnerCoupon?.code || undefined,
-                    discount: partnerDiscount,
-                    // If multiple partners, we only apply points to the FIRST order to be simple
-                    // or we could split proportionally. For now, keep it simple.
-                    pointsRedeemed: (orderResults.length === 0 && usePoints) ? pointsToRedeem : 0,
-                };
+                    const orderPayload: any = {
+                        items: partnerItems.map((item: any) => ({
+                            ...item,
+                            productId: item.id
+                        })),
+                        partnerId: pId === 'unknown' ? undefined : pId,
+                        total: partnerTotal,
+                        deliveryFee: partnerDelivery,
+                        distance: pInfo?.distance || 0,
+                        isPickup,
+                        paymentMethod,
+                        address: isPickup ? {} : {
+                            ...address,
+                            coordinates: address.lat && address.lng ? {
+                                type: 'Point',
+                                coordinates: [parseFloat(address.lng), parseFloat(address.lat)]
+                            } : undefined,
+                        },
+                        coupon: partnerCoupon?.code || undefined,
+                        discount: partnerDiscount,
+                        // If multiple partners, we only apply points to the FIRST order to be simple
+                        pointsRedeemed: (orderResults.length === 0 && usePoints) ? pointsToRedeem : 0,
+                    };
 
-                const orderRes = await fetch('/api/orders', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(orderPayload),
-                });
+                    const orderRes = await fetch('/api/orders', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(orderPayload),
+                    });
 
-                if (!orderRes.ok) {
-                    showToast('Erro ao criar pedido', 'error');
-                    setLoading(false);
-                    return;
+                    if (!orderRes.ok) {
+                        setErrorMessage('Houve um problema ao criar seu pedido. Por favor, tente novamente.');
+                        setShowErrorModal(true);
+                        setLoading(false);
+                        return;
+                    }
+
+                    const orderData = await orderRes.json();
+                    orderResults.push(orderData);
                 }
-
-                const orderData = await orderRes.json();
-                orderResults.push(orderData);
+                setCreatedOrders(orderResults);
             }
 
             // Create billing for the first order (AbacatePay)
@@ -399,23 +407,18 @@ function CheckoutContent() {
                     setShowMissingDocModal(true);
                 } else {
                     console.error('Billing error:', billingData);
-                    const errorMsg = billingData.message || 'Erro ao gerar pagamento. Tente novamente.';
-                    showToast(errorMsg, 'error');
-                    
-                    // If it's a validation error (like missing taxId), don't clear cart or redirect
-                    if (billingRes.status !== 400) {
-                        clearCart();
-                        router.push('/orders');
-                    }
+                    setErrorMessage(billingData.message || 'Houve um erro ao processar o seu pagamento no AbacatePay.');
+                    setShowErrorModal(true);
                 }
             } catch (billingError) {
                 console.error('Billing error:', billingError);
-                showToast('Pedido criado! Houve um erro ao gerar o pagamento.', 'error');
-                clearCart();
-                router.push('/orders');
+                setErrorMessage('Houve uma falha ao comunicar-se com o gateway de pagamento.');
+                setShowErrorModal(true);
             }
         } catch (error) {
-            showToast('Erro ao criar pedido', 'error');
+            console.error('Checkout error:', error);
+            setErrorMessage('Ocorreu um erro ao processar sua compra.');
+            setShowErrorModal(true);
         } finally {
             setLoading(false);
         }
@@ -486,10 +489,18 @@ function CheckoutContent() {
 
             const updatedAddrs = [...deliveryAddresses, formData];
             
+            const payload: any = { deliveryAddresses: updatedAddrs };
+            
+            // Check if there's no primary address already, make this the primary as well
+            const hasPrimary = deliveryAddresses.length > 0;
+            if (!hasPrimary) {
+                payload.address = formData;
+            }
+
             const res = await fetch('/api/profile', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ deliveryAddresses: updatedAddrs })
+                body: JSON.stringify(payload)
             });
 
             if (res.ok) {
@@ -497,6 +508,16 @@ function CheckoutContent() {
                 setSelectedAddressIndex(updatedAddrs.length - 1);
                 setShowAddressForm(false);
                 showToast('Endereço adicionado aos seus locais!');
+                
+                // Update LocationContext top bar immediately if this is the primary address
+                if (!hasPrimary) {
+                    setLocationManual(
+                        parseFloat(address.lat || '0') || 0,
+                        parseFloat(address.lng || '0') || 0,
+                        formatAddress(address.street, address.number),
+                        address.city
+                    );
+                }
             } else {
                 showToast('Erro ao salvar endereço', 'error');
             }
@@ -525,14 +546,14 @@ function CheckoutContent() {
                 <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '1.5rem' }}>
                     {/* Delivery Option */}
                     <div className={styles.checkoutCard}>
-                        <h3 style={{ marginBottom: '1.2rem', color: '#333' }}>Opção de Entrega</h3>
+                        <h3 className={styles.cardTitle}>Opção de Entrega</h3>
                         <div className={styles.deliverySelectorArea}>
                             <label className={`${styles.deliveryLabel} ${!isPickup ? styles.deliveryLabelActive : ''}`}>
                                 <input
                                     type="radio"
                                     checked={!isPickup}
                                     onChange={() => setIsPickup(false)}
-                                    style={{ accentColor: '#3BB77E', width: '18px', height: '18px' }}
+                                    className={styles.addressInputRadio}
                                 />
                                 <Truck size={22} color={!isPickup ? '#3BB77E' : '#9CA3AF'} />
                                 <span className={`${styles.deliveryLabelText} ${!isPickup ? styles.deliveryLabelTextActive : ''}`}>Entrega</span>
@@ -542,7 +563,7 @@ function CheckoutContent() {
                                     type="radio"
                                     checked={isPickup}
                                     onChange={() => setIsPickup(true)}
-                                    style={{ accentColor: '#3BB77E', width: '18px', height: '18px' }}
+                                    className={styles.addressInputRadio}
                                 />
                                 <MapPin size={22} color={isPickup ? '#3BB77E' : '#9CA3AF'} />
                                 <span className={`${styles.deliveryLabelText} ${isPickup ? styles.deliveryLabelTextActive : ''}`}>Retirar na Loja</span>
@@ -554,12 +575,12 @@ function CheckoutContent() {
                     {!isPickup && (
                         <div className={styles.checkoutCard}>
                             <div className={styles.cardHeader}>
-                                <h3 style={{ margin: 0, color: '#333' }}>Local de Entrega</h3>
+                                <h3 className={styles.cardTitle}>Local de Entrega</h3>
                                 {deliveryAddresses.length > 0 && !showAddressForm && (
                                     <button 
                                         type="button" 
                                         onClick={() => setShowAddressForm(true)}
-                                        style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: '#3BB77E', color: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '0.9rem', transition: 'all 0.2s' }}
+                                        className={styles.addAddressButton}
                                     >
                                         <Plus size={16} /> Adicionar Endereço
                                     </button>
@@ -567,15 +588,15 @@ function CheckoutContent() {
                             </div>
 
                             {deliveryAddresses.length === 0 && !showAddressForm && (
-                                <div style={{ textAlign: 'center', padding: '2rem 1rem', background: '#f8f9fa', borderRadius: '8px', border: '2px dashed #ddd' }}>
-                                    <MapPin size={40} color="#b0bec5" style={{ margin: '0 auto 1rem' }} />
-                                    <p style={{ color: '#555', marginBottom: '1.2rem', fontWeight: 500 }}>
+                                <div className={styles.addressEmptyState}>
+                                    <MapPin size={40} className={styles.addressEmptyIcon} />
+                                    <p className={styles.addressEmptyText}>
                                         Você ainda não possui nenhum endereço para entrega salvo.
                                     </p>
                                     <button 
                                         type="button" 
                                         onClick={() => setShowAddressForm(true)}
-                                        style={{ background: '#253D4E', color: 'white', border: 'none', padding: '0.8rem 1.5rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '1rem', transition: 'all 0.2s' }}
+                                        className={styles.addressEmptyBtn}
                                     >
                                         Cadastrar Meu Endereço
                                     </button>
@@ -583,7 +604,7 @@ function CheckoutContent() {
                             )}
 
                             {deliveryAddresses.length > 0 && !showAddressForm && (
-                                <div style={{ display: 'grid', gap: '1rem' }}>
+                                <div className={styles.addressList}>
                                     {deliveryAddresses.map((addr, idx) => (
                                         <label key={idx} className={`${styles.addressLabel} ${selectedAddressIndex === idx ? styles.addressLabelActive : ''}`}>
                                             <input 
@@ -591,15 +612,15 @@ function CheckoutContent() {
                                                 name="selectedAddress" 
                                                 checked={selectedAddressIndex === idx} 
                                                 onChange={() => handleSelectAddress(idx)}
-                                                style={{ marginTop: '0.3rem', width: '18px', height: '18px', accentColor: '#3BB77E' }}
+                                                className={styles.addressInputRadio}
                                             />
-                                            <div style={{ flex: 1 }}>
-                                                <div style={{ fontWeight: 600, color: '#333', fontSize: '1.05rem', marginBottom: '0.2rem' }}>
+                                            <div className={styles.addressCardContent}>
+                                                <div className={styles.addressCardTitle}>
                                                     {addr.street}, {addr.number}
-                                                    {idx === 0 && <span style={{ marginLeft: '10px', fontSize: '0.7rem', background: '#e0f2fe', color: '#0369a1', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase', fontWeight: 700 }}>Principal</span>}
+                                                    {idx === 0 && <span className={styles.addressBadgePrimary}>Principal</span>}
                                                 </div>
-                                                <div style={{ fontSize: '0.95rem', color: '#555', marginBottom: '0.2rem' }}>{addr.neighborhood} - {addr.city}/{addr.state}</div>
-                                                <div style={{ fontSize: '0.85rem', color: '#888' }}>CEP: {maskZip(addr.zip)} {addr.complement ? `| Cpl: ${addr.complement}` : ''}</div>
+                                                <div className={styles.addressCardSubtitle}>{addr.neighborhood} - {addr.city}/{addr.state}</div>
+                                                <div className={styles.addressCardZip}>CEP: {maskZip(addr.zip)} {addr.complement ? `| Cpl: ${addr.complement}` : ''}</div>
                                             </div>
                                         </label>
                                     ))}
@@ -607,11 +628,11 @@ function CheckoutContent() {
                             )}
                             
                             {showAddressForm && (
-                                <div style={{ background: '#F9FAFB', padding: '1.5rem', borderRadius: '10px', border: '1px solid #E5E7EB' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem' }}>
-                                        <h4 style={{ margin: 0, color: '#253D4E' }}>Novo Endereço</h4>
+                                <div className={styles.newAddressForm}>
+                                    <div className={styles.newAddressFormHeader}>
+                                        <h4 className={styles.newAddressFormTitle}>Novo Endereço</h4>
                                         {deliveryAddresses.length > 0 && (
-                                            <button type="button" onClick={() => setShowAddressForm(false)} style={{ background: 'none', border: 'none', color: '#6B7280', fontSize: '0.9rem', cursor: 'pointer', textDecoration: 'underline' }}>
+                                            <button type="button" onClick={() => setShowAddressForm(false)} className={styles.cancelFormBtn}>
                                                 Cancelar
                                             </button>
                                         )}
@@ -619,63 +640,63 @@ function CheckoutContent() {
 
                                     <div className={styles.addressFormGrid3}>
                                         <div>
-                                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 500, color: '#374151' }}>Rua</label>
+                                            <label className={styles.addressFieldLabel}>Rua</label>
                                             <input
                                                 required
                                                 placeholder="Nome da rua"
                                                 value={address.street}
                                                 onChange={e => setAddress({ ...address, street: e.target.value })}
-                                                style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #D1D5DB', width: '100%', fontSize: '0.95rem' }}
+                                                className={styles.addressFieldInput}
                                             />
                                         </div>
                                         <div>
-                                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 500, color: '#374151' }}>Número</label>
+                                            <label className={styles.addressFieldLabel}>Número</label>
                                             <input
                                                 type="text"
                                                 required
                                                 value={address.number}
                                                 onChange={e => setAddress({ ...address, number: e.target.value })}
                                                 placeholder="Ex: 123"
-                                                style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #D1D5DB', width: '100%', fontSize: '0.95rem' }}
+                                                className={styles.addressFieldInput}
                                             />
                                         </div>
                                         <div>
-                                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 500, color: '#374151' }}>Complemento</label>
+                                            <label className={styles.addressFieldLabel}>Complemento</label>
                                             <input
                                                 type="text"
                                                 value={address.complement}
                                                 onChange={e => setAddress({ ...address, complement: e.target.value })}
                                                 placeholder="Apto, bloco"
-                                                style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #D1D5DB', width: '100%', fontSize: '0.95rem' }}
+                                                className={styles.addressFieldInput}
                                             />
                                         </div>
                                     </div>
 
                                     <div className={styles.addressFormGrid2}>
                                         <div>
-                                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 500, color: '#374151' }}>Cidade</label>
+                                            <label className={styles.addressFieldLabel}>Cidade</label>
                                             <input
                                                 required
                                                 placeholder="Sua cidade"
                                                 value={address.city}
                                                 onChange={e => setAddress({ ...address, city: e.target.value })}
-                                                style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #D1D5DB', width: '100%', fontSize: '0.95rem' }}
+                                                className={styles.addressFieldInput}
                                             />
                                         </div>
                                         <div>
-                                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 500, color: '#374151' }}>CEP</label>
+                                            <label className={styles.addressFieldLabel}>CEP</label>
                                             <input
                                                 required
                                                 placeholder="00000-000"
                                                 value={address.zip}
                                                 onChange={e => setAddress({ ...address, zip: maskZip(e.target.value) })}
-                                                style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #D1D5DB', width: '100%', fontSize: '0.95rem' }}
+                                                className={styles.addressFieldInput}
                                             />
                                         </div>
                                     </div>
 
-                                    <div style={{ marginBottom: '1.5rem', background: 'white', padding: '1rem', borderRadius: '8px', border: '1px solid #E5E7EB' }}>
-                                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.8rem', fontWeight: 600, color: '#374151' }}>
+                                    <div className={styles.mapWrapper}>
+                                        <label className={styles.mapLabel}>
                                             <MapPin size={18} color="#3BB77E" /> Localização no Mapa (Recomendado)
                                         </label>
                                         <MapPicker
@@ -691,7 +712,7 @@ function CheckoutContent() {
                                             }}
                                             height="250px"
                                         />
-                                        <p style={{ fontSize: '0.8rem', color: '#6B7280', marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                                        <p className={styles.mapHint}>
                                             <AlertCircle size={14} /> Confirme o pino exato para evitar erros no cálculo do frete.
                                         </p>
                                     </div>
@@ -699,7 +720,7 @@ function CheckoutContent() {
                                     <button 
                                         type="button" 
                                         onClick={handleSaveNewAddress} 
-                                        style={{ width: '100%', background: '#253D4E', color: 'white', border: 'none', padding: '1rem', borderRadius: '8px', fontWeight: 600, fontSize: '1rem', cursor: 'pointer', transition: 'background 0.2s' }}
+                                        className={styles.saveNewAddressBtn}
                                     >
                                         Salvar e Utilizar Este Endereço
                                     </button>
@@ -711,14 +732,14 @@ function CheckoutContent() {
                     {/* Loyalty Points */}
                     {pointsBalance > 0 && (
                         <div className={styles.checkoutCard}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.2rem' }}>
-                                <h3 style={{ margin: 0, color: '#333' }}>Pontos de Fidelidade</h3>
-                                <span style={{ background: '#f0fdf4', color: '#16a34a', padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.9rem', fontWeight: 600 }}>
+                            <div className={styles.loyaltyTitleArea}>
+                                <h3 className={styles.cardTitle}>Pontos de Fidelidade</h3>
+                                <span className={styles.loyaltyBadge}>
                                     {pointsBalance} disponíveis
                                 </span>
                             </div>
 
-                            <div style={{ padding: '1rem', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                            <div className={styles.loyaltySliderContainer}>
                                 <label style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', cursor: 'pointer' }}>
                                     <input
                                         type="checkbox"
@@ -734,7 +755,7 @@ function CheckoutContent() {
                                     />
                                     <div style={{ flex: 1 }}>
                                         <div style={{ fontWeight: 600, color: '#253D4E' }}>Usar meus pontos para desconto</div>
-                                        <div style={{ fontSize: '0.85rem', color: '#64748b' }}>Cada 10 pontos equivalem a R$ 1,00 de desconto</div>
+                                        <div style={{ fontSize: '0.85rem', color: '#7E8D9E' }}>Cada 10 pontos equivalem a R$ 1,00 de desconto</div>
                                     </div>
                                 </label>
 
@@ -749,8 +770,8 @@ function CheckoutContent() {
                                             onChange={(e) => setPointsToRedeem(parseInt(e.target.value))}
                                             style={{ width: '100%', accentColor: '#3BB77E', marginBottom: '0.6rem' }}
                                         />
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1rem', fontWeight: 700 }}>
-                                            <span style={{ color: '#64748b' }}>Resgatando: <span style={{ color: '#253D4E' }}>{pointsToRedeem} pontos</span></span>
+                                        <div className={styles.loyaltyResultRow}>
+                                            <span style={{ color: '#7E8D9E', fontWeight: 500 }}>Resgatando: <span style={{ color: '#253D4E', fontWeight: 700 }}>{pointsToRedeem} pontos</span></span>
                                             <span style={{ color: '#3BB77E' }}>- R$ {(pointsToRedeem * 0.1).toFixed(2)}</span>
                                         </div>
                                     </div>
@@ -761,7 +782,7 @@ function CheckoutContent() {
 
                     {/* Coupon */}
                     <div className={styles.checkoutCard}>
-                        <h3 style={{ marginBottom: '1.2rem', color: '#333' }}>Cupom de Desconto</h3>
+                        <h3 className={styles.cardTitle}>Cupom de Desconto</h3>
                         <div className={styles.couponInputArea}>
                             <input
                                 placeholder="Digite seu código"
@@ -782,15 +803,15 @@ function CheckoutContent() {
                         {appliedCoupons.length > 0 && (
                             <div style={{ marginTop: '1.2rem', display: 'grid', gap: '0.6rem' }}>
                                 {appliedCoupons.map((c) => (
-                                    <div key={c.code} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#F3FAF6', padding: '0.8rem 1rem', borderRadius: '8px', border: '1px solid #3BB77E', borderLeft: '4px solid #3BB77E' }}>
+                                    <div key={c.code} className={styles.couponItem}>
                                         <div style={{ fontSize: '0.95rem' }}>
-                                            <strong style={{ color: '#047857' }}>{c.code}</strong>
+                                            <strong style={{ color: '#2d9063' }}>{c.code}</strong>
                                             <span style={{ marginLeft: '0.5rem', color: '#4B5563' }}>({c.shopName}) - R$ {c.amount.toFixed(2)}</span>
                                         </div>
                                         <button
                                             type="button"
                                             onClick={() => handleRemoveCoupon(c.code)}
-                                            style={{ background: '#FEE2E2', border: 'none', color: '#EF4444', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, padding: '0.4rem 0.8rem', borderRadius: '6px', transition: 'all 0.2s' }}
+                                            className={styles.couponRemoveBtn}
                                         >
                                             Remover
                                         </button>
@@ -802,21 +823,21 @@ function CheckoutContent() {
 
                     {/* Payment Method Selection */}
                     <div className={styles.checkoutCard}>
-                        <h3 style={{ marginBottom: '1.2rem', color: '#333' }}>Método de Pagamento</h3>
+                        <h3 className={styles.cardTitle}>Método de Pagamento</h3>
                         <div className={styles.paymentSelectorArea}>
                             <label className={`${styles.paymentLabel} ${paymentMethod === 'pix_cartao' ? styles.paymentLabelActive : ''}`}>
-                                <input type="radio" checked={paymentMethod === 'pix_cartao'} onChange={() => setPaymentMethod('pix_cartao')} style={{ accentColor: '#3BB77E' }}/>
+                                <input type="radio" checked={paymentMethod === 'pix_cartao'} onChange={() => setPaymentMethod('pix_cartao')} className={styles.addressInputRadio}/>
                                 <QrCode size={20} color={paymentMethod === 'pix_cartao' ? '#3BB77E' : '#6B7280'}/>
                                 <CreditCard size={20} color={paymentMethod === 'pix_cartao' ? '#3BB77E' : '#6B7280'}/>
                                 <span className={`${styles.paymentLabelText} ${paymentMethod === 'pix_cartao' ? styles.paymentLabelTextActive : ''}`}>PIX ou Cartão</span>
                             </label>
                             <label className={`${styles.paymentLabel} ${paymentMethod === 'pix' ? styles.paymentLabelActive : ''}`}>
-                                <input type="radio" checked={paymentMethod === 'pix'} onChange={() => setPaymentMethod('pix')} style={{ accentColor: '#3BB77E' }}/>
+                                <input type="radio" checked={paymentMethod === 'pix'} onChange={() => setPaymentMethod('pix')} className={styles.addressInputRadio}/>
                                 <QrCode size={20} color={paymentMethod === 'pix' ? '#3BB77E' : '#6B7280'}/>
                                 <span className={`${styles.paymentLabelText} ${paymentMethod === 'pix' ? styles.paymentLabelTextActive : ''}`}>Somente PIX</span>
                             </label>
                             <label className={`${styles.paymentLabel} ${paymentMethod === 'cartao' ? styles.paymentLabelActive : ''}`}>
-                                <input type="radio" checked={paymentMethod === 'cartao'} onChange={() => setPaymentMethod('cartao')} style={{ accentColor: '#3BB77E' }}/>
+                                <input type="radio" checked={paymentMethod === 'cartao'} onChange={() => setPaymentMethod('cartao')} className={styles.addressInputRadio}/>
                                 <CreditCard size={20} color={paymentMethod === 'cartao' ? '#3BB77E' : '#6B7280'}/>
                                 <span className={`${styles.paymentLabelText} ${paymentMethod === 'cartao' ? styles.paymentLabelTextActive : ''}`}>Somente Cartão</span>
                             </label>
@@ -826,20 +847,7 @@ function CheckoutContent() {
                     <button
                         type="submit"
                         disabled={loading}
-                        style={{ 
-                            width: '100%', 
-                            padding: '1.2rem', 
-                            background: '#3BB77E', 
-                            color: 'white', 
-                            border: 'none', 
-                            borderRadius: '10px', 
-                            fontSize: '1.1rem', 
-                            fontWeight: 700, 
-                            cursor: loading ? 'not-allowed' : 'pointer', 
-                            boxShadow: '0 4px 15px rgba(59, 183, 126, 0.3)',
-                            transition: 'all 0.2s ease',
-                            opacity: loading ? 0.7 : 1
-                        }}
+                        className={styles.submitCheckoutBtn}
                     >
                         {loading ? 'Preparando Integração Segura...' : 'Pagar e Finalizar Pedido'}
                     </button>
@@ -848,7 +856,7 @@ function CheckoutContent() {
                 {/* Summary */}
                 <div>
                     <div className={styles.summaryCard}>
-                        <h3 style={{ marginBottom: '1.5rem' }}>Resumo do Pedido</h3>
+                        <h3 className={styles.cardTitle} style={{ marginBottom: '1.5rem' }}>Resumo do Pedido</h3>
 
                         {partnerIds.map((pId) => {
                             const pItems = itemsByPartner[pId];
@@ -857,15 +865,15 @@ function CheckoutContent() {
                             const missing = (pInfo?.minimumOrder || 0) - pSubtotal;
 
                             return (
-                                <div key={pId} style={{ marginBottom: '2rem', padding: '1rem', border: '1px solid #eee', borderRadius: '8px' }}>
-                                    <h4 style={{ fontSize: '1rem', marginBottom: '0.8rem', color: '#666', borderBottom: '1px solid #eee', paddingBottom: '0.5rem' }}>
+                                <div key={pId} className={styles.partnerSummaryCard}>
+                                    <h4 className={styles.partnerShopTitle}>
                                         {pInfo?.shopName || 'Carregando...'}
                                     </h4>
 
                                     {pItems.map((item: any, idx: number) => (
-                                        <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
-                                            <span style={{ minWidth: 0, flex: 1, wordBreak: 'break-word' }}>{item.quantity}x {item.title}</span>
-                                            <span style={{ flexShrink: 0, fontWeight: 500 }}>R$ {(item.price * item.quantity).toFixed(2)}</span>
+                                        <div key={idx} className={styles.summaryItemRow}>
+                                            <span className={styles.summaryItemTitle}>{item.quantity}x {item.title}</span>
+                                            <span className={styles.summaryItemPrice}>R$ {(item.price * item.quantity).toFixed(2)}</span>
                                         </div>
                                     ))}
 
@@ -895,8 +903,8 @@ function CheckoutContent() {
                             );
                         })}
 
-                        <div style={{ padding: '0 1rem' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: '#4B5563', fontSize: '1.05rem' }}>
+                        <div className={styles.summaryTotalsContainer}>
+                            <div className={styles.summaryTotalRow}>
                                 <span>Subtotal Geral</span>
                                 <span>R$ {total.toFixed(2)}</span>
                             </div>
@@ -913,7 +921,7 @@ function CheckoutContent() {
                             )}
 
                             {!isPickup && (
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                                <div className={styles.summaryTotalRow}>
                                     <span>Total Frete</span>
                                     <span>R$ {totalDeliveryFee.toFixed(2)}</span>
                                 </div>
@@ -926,9 +934,9 @@ function CheckoutContent() {
                                 </div>
                             )}
 
-                            <hr style={{ margin: '1rem 0', border: 'none', borderTop: '2px solid #333' }} />
+                            <hr style={{ margin: '1.2rem 0', border: 'none', borderTop: '2px solid #E5E7EB' }} />
 
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.3rem', fontWeight: 800, color: '#111827' }}>
+                            <div className={styles.summaryTotalFinalRow}>
                                 <span>Total Final</span>
                                 <span style={{ color: '#3BB77E' }}>R$ {finalTotal.toFixed(2)}</span>
                             </div>
@@ -939,50 +947,51 @@ function CheckoutContent() {
 
             {/* Missing Document Modal */}
             {showMissingDocModal && (
-                <div style={{ 
-                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
-                    backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', 
-                    justifyContent: 'center', alignItems: 'center', zIndex: 1000 
-                }}>
-                    <div style={{ 
-                        background: 'white', padding: '2.5rem', borderRadius: '16px', 
-                        maxWidth: '400px', width: '90%', textAlign: 'center', 
-                        boxShadow: '0 10px 25px rgba(0,0,0,0.2)' 
-                    }}>
-                        <div style={{ 
-                            width: '60px', height: '60px', background: '#ffebee', 
-                            borderRadius: '50%', display: 'flex', justifyContent: 'center', 
-                            alignItems: 'center', margin: '0 auto 1.5rem', color: '#f44336' 
-                        }}>
+                <div className={styles.modalOverlay}>
+                    <div className={styles.modalCard}>
+                        <div className={styles.modalIconWrapper}>
                             <User size={32} />
                         </div>
-                        <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', color: '#333' }}>Falta um detalhe!</h2>
-                        <p style={{ color: '#666', marginBottom: '1.5rem', lineHeight: '1.5' }}>
+                        <h2 className={styles.modalTitle}>Falta um detalhe!</h2>
+                        <p className={styles.modalDesc}>
                             Para prosseguirmos de forma segura e gerarmos o pagamento, exigimos que você <strong>informe seu CPF e Telefone</strong> no seu perfil.
                         </p>
                         <button 
                             type="button"
                             onClick={() => router.push('/profile')}
-                            style={{ 
-                                width: '100%', padding: '1.2rem', background: '#3BB77E', color: 'white', 
-                                border: 'none', borderRadius: '10px', 
-                                fontWeight: 700, fontSize: '1.1rem', 
-                                cursor: 'pointer',
-                                boxShadow: '0 4px 15px rgba(59, 183, 126, 0.3)', 
-                                transition: 'all 0.2s' 
-                            }}
+                            className={styles.modalActionBtn}
                         >
                             Ir para Meu Perfil
                         </button>
                         <button 
                             type="button"
                             onClick={() => setShowMissingDocModal(false)}
-                            style={{ 
-                                width: '100%', padding: '1rem', background: 'transparent', color: '#666', 
-                                border: 'none', fontWeight: 600, marginTop: '0.5rem', cursor: 'pointer' 
-                            }}
+                            className={styles.modalCancelBtn}
                         >
                             Cancelar
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Error Modal */}
+            {showErrorModal && (
+                <div className={styles.modalOverlay}>
+                    <div className={styles.modalCard}>
+                        <div className={styles.modalIconWrapper}>
+                            <AlertCircle size={32} />
+                        </div>
+                        <h2 className={styles.modalTitle}>Ops, ocorreu um erro!</h2>
+                        <p className={styles.modalDesc}>
+                            Ocorreu um problema ao processar seu pagamento. Por favor, tente novamente dentro de alguns instantes.
+                        </p>
+                        <button 
+                            type="button"
+                            onClick={() => setShowErrorModal(false)}
+                            className={styles.modalActionBtn}
+                            style={{ background: '#EF4444', boxShadow: '0 4px 15px rgba(239, 68, 68, 0.2)' }}
+                        >
+                            Tentar Novamente
                         </button>
                     </div>
                 </div>

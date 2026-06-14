@@ -95,7 +95,14 @@ export async function GET(req: Request) {
             }
         }
 
-        const services = await Service.find(query).populate('partnerId', 'name');
+        const services = await Service.find(query).populate('partnerId', '-password');
+        
+        services.forEach((s: any) => {
+            if (s.partnerId && typeof s.partnerId.decryptFieldsSync === 'function') {
+                s.partnerId.decryptFieldsSync();
+            }
+        });
+
         return NextResponse.json(services);
     } catch (error: any) {
         return NextResponse.json({ message: error.message }, { status: 500 });

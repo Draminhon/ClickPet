@@ -1,9 +1,15 @@
 import mongoose from 'mongoose';
 import { fieldEncryption } from 'mongoose-field-encryption';
+import crypto from 'crypto';
 
 const ENC_KEY = process.env.ENCRYPTION_KEY;
 if (ENC_KEY && ENC_KEY.length !== 32) {
     console.error(`[User Model] ENCRYPTION_KEY is ${ENC_KEY?.length || 0} chars — MUST be exactly 32!`);
+}
+
+export function hashEmail(email: string): string {
+    if (!email) return '';
+    return crypto.createHash('sha256').update(email.toLowerCase().trim()).digest('hex');
 }
 
 const AddressSchema = new mongoose.Schema({
@@ -59,7 +65,12 @@ const UserSchema = new mongoose.Schema({
     email: {
         type: String,
         required: [true, 'Please provide an email'],
+    },
+    emailHash: {
+        type: String,
+        required: [true, 'Please provide an email hash'],
         unique: true,
+        index: true,
     },
     password: {
         type: String,
@@ -164,8 +175,15 @@ const UserSchema = new mongoose.Schema({
     },
 }, { timestamps: true });
 
+UserSchema.pre('validate', function (next) {
+    if (this.email) {
+        this.emailHash = hashEmail(this.email);
+    }
+    next();
+});
+
 UserSchema.plugin(fieldEncryption, {
-    fields: ['cnpj', 'cpf', 'phone', 'whatsapp', 'twoFactorSecret'],
+    fields: ['cnpj', 'cpf', 'phone', 'whatsapp', 'twoFactorSecret', 'name', 'email'],
     secret: ENC_KEY || ''
 });
 

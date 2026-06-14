@@ -9,10 +9,14 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     try {
         const { id } = await params;
         await dbConnect();
-        const product = await Product.findById(id).populate('partnerId', 'name');
+        const product = await Product.findById(id).populate('partnerId', '-password');
 
         if (!product) {
             return NextResponse.json({ message: 'Product not found' }, { status: 404 });
+        }
+
+        if (product.partnerId && typeof product.partnerId.decryptFieldsSync === 'function') {
+            product.partnerId.decryptFieldsSync();
         }
 
         return NextResponse.json(product);

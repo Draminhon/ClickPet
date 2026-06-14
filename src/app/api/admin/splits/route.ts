@@ -40,11 +40,19 @@ export async function GET(req: Request) {
                 .sort({ createdAt: -1 })
                 .skip(skip)
                 .limit(limit)
-                .populate('partnerId', 'name email pixConfig')
-                .populate('userId', 'name email')
-                .lean(),
+                .populate('partnerId', '-password')
+                .populate('userId', '-password'),
             Order.countDocuments(query),
         ]);
+
+        orders.forEach((o: any) => {
+            if (o.partnerId && typeof o.partnerId.decryptFieldsSync === 'function') {
+                o.partnerId.decryptFieldsSync();
+            }
+            if (o.userId && typeof o.userId.decryptFieldsSync === 'function') {
+                o.userId.decryptFieldsSync();
+            }
+        });
 
         // Calculate summary totals
         const summaryPipeline = [

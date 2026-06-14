@@ -30,10 +30,16 @@ export async function GET(request: NextRequest) {
 
         // Get subscriptions with partner details
         let subscriptions = await Subscription.find(query)
-            .populate('partnerId', 'name email cnpj phone')
+            .populate('partnerId', '-password')
             .sort({ createdAt: -1 })
             .skip((page - 1) * limit)
             .limit(limit);
+
+        subscriptions.forEach((sub: any) => {
+            if (sub.partnerId && typeof sub.partnerId.decryptFieldsSync === 'function') {
+                sub.partnerId.decryptFieldsSync();
+            }
+        });
 
         // Filter by search if provided
         if (search) {

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useToast } from '@/context/ToastContext';
+import { useLocation } from '@/context/LocationContext';
 import { Minus, Plus, ChevronUp, ChevronDown, QrCode, Upload } from 'lucide-react';
 import { maskPhone, maskPrice, maskCPF, maskCNPJ, maskZip } from '@/utils/masks';
 import MapPicker from '@/components/ui/MapPicker';
@@ -252,6 +253,7 @@ export default function PartnerSettings() {
     const pathname = usePathname();
     const { data: session, update } = useSession();
     const { showToast } = useToast();
+    const { setLocationManual } = useLocation();
     const [loading, setLoading] = useState(false);
     const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
     const [initialData, setInitialData] = useState<any>(null);
@@ -415,6 +417,10 @@ export default function PartnerSettings() {
     const handleLocalImageChange = (e: React.ChangeEvent<HTMLInputElement>, field: 'shopLogo' | 'bannerImage') => {
         const file = e.target.files?.[0];
         if (file) {
+            if (!file.type.startsWith('image/')) {
+                showToast('Apenas arquivos de imagem são aceitos', 'error');
+                return;
+            }
             if (file.size > 2 * 1024 * 1024) { // Increased to 2MB to allow original high-res before crop
                 showToast('A imagem original deve ter no máximo 2MB', 'error');
                 return;
@@ -504,6 +510,14 @@ export default function PartnerSettings() {
                 showToast('Informações atualizadas com sucesso!');
                 localStorage.removeItem('partner_settings_draft');
                 setInitialData(formData);
+                if (formData.address?.street) {
+                    setLocationManual(
+                        formData.address.coordinates.lat,
+                        formData.address.coordinates.lng,
+                        `${formData.address.street}${formData.address.number ? `, ${formData.address.number}` : ''}`,
+                        formData.address.city || ''
+                    );
+                }
                 await update();
             } else {
                 showToast('Erro ao atualizar informações', 'error');
@@ -598,6 +612,14 @@ export default function PartnerSettings() {
                     return nextErrors;
                 });
                 localStorage.removeItem('partner_settings_draft');
+                if (data.address?.street) {
+                    setLocationManual(
+                        data.address.coordinates.lat,
+                        data.address.coordinates.lng,
+                        `${data.address.street}${data.address.number ? `, ${data.address.number}` : ''}`,
+                        data.address.city || ''
+                    );
+                }
                 await update();
             } else {
                 setSaveStatus('error');

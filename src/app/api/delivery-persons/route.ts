@@ -20,6 +20,10 @@ export async function POST(req: Request) {
             partnerId: session.user.id,
         });
 
+        if ((deliveryPerson as any).decryptFieldsSync) {
+            (deliveryPerson as any).decryptFieldsSync();
+        }
+
         return NextResponse.json(deliveryPerson, { status: 201 });
     } catch (error: any) {
         console.error('[DELIVERY] POST Error:', error);

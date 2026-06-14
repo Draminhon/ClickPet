@@ -9,10 +9,14 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
         const { id } = await params;
         await dbConnect();
 
-        const service = await Service.findById(id).populate('partnerId', 'name address');
+        const service = await Service.findById(id).populate('partnerId', '-password');
 
         if (!service) {
             return NextResponse.json({ message: 'Service not found' }, { status: 404 });
+        }
+
+        if (service.partnerId && typeof service.partnerId.decryptFieldsSync === 'function') {
+            service.partnerId.decryptFieldsSync();
         }
 
         return NextResponse.json(service);

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Review from '@/models/Review';
 import Product from '@/models/Product';
-import User from '@/models/User';
+import User, { hashEmail } from '@/models/User';
 
 export async function GET(req: Request) {
     try {
@@ -15,7 +15,7 @@ export async function GET(req: Request) {
         }
 
         // 2. Find or create a user to be the reviewer
-        let user = await User.findOne({ email: 'seed_user@example.com' });
+        let user = await User.findOne({ emailHash: hashEmail('seed_user@example.com') });
         if (!user) {
             user = await User.create({
                 name: 'João Carlos',
@@ -23,6 +23,9 @@ export async function GET(req: Request) {
                 password: 'password123', // In a real app, this should be hashed
                 role: 'customer'
             });
+            if (user.decryptFieldsSync) {
+                user.decryptFieldsSync();
+            }
         }
 
         // 3. Create some mock reviews

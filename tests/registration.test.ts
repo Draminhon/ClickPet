@@ -1,5 +1,5 @@
 import { POST } from '../src/app/api/register/route';
-import User from '../src/models/User';
+import User, { hashEmail } from '../src/models/User';
 import mongoose from 'mongoose';
 
 // Mock NextResponse
@@ -28,7 +28,7 @@ describe('Registration API Security', () => {
 
         expect(response.status).toBe(201);
         
-        const user = await User.findOne({ email: 'hacker@example.com' });
+        const user = await User.findOne({ emailHash: hashEmail('hacker@example.com') });
         expect(user).toBeDefined();
         expect(user.role).toBe('customer'); // Escalation blocked
     });

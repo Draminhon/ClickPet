@@ -28,6 +28,10 @@ export async function POST(req: Request) {
             read: false, // Ensure new messages start as unread
         });
 
+        if ((message as any).decryptFieldsSync) {
+            (message as any).decryptFieldsSync();
+        }
+
         return NextResponse.json(message, { status: 201 });
     } catch (error: any) {
         return NextResponse.json({ message: error.message }, { status: 500 });

@@ -56,8 +56,17 @@ export async function GET(req: Request) {
             .sort({ date: -1 })
             .populate('serviceId', 'name duration prices category image')
             .populate('petId', 'name species breed age weight photo')
-            .populate('userId', 'name email phone') // For partners to see who booked
-            .populate('partnerId', 'name address'); // For users to see where
+            .populate('userId', '-password') // For partners to see who booked
+            .populate('partnerId', '-password'); // For users to see where
+
+        appointments.forEach((appt: any) => {
+            if (appt.userId && typeof appt.userId.decryptFieldsSync === 'function') {
+                appt.userId.decryptFieldsSync();
+            }
+            if (appt.partnerId && typeof appt.partnerId.decryptFieldsSync === 'function') {
+                appt.partnerId.decryptFieldsSync();
+            }
+        });
 
         return NextResponse.json(appointments);
     } catch (error: any) {

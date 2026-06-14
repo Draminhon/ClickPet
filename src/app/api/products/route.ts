@@ -114,7 +114,14 @@ export async function GET(req: Request) {
             query.title = { $regex: escapeRegex(search), $options: 'i' };
         }
 
-        const products = await Product.find(query).populate('partnerId', 'name');
+        const products = await Product.find(query).populate('partnerId', '-password');
+        
+        products.forEach((p: any) => {
+            if (p.partnerId && typeof p.partnerId.decryptFieldsSync === 'function') {
+                p.partnerId.decryptFieldsSync();
+            }
+        });
+
         return NextResponse.json(products);
     } catch (error: any) {
         return NextResponse.json({ message: error.message }, { status: 500 });

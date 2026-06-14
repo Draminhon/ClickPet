@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
-import User from '@/models/User';
+import User, { hashEmail } from '@/models/User';
 
 const mockPartners = [
     {
@@ -67,7 +67,7 @@ export async function GET() {
 
         for (const partnerData of mockPartners) {
             await User.findOneAndUpdate(
-                { email: partnerData.email },
+                { emailHash: hashEmail(partnerData.email) },
                 partnerData,
                 { upsert: true, new: true }
             );

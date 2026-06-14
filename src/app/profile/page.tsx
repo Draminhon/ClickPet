@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useToast } from '@/context/ToastContext';
+import { useLocation } from '@/context/LocationContext';
 import { User, Phone, Upload, Trash2, Plus, LogOut, Pencil, MapPin, Camera, Mail, AlertCircle } from 'lucide-react';
 import { maskPhone, maskZip, maskCPF } from '@/utils/masks';
 import Image from 'next/image';
@@ -12,6 +13,7 @@ import styles from './Profile.module.css';
 export default function ProfilePage() {
     const { data: session } = useSession();
     const { showToast } = useToast();
+    const { setLocationManual } = useLocation();
     const [loading, setLoading] = useState(false);
     const [uploadingImage, setUploadingImage] = useState(false);
     const [userData, setUserData] = useState<any>(null);
@@ -99,6 +101,10 @@ export default function ProfilePage() {
     const handleProfileImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
+            if (!file.type.startsWith('image/')) {
+                showToast('Apenas arquivos de imagem são aceitos', 'error');
+                return;
+            }
             if (file.size > 2 * 1024 * 1024) {
                 showToast('A imagem deve ter no máximo 2MB', 'error');
                 return;
@@ -138,8 +144,37 @@ export default function ProfilePage() {
         setLoading(true);
 
         try {
+            let finalAddress = formData.address;
+            let finalDeliveryAddresses = formData.deliveryAddresses;
+
+            // If the address form is currently open and has a street filled out, let's add it automatically
+            if (showAddressForm && addressForm.street && addressForm.city && addressForm.zip) {
+                const newAddressEntry = {
+                    street: addressForm.street,
+                    number: addressForm.number,
+                    complement: addressForm.complement,
+                    neighborhood: addressForm.neighborhood,
+                    city: addressForm.city,
+                    state: addressForm.state,
+                    zip: addressForm.zip,
+                    coordinates: {
+                        type: 'Point',
+                        coordinates: [parseFloat(addressForm.lng || '0'), parseFloat(addressForm.lat || '0')]
+                    }
+                };
+                if (!formData.address.street) {
+                    finalAddress = newAddressEntry;
+                } else {
+                    finalDeliveryAddresses = [...formData.deliveryAddresses, newAddressEntry];
+                }
+                setShowAddressForm(false);
+                setAddressForm({ street: '', number: '', complement: '', neighborhood: '', city: '', state: '', zip: '', lat: '', lng: '' });
+            }
+
             const bodyData = { 
                 ...formData, 
+                address: finalAddress,
+                deliveryAddresses: finalDeliveryAddresses,
                 cpf: formData.cpf.replace(/\D/g, '') 
             };
 
@@ -159,6 +194,14 @@ export default function ProfilePage() {
                     address: updatedUser.address || { street: '', number: '', complement: '', neighborhood: '', city: '', state: '', zip: '' },
                     deliveryAddresses: Array.isArray(updatedUser.deliveryAddresses) ? updatedUser.deliveryAddresses : [],
                 });
+                if (updatedUser.address?.street) {
+                    setLocationManual(
+                        updatedUser.address.coordinates?.coordinates?.[1] || 0,
+                        updatedUser.address.coordinates?.coordinates?.[0] || 0,
+                        `${updatedUser.address.street}${updatedUser.address.number ? `, ${updatedUser.address.number}` : ''}`,
+                        updatedUser.address.city || ''
+                    );
+                }
                 showToast('Informações atualizadas com sucesso!');
             } else {
                 showToast('Erro ao atualizar informações', 'error');
@@ -191,7 +234,7 @@ export default function ProfilePage() {
         }
     };
 
-    const handleAddAddress = () => {
+    const handleAddAddress = async () => {
         if (!addressForm.street || !addressForm.city || !addressForm.zip) {
             showToast('Preencha os campos obrigatórios do endereço (Rua, Cidade, CEP)', 'error');
             return;
@@ -211,17 +254,66 @@ export default function ProfilePage() {
             }
         };
         
+        let updatedAddress = formData.address;
+        let updatedDeliveryAddresses = [...formData.deliveryAddresses];
+
         if (!formData.address.street) {
             // If NO primary address, first one becomes primary
-            setFormData({ ...formData, address: newAddressEntry });
+            updatedAddress = newAddressEntry;
         } else {
             // Otherwise add to secondary list
-            const newAddrs = [...formData.deliveryAddresses, newAddressEntry];
-            setFormData({ ...formData, deliveryAddresses: newAddrs });
+            updatedDeliveryAddresses.push(newAddressEntry);
         }
+
+        const newFormData = {
+            ...formData,
+            address: updatedAddress,
+            deliveryAddresses: updatedDeliveryAddresses
+        };
         
+        setFormData(newFormData);
         setShowAddressForm(false);
         setAddressForm({ street: '', number: '', complement: '', neighborhood: '', city: '', state: '', zip: '', lat: '', lng: '' });
+
+        // Auto-save the new address immediately for better UX
+        setLoading(true);
+        try {
+            const bodyData = { 
+                ...newFormData, 
+                cpf: newFormData.cpf.replace(/\D/g, '') 
+            };
+            const res = await fetch('/api/profile', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(bodyData),
+            });
+            if (res.ok) {
+                const updatedUser = await res.json();
+                setUserData(updatedUser);
+                setFormData({
+                    cpf: updatedUser.cpf ? maskCPF(updatedUser.cpf) : '',
+                    phone: updatedUser.phone || '',
+                    image: updatedUser.image || '',
+                    address: updatedUser.address || { street: '', number: '', complement: '', neighborhood: '', city: '', state: '', zip: '' },
+                    deliveryAddresses: Array.isArray(updatedUser.deliveryAddresses) ? updatedUser.deliveryAddresses : [],
+                });
+                if (updatedUser.address?.street) {
+                    setLocationManual(
+                        updatedUser.address.coordinates?.coordinates?.[1] || 0,
+                        updatedUser.address.coordinates?.coordinates?.[0] || 0,
+                        `${updatedUser.address.street}${updatedUser.address.number ? `, ${updatedUser.address.number}` : ''}`,
+                        updatedUser.address.city || ''
+                    );
+                }
+                showToast('Endereço adicionado com sucesso!');
+            } else {
+                showToast('Erro ao salvar endereço', 'error');
+            }
+        } catch (error) {
+            showToast('Erro ao salvar endereço', 'error');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleDeleteAddress = async (index: number | null) => {
@@ -267,6 +359,10 @@ export default function ProfilePage() {
     const handlePetImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
+            if (!file.type.startsWith('image/')) {
+                showToast('Apenas arquivos de imagem são aceitos', 'error');
+                return;
+            }
             if (file.size > 1024 * 1024) {
                 showToast('A imagem deve ter no máximo 1MB', 'error');
                 return;

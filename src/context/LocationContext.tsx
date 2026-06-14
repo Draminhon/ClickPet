@@ -3,6 +3,8 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
 import { useSession } from "next-auth/react";
 import { useToast } from "./ToastContext";
+import { formatAddress } from "@/utils/masks";
+
 
 interface LocationState {
     lat: number | null;
@@ -46,11 +48,22 @@ export function LocationProvider({ children }: { children: ReactNode }) {
             const saved = localStorage.getItem("clickpet_location");
             if (saved) {
                 const parsed = JSON.parse(saved);
-                setLocation((prev) => ({
-                    ...prev,
-                    ...parsed,
-                    isLoading: false,
-                }));
+                
+                const isAddressEmptyOrComma = (addr: string) => {
+                    if (!addr) return true;
+                    const cleaned = addr.trim().replace(/[\s,]+/g, '');
+                    return cleaned === '' || cleaned === 'undefined';
+                };
+
+                if (isAddressEmptyOrComma(parsed.address)) {
+                    localStorage.removeItem("clickpet_location");
+                } else {
+                    setLocation((prev) => ({
+                        ...prev,
+                        ...parsed,
+                        isLoading: false,
+                    }));
+                }
             }
         } catch {
             // Ignore parse errors
@@ -70,24 +83,45 @@ export function LocationProvider({ children }: { children: ReactNode }) {
         }
     }, [status]);
 
-    // Load from profile if logged in and no location set
+    // Load from profile if logged in and no location set (or if location is empty/corrupted)
     useEffect(() => {
-        if (session && !location.source) {
+        const isAddressEmptyOrComma = (addr: string) => {
+            if (!addr) return true;
+            const cleaned = addr.trim().replace(/[\s,]+/g, '');
+            return cleaned === '' || cleaned === 'undefined';
+        };
+
+        if (session && (!location.source || location.source === "profile" || isAddressEmptyOrComma(location.address))) {
             fetch("/api/profile")
                 .then((res) => res.json())
                 .then((data) => {
-                    if (data.address?.street) {
-                        const coords = data.address.coordinates?.coordinates;
-                        const newLoc: LocationState = {
-                            lat: coords?.[1] || null,
-                            lng: coords?.[0] || null,
-                            address: `${data.address.street}${data.address.number ? `, ${data.address.number}` : ""}`,
-                            city: data.address.city || "",
-                            isLoading: false,
-                            source: "profile",
-                        };
-                        setLocation(newLoc);
-                        persistLocation(newLoc);
+                    // Fallback to the first delivery address if primary is empty
+                    const primaryAddr = data.address?.street ? data.address : (data.deliveryAddresses?.[0]?.street ? data.deliveryAddresses[0] : null);
+
+                    if (primaryAddr && primaryAddr.street) {
+                        const coords = primaryAddr.coordinates?.coordinates;
+                        const formatted = formatAddress(primaryAddr.street, primaryAddr.number);
+                        if (formatted && !isAddressEmptyOrComma(formatted)) {
+                            const newLoc: LocationState = {
+                                lat: coords?.[1] || null,
+                                lng: coords?.[0] || null,
+                                address: formatted,
+                                city: primaryAddr.city || "",
+                                isLoading: false,
+                                source: "profile",
+                            };
+                            setLocation(newLoc);
+                            persistLocation(newLoc);
+                            return;
+                        }
+                    }
+
+                    // If no valid address in profile, clear the location state if it is currently empty/comma or profile-sourced
+                    if (isAddressEmptyOrComma(location.address) || location.source === "profile") {
+                        setLocation(defaultState);
+                        try {
+                            localStorage.removeItem("clickpet_location");
+                        } catch {}
                     }
                 })
                 .catch(() => {});

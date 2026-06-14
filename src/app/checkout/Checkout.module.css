@@ -1,106 +1,316 @@
 .checkoutContainer {
-    padding: 2rem 16px;
+    width: 100%;
+    padding: 2.5rem 16px;
+    max-width: 1200px;
+    margin: 0 auto;
+    font-family: 'Baloo 2', sans-serif;
+    box-sizing: border-box;
 }
 
 .checkoutGrid {
     display: grid;
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: minmax(0, 1.7fr) minmax(320px, 1.3fr);
     gap: 2rem;
+    align-items: start;
 }
 
+.checkoutGrid > * {
+    min-width: 0;
+}
+
+.checkoutCard {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    border: 1px solid #F0F2F5;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    transition: all 0.3s ease;
+}
+
+.checkoutCard:hover {
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.05);
+}
+
+.cardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #F0F2F5;
+    padding-bottom: 0.8rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.cardTitle {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #253D4E;
+    margin: 0;
+}
+
+/* Delivery Option */
 .deliverySelectorArea {
     display: flex;
-    gap: 1rem;
+    gap: 1.2rem;
 }
 
 .deliveryLabel {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
+    gap: 0.8rem;
     cursor: pointer;
     padding: 1.2rem;
     border: 1px solid #E5E7EB;
-    border-radius: 10px;
+    border-radius: 12px;
     flex: 1;
     background: white;
-    transition: all 0.2s;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .deliveryLabelActive {
     border: 2px solid #3BB77E;
     background: #F3FAF6;
-    box-shadow: 0 4px 10px rgba(59, 183, 126, 0.1);
+    box-shadow: 0 4px 12px rgba(59, 183, 126, 0.08);
 }
 
 .deliveryLabelText {
-    font-weight: 500;
-    color: #4B5563;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #7E8D9E;
+    transition: color 0.2s;
 }
 
 .deliveryLabelTextActive {
-    font-weight: 600;
-    color: #111827;
+    color: #253D4E;
+}
+
+/* Address Card Selectors */
+.addressList {
+    display: grid;
+    gap: 1rem;
 }
 
 .addressLabel {
     display: flex;
     align-items: flex-start;
-    gap: 1rem;
-    padding: 1.2rem;
+    gap: 1.2rem;
+    padding: 1.5rem;
     border: 1px solid #E5E7EB;
-    border-radius: 10px;
+    border-radius: 12px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.25s ease;
     background: white;
 }
 
 .addressLabelActive {
     border: 2px solid #3BB77E;
     background: #F3FAF6;
-    box-shadow: 0 4px 10px rgba(59, 183, 126, 0.1);
+    box-shadow: 0 4px 12px rgba(59, 183, 126, 0.08);
+}
+
+.addAddressButton {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: #3BB77E;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.9rem;
+    transition: background 0.2s ease;
+}
+
+.addAddressButton:hover {
+    background: #2d9063;
+}
+
+/* Form Styles for Adding Address */
+.newAddressForm {
+    background: #F8FAF9;
+    padding: 1.8rem;
+    border-radius: 12px;
+    border: 1px solid #E5E8E6;
+}
+
+.newAddressFormHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.newAddressFormTitle {
+    margin: 0;
+    color: #253D4E;
+    font-size: 1.15rem;
+    font-weight: 700;
+}
+
+.cancelFormBtn {
+    background: none;
+    border: none;
+    color: #6B7280;
+    font-size: 0.95rem;
+    cursor: pointer;
+    text-decoration: underline;
+    font-weight: 600;
 }
 
 .addressFormGrid3 {
     display: grid;
     grid-template-columns: 2fr 1fr 1fr;
-    gap: 1rem;
-    margin-bottom: 1rem;
+    gap: 1.2rem;
+    margin-bottom: 1.2rem;
 }
 
 .addressFormGrid2 {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1rem;
+    gap: 1.2rem;
     margin-bottom: 1.5rem;
 }
 
+.addressFieldLabel {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #4B5563;
+}
+
+.addressFieldInput {
+    padding: 0.85rem 1rem;
+    border-radius: 8px;
+    border: 1px solid #D1D5DB;
+    width: 100%;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s;
+    font-family: inherit;
+}
+
+.addressFieldInput:focus {
+    border-color: #3BB77E;
+    box-shadow: 0 0 0 3px rgba(59, 183, 126, 0.1);
+}
+
+.saveNewAddressBtn {
+    width: 100%;
+    background: #253D4E;
+    color: white;
+    border: none;
+    padding: 1rem;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.saveNewAddressBtn:hover {
+    background: #1e313f;
+}
+
+/* Map Picker Section */
+.mapWrapper {
+    margin-bottom: 1.5rem;
+    background: white;
+    padding: 1.2rem;
+    border-radius: 10px;
+    border: 1px solid #E5E7EB;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.mapLabel {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.8rem;
+    font-weight: 700;
+    color: #253D4E;
+    font-size: 0.95rem;
+}
+
+.mapHint {
+    font-size: 0.8rem;
+    color: #6B7280;
+    margin-top: 0.6rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 500;
+}
+
+/* Loyalty Points */
+.loyaltyTitleArea {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.2rem;
+}
+
+.loyaltyBadge {
+    background: #E8F5EE;
+    color: #16A34A;
+    padding: 0.3rem 0.9rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.loyaltySliderContainer {
+    padding: 1.2rem;
+    background: #F8FAF9;
+    border-radius: 12px;
+    border: 1px solid #E5E8E6;
+}
+
+.loyaltyResultRow {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1rem;
+    font-weight: 700;
+    margin-top: 1rem;
+}
+
+/* Coupon Styles */
 .couponInputArea {
     display: flex;
-    gap: 0.6rem;
+    gap: 0.8rem;
 }
 
 .couponInput {
     flex: 1;
-    padding: 0.8rem 1rem;
+    padding: 0.85rem 1rem;
     border-radius: 8px;
     border: 1px solid #D1D5DB;
     font-size: 1rem;
     outline: none;
     min-width: 0;
+    font-family: inherit;
+    transition: border-color 0.2s;
 }
 
 .couponInput:focus {
     border-color: #3BB77E;
+    box-shadow: 0 0 0 3px rgba(59, 183, 126, 0.1);
 }
 
 .couponBtn {
-    padding: 0.8rem 2rem;
+    padding: 0.85rem 1.8rem;
     background: #3BB77E;
     color: white;
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    font-weight: 600;
+    font-weight: 700;
     font-size: 1rem;
     transition: background 0.2s;
 }
@@ -109,73 +319,273 @@
     background: #2d9063;
 }
 
+.couponItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #F3FAF6;
+    padding: 0.8rem 1.2rem;
+    border-radius: 8px;
+    border: 1px solid #3BB77E;
+    border-left: 4px solid #3BB77E;
+}
+
+.couponRemoveBtn {
+    background: #FEE2E2;
+    border: none;
+    color: #EF4444;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    transition: background 0.2s;
+}
+
+.couponRemoveBtn:hover {
+    background: #fca5a5;
+}
+
+/* Payment Selector Area */
 .paymentSelectorArea {
     display: flex;
-    gap: 0.8rem;
+    gap: 1rem;
     flex-wrap: wrap;
 }
 
 .paymentLabel {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
+    gap: 0.8rem;
     cursor: pointer;
     padding: 1.2rem;
     border: 1px solid #E5E7EB;
-    border-radius: 10px;
+    border-radius: 12px;
     flex: 1;
-    min-width: 150px;
+    min-width: 160px;
     background: white;
-    transition: all 0.2s;
+    transition: all 0.25s ease;
 }
 
 .paymentLabelActive {
     border: 2px solid #3BB77E;
     background: #F3FAF6;
+    box-shadow: 0 4px 12px rgba(59, 183, 126, 0.08);
 }
 
 .paymentLabelText {
-    font-size: 0.95rem;
-    font-weight: 500;
-    color: #4B5563;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #7E8D9E;
 }
 
 .paymentLabelTextActive {
-    font-weight: 600;
-    color: #111827;
+    font-weight: 700;
+    color: #253D4E;
 }
 
-.checkoutCard {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-}
-
-.cardHeader {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-    border-bottom: 1px solid #f0f0f0;
-    padding-bottom: 0.8rem;
-    gap: 1rem;
-    flex-wrap: wrap;
-}
-
+/* Summary Cards (Sidebar) */
 .summaryCard {
     background: white;
-    padding: 1.5rem;
-    border-radius: 12px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    padding: 2rem;
+    border-radius: 16px;
+    border: 1px solid #F0F2F5;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
     position: sticky;
     top: 2rem;
 }
 
-@media (max-width: 992px) {
+.partnerSummaryCard {
+    margin-bottom: 1.5rem;
+    padding: 1.2rem;
+    border: 1px solid #E5E7EB;
+    border-radius: 10px;
+    background: #FAFBFD;
+}
+
+.partnerShopTitle {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-bottom: 0.8rem;
+    color: #253D4E;
+    border-bottom: 1px solid #E5E7EB;
+    padding-bottom: 0.5rem;
+}
+
+.summaryItemRow {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 0.6rem;
+    font-size: 0.9rem;
+    color: #4B5563;
+}
+
+.summaryItemTitle {
+    min-width: 0;
+    flex: 1;
+    word-break: break-word;
+    font-weight: 500;
+}
+
+.summaryItemPrice {
+    flex-shrink: 0;
+    font-weight: 600;
+    color: #253D4E;
+}
+
+.summaryTotalsContainer {
+    padding: 0.5rem;
+}
+
+.summaryTotalRow {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.6rem;
+    color: #6B7280;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.summaryTotalFinalRow {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #253D4E;
+    margin-top: 1rem;
+}
+
+/* Submit Action Button */
+.submitCheckoutBtn {
+    width: 100%;
+    padding: 1.2rem;
+    background: #3BB77E;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.15rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(59, 183, 126, 0.25);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    font-family: inherit;
+}
+
+.submitCheckoutBtn:hover:not(:disabled) {
+    background: #2d9063;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(59, 183, 126, 0.35);
+}
+
+.submitCheckoutBtn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.submitCheckoutBtn:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* Missing Document Modal */
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    padding: 1rem;
+}
+
+.modalCard {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 20px;
+    max-width: 420px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+    animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes scaleIn {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.modalIconWrapper {
+    width: 64px;
+    height: 64px;
+    background: #FEE2E2;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto 1.5rem;
+    color: #EF4444;
+}
+
+.modalTitle {
+    margin-bottom: 0.8rem;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #253D4E;
+}
+
+.modalDesc {
+    color: #7E8D9E;
+    margin-bottom: 1.8rem;
+    line-height: 1.6;
+    font-size: 0.98rem;
+}
+
+.modalActionBtn {
+    width: 100%;
+    padding: 1.1rem;
+    background: #3BB77E;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(59, 183, 126, 0.2);
+    transition: background 0.2s;
+    font-family: inherit;
+}
+
+.modalActionBtn:hover {
+    background: #2d9063;
+}
+
+.modalCancelBtn {
+    width: 100%;
+    padding: 0.9rem;
+    background: transparent;
+    color: #7E8D9E;
+    border: none;
+    font-weight: 700;
+    margin-top: 0.6rem;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.95rem;
+}
+
+.modalCancelBtn:hover {
+    color: #253D4E;
+}
+
+/* Responsiveness media queries */
+@media (max-width: 1150px) {
     .checkoutGrid {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 1.8rem;
     }
     .summaryCard {
         position: static;
@@ -186,37 +596,144 @@
     .checkoutContainer {
         padding: 1.5rem 16px;
     }
+    .checkoutCard {
+        padding: 1.5rem;
+    }
+    .summaryCard {
+        padding: 1.5rem;
+    }
     .addressFormGrid3,
     .addressFormGrid2 {
-        grid-template-columns: 1fr;
-        gap: 0.75rem;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 1rem;
     }
     .addressFormGrid2 {
         margin-bottom: 1rem;
     }
     .deliverySelectorArea {
         flex-direction: column;
-        gap: 0.75rem;
+        gap: 0.8rem;
     }
     .paymentSelectorArea {
         flex-direction: column;
-        gap: 0.75rem;
+        gap: 0.8rem;
     }
 }
 
 @media (max-width: 480px) {
     .couponInputArea {
         flex-direction: column;
-        gap: 0.75rem;
+        gap: 0.8rem;
     }
     .couponBtn {
         width: 100%;
     }
     .checkoutCard {
-        padding: 1rem;
+        padding: 1.2rem;
     }
     .summaryCard {
+        padding: 1.2rem;
+    }
+    .modalCard {
+        padding: 1.8rem;
+    }
+    .paymentLabel {
+        min-width: 100%;
+    }
+    .newAddressForm {
         padding: 1rem;
     }
+    .couponItem {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.8rem;
+    }
+    .couponRemoveBtn {
+        width: 100%;
+    }
+}
+
+.addressBadgePrimary {
+    margin-left: 10px;
+    font-size: 0.7rem;
+    background: #e0f2fe;
+    color: #0369a1;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.addressCardContent {
+    flex: 1;
+    text-align: left;
+}
+
+.addressCardTitle {
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+    color: #333;
+    font-size: 1.05rem;
+    margin-bottom: 0.2rem;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.addressCardSubtitle {
+    font-size: 0.95rem;
+    color: #555;
+    margin-bottom: 0.2rem;
+}
+
+.addressCardZip {
+    font-size: 0.85rem;
+    color: #888;
+}
+
+.addressEmptyState {
+    text-align: center;
+    padding: 2.5rem 1.5rem;
+    background: #F8FAF9;
+    border-radius: 12px;
+    border: 2px dashed #E5E8E6;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.addressEmptyIcon {
+    color: #b0bec5;
+    margin-bottom: 1rem;
+}
+
+.addressEmptyText {
+    color: #555;
+    margin-bottom: 1.2rem;
+    font-weight: 600;
+}
+
+.addressEmptyBtn {
+    background: #253D4E;
+    color: white;
+    border: none;
+    padding: 0.8rem 1.8rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 1rem;
+    transition: background 0.2s ease;
+}
+
+.addressEmptyBtn:hover {
+    background: #1e313f;
+}
+
+.addressInputRadio {
+    margin-top: 0.3rem;
+    width: 18px;
+    height: 18px;
+    accent-color: #3BB77E;
+    flex-shrink: 0;
 }
 

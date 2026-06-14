@@ -39,6 +39,9 @@ export async function POST(req: Request) {
         });
 
         const pet = await Pet.create(petData);
+        if ((pet as any).decryptFieldsSync) {
+            (pet as any).decryptFieldsSync();
+        }
 
         return NextResponse.json(pet, { status: 201 });
     } catch (error: any) {
@@ -78,6 +81,10 @@ export async function PUT(req: Request) {
 
         if (!pet) {
             return NextResponse.json({ message: 'Pet not found' }, { status: 404 });
+        }
+
+        if ((pet as any).decryptFieldsSync) {
+            (pet as any).decryptFieldsSync();
         }
 
         return NextResponse.json(pet);

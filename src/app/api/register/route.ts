@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
-import User from '@/models/User';
+import User, { hashEmail } from '@/models/User';
 import Subscription from '@/models/Subscription';
 import bcrypt from 'bcryptjs';
 import { sanitizeInput } from '@/lib/sanitize';
@@ -23,16 +23,14 @@ export async function POST(req: Request) {
 
         await dbConnect();
         
-        const body = await req.json();
-        // Prevent NoSQL Object Injection by casting immediately to string
-        const name = String(body.name || '');
-        const email = String(body.email || '');
-        const password = String(body.password || '');
-        const role = String(body.role || '');
+        const rawBody = await req.json();
+        
+        const name = sanitizeInput(rawBody.name);
+        const email = sanitizeInput(rawBody.email);
+        const password = String(rawBody.password);
+        const role = sanitizeInput(rawBody.role);
 
-        // Validate required fields
-        const sanitizedName = sanitizeInput(name);
-        if (!sanitizedName || sanitizedName.length < 2) {
+        if (!name || name.trim().length < 2) {
             return NextResponse.json(
                 { message: 'Nome deve ter pelo menos 2 caracteres.' },
                 { status: 400 }
@@ -55,7 +53,7 @@ export async function POST(req: Request) {
 
 
 
-        const existingUser = await User.findOne({ email: email.toLowerCase().trim() });
+        const existingUser = await User.findOne({ emailHash: hashEmail(email) });
         if (existingUser) {
             return NextResponse.json(
                 { message: 'Email já cadastrado.' },
@@ -71,7 +69,7 @@ export async function POST(req: Request) {
         else if (role === 'veterinarian') finalRole = 'veterinarian';
 
         const userData: any = {
-            name: sanitizedName,
+            name: name,
             email: email.toLowerCase().trim(),
             password: hashedPassword,
             role: finalRole,

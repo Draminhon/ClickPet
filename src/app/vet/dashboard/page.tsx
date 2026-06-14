@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useToast } from '@/context/ToastContext';
+import { useLocation } from '@/context/LocationContext';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import MapPicker from '@/components/ui/MapPicker';
@@ -16,6 +17,7 @@ import styles from './VetDashboard.module.css';
 export default function VetDashboard() {
     const { data: session, update: updateSession } = useSession();
     const { showToast } = useToast();
+    const { setLocationManual } = useLocation();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [isDirty, setIsDirty] = useState(false);
@@ -188,6 +190,10 @@ export default function VetDashboard() {
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, field: 'image' | 'bannerImage') => {
         const file = e.target.files?.[0];
         if (file) {
+            if (!file.type.startsWith('image/')) {
+                showToast('Apenas arquivos de imagem são aceitos', 'error');
+                return;
+            }
             if (file.size > 5 * 1024 * 1024) {
                 showToast('A imagem deve ter no máximo 5MB', 'error');
                 return;
@@ -284,6 +290,14 @@ export default function VetDashboard() {
             if (res.ok) {
                 showToast('Perfil atualizado com sucesso!', 'success');
                 setIsDirty(false);
+                if (formData.address?.street) {
+                    setLocationManual(
+                        formData.address.lat,
+                        formData.address.lng,
+                        `${formData.address.street}${formData.address.number ? `, ${formData.address.number}` : ''}`,
+                        formData.address.city || ''
+                    );
+                }
                 // Refresh session to update isProfileComplete status
                 updateSession();
             } else {

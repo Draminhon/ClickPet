@@ -20,10 +20,14 @@ export async function GET(
         await dbConnect();
 
         const subscription = await Subscription.findById(id)
-            .populate('partnerId', 'name email cnpj phone address');
+            .populate('partnerId', '-password');
 
         if (!subscription) {
             return NextResponse.json({ error: 'Assinatura não encontrada' }, { status: 404 });
+        }
+
+        if (subscription.partnerId && typeof subscription.partnerId.decryptFieldsSync === 'function') {
+            subscription.partnerId.decryptFieldsSync();
         }
 
         return NextResponse.json(subscription);

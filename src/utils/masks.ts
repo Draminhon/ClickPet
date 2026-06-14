@@ -125,3 +125,12 @@ export const maskPrice = (value: string) => {
 export const parseMaskedPrice = (value: string) => {
     return parseFloat(value.replace(/\./g, "").replace(",", "."));
 };
+
+export const formatAddress = (street?: string, number?: string) => {
+    const s = (street || '').trim();
+    const n = (number || '').trim();
+    if (!s && !n) return '';
+    if (s && n) return `${s}, ${n}`;
+    return s || n;
+};
+

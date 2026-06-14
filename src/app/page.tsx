@@ -35,11 +35,27 @@ async function getFeaturedPartners(isClinic = false) {
     }
 
     const partners = await User.find(query)
-        .select('name shopLogo specialization workingHours role rating reviewCount')
-        .limit(30)
-        .lean();
+        .select('-password')
+        .limit(30);
 
-    return JSON.parse(JSON.stringify(partners));
+    partners.forEach((partner: any) => {
+        if (typeof partner.decryptFieldsSync === 'function') {
+            partner.decryptFieldsSync();
+        }
+    });
+
+    const serializedPartners = partners.map((partner: any) => ({
+        _id: String(partner._id),
+        name: partner.name,
+        shopLogo: partner.shopLogo || null,
+        specialization: partner.specialization || '',
+        workingHours: partner.workingHours || [],
+        role: partner.role || 'partner',
+        rating: partner.rating || 0,
+        reviewCount: partner.reviewCount || 0,
+    }));
+
+    return JSON.parse(JSON.stringify(serializedPartners));
 }
 
 export default async function HomePage() {

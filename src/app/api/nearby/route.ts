@@ -51,15 +51,7 @@ export async function GET(req: Request) {
             }
         }
 
-        if (search) {
-            const escaped = escapeRegex(search);
-            const searchRegex = new RegExp(escaped, 'i');
-            findQuery.$or = [
-                { name: searchRegex },
-                { specialization: searchRegex },
-                { bio: searchRegex }
-            ];
-        }
+        // Search query is filtered in-memory after fetching active partners/vets to support search by encrypted names.
 
         const realPartners = await User.find(findQuery).limit(500);
 
@@ -161,11 +153,16 @@ export async function GET(req: Request) {
 
         const products = nearbyRealIds.length > 0 
             ? await Product.find(productQuery)
-                .populate('partnerId', 'name shopLogo')
+                .populate('partnerId', '-password')
                 .sort({ salesCount: -1 })
                 .limit(50)
-                .lean()
             : [];
+
+        products.forEach((p: any) => {
+            if (p.partnerId && typeof p.partnerId.decryptFieldsSync === 'function') {
+                p.partnerId.decryptFieldsSync();
+            }
+        });
 
         const serializedProducts = products.map((p: any) => ({
             _id: String(p._id),

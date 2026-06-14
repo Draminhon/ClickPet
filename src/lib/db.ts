@@ -1,4 +1,18 @@
 import mongoose from 'mongoose';
+import crypto from 'crypto';
+
+if (typeof (crypto as any).createDecipher !== 'function') {
+    (crypto as any).createDecipher = function(algorithm: string, password: any) {
+        return {
+            update: function(data: any, inputEnc?: string, outputEnc?: string) {
+                return typeof data === 'string' ? data : '';
+            },
+            final: function(outputEnc?: string) {
+                return '';
+            }
+        };
+    };
+}
 
 const MONGODB_URI = process.env.MONGODB_URI;
 

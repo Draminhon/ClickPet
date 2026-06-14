@@ -30,6 +30,10 @@ export default function NewProduct() {
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
+            if (!file.type.startsWith('image/')) {
+                showToast('Apenas arquivos de imagem são aceitos', 'error');
+                return;
+            }
             if (file.size > 1024 * 1024) { // 1MB limit
                 showToast('A imagem deve ter no máximo 1MB', 'error');
                 return;

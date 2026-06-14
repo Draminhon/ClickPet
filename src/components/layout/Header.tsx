@@ -10,7 +10,9 @@ import { useSession, signOut } from 'next-auth/react';
 import { useToast } from '@/context/ToastContext';
 import { useLocation } from '@/context/LocationContext';
 import MapPicker from '@/components/ui/MapPicker';
+import { formatAddress } from '@/utils/masks';
 import styles from './Header.module.css';
+
 
 export default function Header() {
     const { count, items: cartItems, updateQuantity, removeFromCart, total: cartTotal } = useCart();
@@ -140,6 +142,14 @@ export default function Header() {
         }
     }, [session]);
 
+    // Re-fetch profile data when the LocationContext address changes
+    // (e.g. user saved an address from the Profile or Checkout page)
+    useEffect(() => {
+        if (session && address) {
+            fetchUserAddress();
+        }
+    }, [address]);
+
     const fetchUserAddress = () => {
         fetch('/api/profile')
             .then(res => res.json())
@@ -189,7 +199,7 @@ export default function Header() {
             setLocationManual(
                 selectedAddr.coordinates.coordinates[1],
                 selectedAddr.coordinates.coordinates[0],
-                `${selectedAddr.street}, ${selectedAddr.number}`,
+                formatAddress(selectedAddr.street, selectedAddr.number),
                 selectedAddr.city
             );
 
@@ -330,6 +340,16 @@ export default function Header() {
                 showToast(editingIndex === -1 ? 'Endereço adicionado!' : 'Endereço atualizado!');
                 setShowAddressModal(false);
                 fetchUserAddress();
+
+                // If editing or adding the primary address, update the active LocationContext immediately
+                if (editingIndex === null || (editingIndex === -1 && !hasPrimary)) {
+                    setLocationManual(
+                        parseFloat(addressForm.lat) || 0,
+                        parseFloat(addressForm.lng) || 0,
+                        formatAddress(addressForm.street, addressForm.number),
+                        addressForm.city
+                    );
+                }
             } else {
                 showToast('Erro ao salvar endereço', 'error');
             }
@@ -410,7 +430,7 @@ export default function Header() {
                                                     </div>
                                                     <div className={styles.addressInfo}>
                                                         <span className={styles.addressStreet}>
-                                                            {userProfile.address.street}, {userProfile.address.number}
+                                                            {formatAddress(userProfile.address.street, userProfile.address.number) || "Sem endereço"}
                                                         </span>
                                                         <span className={styles.addressCity}>{userProfile.address.city}</span>
                                                     </div>
@@ -443,7 +463,7 @@ export default function Header() {
                                                     </div>
                                                     <div className={styles.addressInfo}>
                                                         <span className={styles.addressStreet}>
-                                                            {addr.street}, {addr.number}
+                                                            {formatAddress(addr.street, addr.number) || "Sem endereço"}
                                                         </span>
                                                         <span className={styles.addressCity}>{addr.city}</span>
                                                     </div>
@@ -597,11 +617,7 @@ export default function Header() {
                             </>
                         ) : (
                             <>
-                                {/* Not logged in: Criar Conta + Entrar */}
-                                <Link href="/register" className={styles.createAccountBtn}>
-                                    Criar Conta
-                                </Link>
-
+                                {/* Not logged in: Entrar */}
                                 <Link href="/login" className={styles.enterBtn}>
                                     Entrar
                                 </Link>

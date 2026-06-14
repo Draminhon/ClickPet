@@ -208,6 +208,10 @@ export async function POST(req: Request) {
             await loyaltyService.redeemPoints(session.user.id, requestedPoints);
         }
 
+        if ((order as any).decryptFieldsSync) {
+            (order as any).decryptFieldsSync();
+        }
+
         return NextResponse.json(order, { status: 201 });
     } catch (error: any) {
         return NextResponse.json({ message: 'Error creating order' }, { status: 500 });

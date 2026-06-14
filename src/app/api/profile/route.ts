@@ -21,6 +21,20 @@ export async function GET(req: Request) {
             return NextResponse.json({ message: 'User not found' }, { status: 404 });
         }
 
+        user.decryptFieldsSync();
+        if (user.address && typeof user.address.decryptFieldsSync === 'function') {
+            user.address.decryptFieldsSync();
+        }
+        if (Array.isArray(user.deliveryAddresses)) {
+            user.deliveryAddresses.forEach((addr: any) => {
+                if (typeof addr.decryptFieldsSync === 'function') {
+                    addr.decryptFieldsSync();
+                }
+            });
+        }
+
+        console.log('[PROFILE GET] user ID:', session.user.id, 'address:', JSON.stringify(user.address), 'deliveryAddresses:', JSON.stringify(user.deliveryAddresses));
+
         return NextResponse.json(user);
     } catch (error: any) {
         console.error('[PROFILE] Error fetching profile:', error);
@@ -39,6 +53,8 @@ export async function PUT(req: Request) {
         const rawBody = await req.json();
         const body = sanitizeObject(rawBody);
 
+        console.log('[PROFILE PUT] incoming body keys:', Object.keys(body), 'address:', JSON.stringify(body.address), 'deliveryAddresses:', JSON.stringify(body.deliveryAddresses));
+
         const user = await User.findById(session.user.id);
         if (!user) {
             return NextResponse.json({ message: 'User not found' }, { status: 404 });
@@ -50,12 +66,26 @@ export async function PUT(req: Request) {
             updateData.name = body.name;
         }
         if (body.address) {
-            user.address = { ...user.address, ...body.address };
+            const hasStreet = body.address.street && body.address.street.trim();
+            if (!hasStreet) {
+                user.address = undefined;
+            } else {
+                user.address = { ...user.address?.toObject(), ...body.address };
+            }
             updateData.address = body.address;
         }
         if (body.deliveryAddresses !== undefined) {
-            user.deliveryAddresses = body.deliveryAddresses;
-            updateData.deliveryAddresses = body.deliveryAddresses;
+            const cleanDeliveries = Array.isArray(body.deliveryAddresses)
+                ? body.deliveryAddresses.filter((addr: any) => addr && addr.street && addr.street.trim())
+                : [];
+            user.deliveryAddresses = cleanDeliveries;
+            updateData.deliveryAddresses = cleanDeliveries;
+
+            // If the user has no primary address, set the first delivery address as primary
+            if ((!user.address || !user.address.street) && cleanDeliveries.length > 0) {
+                user.address = cleanDeliveries[0];
+                updateData.address = cleanDeliveries[0];
+            }
         }
         if (body.phone !== undefined) {
             user.phone = body.phone;
@@ -138,9 +168,23 @@ export async function PUT(req: Request) {
         }
 
         await user.save();
+        console.log('[PROFILE PUT] user saved successfully. role:', user.role, 'address:', JSON.stringify(user.address));
 
         // Fetch again to ensure clean returning object (striping password)
         const updatedUser = await User.findById(session.user.id).select('-password');
+        if (updatedUser) {
+            updatedUser.decryptFieldsSync();
+            if (updatedUser.address && typeof updatedUser.address.decryptFieldsSync === 'function') {
+                updatedUser.address.decryptFieldsSync();
+            }
+            if (Array.isArray(updatedUser.deliveryAddresses)) {
+                updatedUser.deliveryAddresses.forEach((addr: any) => {
+                    if (typeof addr.decryptFieldsSync === 'function') {
+                        addr.decryptFieldsSync();
+                    }
+                });
+            }
+        }
 
         const updatedFields = Object.keys(updateData);
         await logAction(req, 'profile_update', { updatedFields });

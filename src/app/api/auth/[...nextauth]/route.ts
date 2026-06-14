@@ -1,7 +1,7 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import dbConnect from "@/lib/db";
-import User from "@/models/User";
+import User, { hashEmail } from "@/models/User";
 import bcrypt from "bcryptjs";
 import GoogleProvider from "next-auth/providers/google";
 import speakeasy from "speakeasy";
@@ -37,14 +37,16 @@ export const authOptions: NextAuthOptions = {
 
                 await dbConnect();
                 
-                // Exclude encrypted fields initially to prevent lean() decryption issues
-                const user: any = await User.findOne({ email: emailStr })
-                    .select('-cnpj -phone -address -twoFactorSecret')
-                    .lean();
+                // Exclude encrypted fields initially, then decrypt manually
+                const userDoc = await User.findOne({ emailHash: hashEmail(emailStr) })
+                    .select('-cnpj -phone -address -twoFactorSecret');
 
-                if (!user) {
+                if (!userDoc) {
                     throw new Error("Email ou senha incorretos");
                 }
+
+                userDoc.decryptFieldsSync();
+                const user = userDoc.toObject() as any;
 
                 if (user.lockUntil && new Date(user.lockUntil) > new Date()) {
                     throw new Error("Conta bloqueada temporariamente. Tente novamente mais tarde.");
@@ -115,7 +117,7 @@ export const authOptions: NextAuthOptions = {
             if (account.provider === "google") {
                 try {
                     await dbConnect();
-                    let dbUser = await User.findOne({ email: user.email });
+                    let dbUser = await User.findOne({ emailHash: hashEmail(user.email) });
 
                     if (!dbUser) {
                         const { cookies } = await import("next/headers");
@@ -161,7 +163,7 @@ export const authOptions: NextAuthOptions = {
                 // Initial Login
                 token.lastRefreshed = Date.now();
                 if (account && account.provider !== 'credentials') {
-                    const dbUser = await User.findOne({ email: user.email }).lean() as any;
+                    const dbUser = await User.findOne({ emailHash: hashEmail(user.email) }).lean() as any;
                     if (dbUser) {
                         token.id = dbUser._id.toString();
                         token.role = dbUser.role;

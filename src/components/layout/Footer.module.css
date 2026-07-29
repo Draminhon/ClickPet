@@ -23,6 +23,30 @@
     line-height: 1;
 }
 
+.logoContainer {
+    display: inline-block;
+}
+
+.logoRow {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.logoMascote {
+    height: 90px;
+    width: auto;
+    object-fit: contain;
+    transition: height 0.2s;
+}
+
+.logoTexto {
+    height: 90px;
+    width: auto;
+    object-fit: contain;
+    transition: height 0.2s;
+}
+
 .linksContainer {
     display: flex;
     gap: 64px;
@@ -99,6 +123,14 @@
         font-size: 60px;
     }
 
+    .logoMascote {
+        height: 70px;
+    }
+
+    .logoTexto {
+        height: 70px;
+    }
+
     .linksContainer {
         flex-wrap: wrap;
         gap: 32px;
@@ -107,5 +139,15 @@
     .legalColRight {
         flex-direction: column;
         gap: 12px;
+    }
+}
+
+@media (max-width: 768px) {
+    .logoMascote {
+        height: 55px;
+    }
+
+    .logoTexto {
+        height: 55px;
     }
 }

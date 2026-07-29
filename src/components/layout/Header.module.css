@@ -4,10 +4,11 @@
     top: 0;
     z-index: 100;
     padding: 0 80px;
-    height: 72px;
+    height: 90px;
     display: flex;
     align-items: center;
     width: 100%;
+    margin-top: 16px;
 }
 
 .headerContent {
@@ -24,6 +25,31 @@
     white-space: nowrap;
     text-decoration: none;
     letter-spacing: -0.5px;
+}
+
+.logoContainer {
+    text-decoration: none;
+    display: inline-block;
+}
+
+.logoRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.logoMascote {
+    height: 75px;
+    width: auto;
+    object-fit: contain;
+    transition: height 0.2s;
+}
+
+.logoTexto {
+    height: 70px;
+    width: auto;
+    object-fit: contain;
+    transition: height 0.2s;
 }
 
 .headerActions {
@@ -153,7 +179,8 @@
 
 .profileDropdown {
     position: absolute;
-    top: 50px; /* Reduced gap to ensure overlap with wrapper */
+    top: 68px;
+    /* Reduced gap to ensure overlap with wrapper */
     right: 0;
     background: white;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -178,8 +205,15 @@
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .profileIcon {
@@ -278,7 +312,7 @@
 /* Advanced Location Dropdown Styles */
 .locationDropdown {
     position: absolute;
-    top: 52px;
+    top: 70px;
     left: 50%;
     transform: translateX(-50%);
     background: white;
@@ -294,8 +328,15 @@
 }
 
 @keyframes slideDown {
-    from { opacity: 0; transform: translate(-50%, -10px); }
-    to { opacity: 1; transform: translate(-50%, 0); }
+    from {
+        opacity: 0;
+        transform: translate(-50%, -10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
 }
 
 .dropdownSection {
@@ -481,6 +522,14 @@
         font-size: 28px;
     }
 
+    .logoMascote {
+        height: 52px;
+    }
+
+    .logoTexto {
+        height: 48px;
+    }
+
     .locationText {
         max-width: 100px;
         font-size: 14px;
@@ -519,6 +568,14 @@
 
     .logo {
         font-size: 24px;
+    }
+
+    .logoMascote {
+        height: 46px;
+    }
+
+    .logoTexto {
+        height: 42px;
     }
 
     .locationGroup {
@@ -723,7 +780,7 @@
         padding: 1.5rem;
         max-height: 95vh;
     }
-    
+
     .formGrid3,
     .formGrid2 {
         grid-template-columns: 1fr;
@@ -780,14 +837,14 @@
         border-bottom: 1px solid #DDE1E6;
         margin-bottom: 12px;
     }
-    
+
     .mobileModalTitle {
         font-family: 'Baloo 2', sans-serif;
         font-weight: 700;
         font-size: 18px;
         color: #272727;
     }
-    
+
     .mobileModalClose {
         background: none;
         border: none;
@@ -801,8 +858,15 @@
 }
 
 @keyframes scaleIn {
-    from { opacity: 0; transform: translate(-50%, -45%) scale(0.95); }
-    to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    from {
+        opacity: 0;
+        transform: translate(-50%, -45%) scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
 }
 
 /* ---- Drawers (Cart & Notifications) ---- */
@@ -822,8 +886,13 @@
 }
 
 @keyframes fadeInBg {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 .drawerCard {
@@ -839,8 +908,13 @@
 }
 
 @keyframes slideInRight {
-    from { transform: translateX(100%); }
-    to { transform: translateX(0); }
+    from {
+        transform: translateX(100%);
+    }
+
+    to {
+        transform: translateX(0);
+    }
 }
 
 .drawerHeader {
@@ -1244,12 +1318,15 @@
         max-width: 100%;
         border-radius: 0;
     }
+
     .drawerHeader {
         padding: 16px;
     }
+
     .drawerContent {
         padding: 16px;
     }
+
     .drawerFooter {
         padding: 16px;
     }

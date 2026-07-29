@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>ClickPet | Assistente para Investidores</title>
+
+    <meta
+      name="description"
+      content="Assistente institucional da ClickPet para investidores."
+    />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="/investidores/styles.css" />
+  </head>
+
+  <body>
+    <div class="app" id="app">
+      <header class="app-header" aria-label="Cabeçalho">
+        <a class="brand" href="/" aria-label="ClickPet">
+          <img
+            class="brand-logo"
+            src="/investidores/assets/images/clickpet-logo.png"
+            alt="ClickPet"
+            width="500"
+            height="500"
+          />
+        </a>
+      </header>
+
+      <main class="chat-shell" aria-label="Assistente para investidores">
+        <section class="empty-state" id="emptyState">
+          <div class="empty-state-content">
+            <h1 class="empty-title">Por onde começamos?</h1>
+
+            <form class="message-form message-form-centered" id="initialForm">
+              <label class="sr-only" for="initialMessageInput">
+                Pergunte para a ClickPet
+              </label>
+
+              <div class="message-input-wrapper">
+                <textarea
+                  id="initialMessageInput"
+                  class="message-input"
+                  name="message"
+                  rows="1"
+                  placeholder="Pergunte para a ClickPet"
+                  autocomplete="off"
+                  spellcheck="true"
+                  maxlength="1000"
+                ></textarea>
+
+                <button
+                  class="send-button"
+                  type="submit"
+                  aria-label="Enviar mensagem"
+                >
+                  <span aria-hidden="true">↑</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <section class="conversation-state" id="conversationState" hidden>
+          <div class="conversation-container">
+            <div
+              class="messages"
+              id="messages"
+              aria-live="polite"
+              aria-label="Histórico da conversa"
+            ></div>
+          </div>
+
+          <div class="bottom-composer">
+            <form class="message-form" id="chatForm">
+              <label class="sr-only" for="chatMessageInput">
+                Pergunte a ClickPet
+              </label>
+
+              <div class="message-input-wrapper">
+                <textarea
+                  id="chatMessageInput"
+                  class="message-input"
+                  name="message"
+                  rows="1"
+                  placeholder="Pergunte a ClickPet"
+                  autocomplete="off"
+                  spellcheck="true"
+                  maxlength="1000"
+                ></textarea>
+
+                <button
+                  class="send-button"
+                  type="submit"
+                  aria-label="Perguntar a ClickPet"
+                >
+                  <span class="send-icon" aria-hidden="true">
+                    <svg
+                      width="15"
+                      height="15"
+                      viewBox="0 0 15 15"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M7.5 13.5V1.5M7.5 1.5L2.5 6.5M7.5 1.5L12.5 6.5"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  </span>
+                </button>
+              </div>
+            </form>
+
+            <p class="disclaimer">
+              As respostas são geradas através das informações presentes no banco de dados institucional da
+              ClickPet.
+            </p>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <template id="userMessageTemplate">
+      <article class="message message-user">
+        <div class="message-bubble">
+          <p class="message-text"></p>
+        </div>
+      </article>
+    </template>
+
+    <template id="assistantMessageTemplate">
+      <article class="message message-assistant">
+        <div class="assistant-content">
+          <div class="message-text"></div>
+
+          <div class="sources-card" hidden>
+            <span class="sources-label">Fontes:</span>
+            <span class="sources-text"></span>
+          </div>
+        </div>
+      </article>
+    </template>
+
+    <template id="loadingMessageTemplate">
+      <article class="message message-assistant message-loading">
+        <div class="assistant-content">
+          <div class="typing-indicator" aria-label="Gerando resposta">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+      </article>
+    </template>
+
+    <script src="/investidores/app.js"></script>
+  </body>
+</html>

@@ -100,7 +100,7 @@ export default async function HomePage() {
                         defaultClinics={veterinaryClinics} 
                     />
 
-                    {/* CTA Row and Divider */}
+                    {/* CTA Row */}
                     <div className={styles.contentWrapper} style={{ display: 'flex', flexDirection: 'column' }}>
                         <Link href="/login" style={{ textDecoration: 'none' }}>
                             <div className={styles.ctaRow}>
@@ -110,10 +110,11 @@ export default async function HomePage() {
                                 <span className={styles.ctaText}>Faça sua compra agora mesmo!</span>
                             </div>
                         </Link>
-                        
-                        <div className={styles.dividerWrapper}>
-                            <hr className={styles.pageDivider} />
-                        </div>
+                    </div>
+
+                    {/* Divider aligned with footer banner */}
+                    <div className={styles.dividerWrapper}>
+                        <hr className={styles.pageDivider} />
                     </div>
 
                     {/* Juntos Branding Section */}

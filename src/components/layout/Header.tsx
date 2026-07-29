@@ -20,8 +20,15 @@ export default function Header() {
     const { showToast } = useToast();
     const router = useRouter();
     const pathname = usePathname();
+    const isLogoWhite = !session && pathname !== '/about' && pathname !== '/partner-about';
+    const mascoteSrc = isLogoWhite
+        ? "/assets/icons/Logo mascote - Branco.png"
+        : "/assets/icons/Logo mascote - Preto.png";
+    const textoSrc = isLogoWhite
+        ? "/assets/titles/Logo texto - Branco.png"
+        : "/assets/titles/Logo texto - Preto.png";
     const { address, setLocationFromGPS, clearLocation, setLocationManual } = useLocation();
-    
+
     const [showAddressModal, setShowAddressModal] = useState(false);
     const [showLocationDropdown, setShowLocationDropdown] = useState(false);
     const [showProfileDropdown, setShowProfileDropdown] = useState(false);
@@ -31,7 +38,7 @@ export default function Header() {
     const [editingIndex, setEditingIndex] = useState<number | null>(null); // null = new or primary, -1 = new, 0+ = deliveryAddresses index
     const [showCartDrawer, setShowCartDrawer] = useState(false);
     const [showNotificationsDrawer, setShowNotificationsDrawer] = useState(false);
-    
+
     // States for mobile profile & notification modal
     const [isMobile, setIsMobile] = useState(false);
     const [showMobileProfileModal, setShowMobileProfileModal] = useState(false);
@@ -212,7 +219,7 @@ export default function Header() {
             // Swap: move current primary to deliveryAddresses, and selected to primary
             const newDeliveryAddresses = [...(userProfile?.deliveryAddresses || [])];
             const oldPrimary = { ...userProfile.address };
-            
+
             if (index !== undefined) {
                 newDeliveryAddresses.splice(index, 1);
             }
@@ -239,7 +246,7 @@ export default function Header() {
 
     const handleDeleteAddress = async (index: number | null) => {
         if (!confirm('Tem certeza que deseja excluir este endereço?')) return;
-        
+
         try {
             let payload: any = {};
             const remainingDeliveries = [...(userProfile?.deliveryAddresses || [])];
@@ -247,7 +254,7 @@ export default function Header() {
             if (index === null) {
                 // Delete primary address
                 if (remainingDeliveries.length > 0) {
-                    payload.address = remainingDeliveries.shift(); 
+                    payload.address = remainingDeliveries.shift();
                     payload.deliveryAddresses = remainingDeliveries;
                 } else {
                     payload.address = { street: '', number: '', complement: '', neighborhood: '', city: '', state: '', zip: '' };
@@ -265,12 +272,12 @@ export default function Header() {
 
             if (res.ok) {
                 showToast('Endereço excluído');
-                
+
                 // If we deleted the primary address and it was currently selected in context, clear it
                 if (index === null && payload.address?.street === '') {
                     clearLocation();
                 }
-                
+
                 fetchUserAddress();
             }
         } catch (error) {
@@ -370,21 +377,34 @@ export default function Header() {
             <header className={`${styles.header} ${!session ? styles.headerTransparent : ''}`}>
                 <div className={styles.headerContent}>
                     {/* Logo */}
-                    <Link 
-                        href="/" 
-                        className={`${styles.logo} ${
-                            pathname === '/about' || pathname === '/partner-about' 
-                                ? styles.logoBlack 
-                                : (!session ? styles.logoWhite : '')
-                        }`}
+                    <Link
+                        href="/"
+                        className={styles.logoContainer}
                     >
-                        ClickPet.
+                        <div className={styles.logoRow}>
+                            <Image
+                                src={mascoteSrc}
+                                alt="ClickPet Mascote"
+                                width={85}
+                                height={85}
+                                className={styles.logoMascote}
+                                priority
+                            />
+                            <Image
+                                src={textoSrc}
+                                alt="ClickPet"
+                                width={380}
+                                height={75}
+                                className={styles.logoTexto}
+                                priority
+                            />
+                        </div>
                     </Link>
 
                     {/* Center: Location (Only when logged in) */}
                     {session && (
-                        <div 
-                            className={styles.locationGroup} 
+                        <div
+                            className={styles.locationGroup}
                             onClick={() => setShowLocationDropdown(!showLocationDropdown)}
                         >
                             <MapPin color="#EC802B" size={18} strokeWidth={2.5} />
@@ -396,8 +416,8 @@ export default function Header() {
 
                             {showLocationDropdown && (
                                 <>
-                                    <div 
-                                        className={styles.locationBackdrop} 
+                                    <div
+                                        className={styles.locationBackdrop}
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             setShowLocationDropdown(false);
@@ -406,8 +426,8 @@ export default function Header() {
                                     <div className={styles.locationDropdown} onClick={(e) => e.stopPropagation()}>
                                         <div className={styles.mobileModalHeader}>
                                             <span className={styles.mobileModalTitle}>Seus Endereços</span>
-                                            <button 
-                                                className={styles.mobileModalClose} 
+                                            <button
+                                                className={styles.mobileModalClose}
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     setShowLocationDropdown(false);
@@ -417,101 +437,101 @@ export default function Header() {
                                             </button>
                                         </div>
                                         <div className={styles.dropdownSection}>
-                                        <span className={styles.sectionTitle}>Seus Endereços</span>
-                                        <div className={styles.addressList}>
-                                            {/* Primary Address */}
-                                            {userProfile?.address && (
-                                                <div 
-                                                    className={`${styles.addressItem} ${styles.activeAddressItem}`}
-                                                    onClick={() => handleSelectAddress(userProfile.address, true)}
-                                                >
-                                                    <div className={styles.addressIconWrapper}>
-                                                        <MapPin size={16} />
+                                            <span className={styles.sectionTitle}>Seus Endereços</span>
+                                            <div className={styles.addressList}>
+                                                {/* Primary Address */}
+                                                {userProfile?.address && (
+                                                    <div
+                                                        className={`${styles.addressItem} ${styles.activeAddressItem}`}
+                                                        onClick={() => handleSelectAddress(userProfile.address, true)}
+                                                    >
+                                                        <div className={styles.addressIconWrapper}>
+                                                            <MapPin size={16} />
+                                                        </div>
+                                                        <div className={styles.addressInfo}>
+                                                            <span className={styles.addressStreet}>
+                                                                {formatAddress(userProfile.address.street, userProfile.address.number) || "Sem endereço"}
+                                                            </span>
+                                                            <span className={styles.addressCity}>{userProfile.address.city}</span>
+                                                        </div>
+                                                        <div className={styles.addressActions}>
+                                                            <button
+                                                                className={`${styles.iconBtn} ${styles.editBtn}`}
+                                                                onClick={(e) => { e.stopPropagation(); handleEditAddress(userProfile.address, null); }}
+                                                            >
+                                                                <Edit2 size={14} />
+                                                            </button>
+                                                            <button
+                                                                className={`${styles.iconBtn} ${styles.deleteBtn}`}
+                                                                onClick={(e) => { e.stopPropagation(); handleDeleteAddress(null); }}
+                                                            >
+                                                                <Trash2 size={14} />
+                                                            </button>
+                                                        </div>
                                                     </div>
-                                                    <div className={styles.addressInfo}>
-                                                        <span className={styles.addressStreet}>
-                                                            {formatAddress(userProfile.address.street, userProfile.address.number) || "Sem endereço"}
-                                                        </span>
-                                                        <span className={styles.addressCity}>{userProfile.address.city}</span>
-                                                    </div>
-                                                    <div className={styles.addressActions}>
-                                                        <button 
-                                                            className={`${styles.iconBtn} ${styles.editBtn}`}
-                                                            onClick={(e) => { e.stopPropagation(); handleEditAddress(userProfile.address, null); }}
-                                                        >
-                                                            <Edit2 size={14} />
-                                                        </button>
-                                                        <button 
-                                                            className={`${styles.iconBtn} ${styles.deleteBtn}`}
-                                                            onClick={(e) => { e.stopPropagation(); handleDeleteAddress(null); }}
-                                                        >
-                                                            <Trash2 size={14} />
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            )}
+                                                )}
 
-                                            {/* Delivery Addresses */}
-                                            {userProfile?.deliveryAddresses?.map((addr: any, index: number) => (
-                                                <div 
-                                                    key={index} 
-                                                    className={styles.addressItem}
-                                                    onClick={() => handleSelectAddress(addr, false, index)}
-                                                >
-                                                    <div className={styles.addressIconWrapper}>
-                                                        <MapPin size={16} />
+                                                {/* Delivery Addresses */}
+                                                {userProfile?.deliveryAddresses?.map((addr: any, index: number) => (
+                                                    <div
+                                                        key={index}
+                                                        className={styles.addressItem}
+                                                        onClick={() => handleSelectAddress(addr, false, index)}
+                                                    >
+                                                        <div className={styles.addressIconWrapper}>
+                                                            <MapPin size={16} />
+                                                        </div>
+                                                        <div className={styles.addressInfo}>
+                                                            <span className={styles.addressStreet}>
+                                                                {formatAddress(addr.street, addr.number) || "Sem endereço"}
+                                                            </span>
+                                                            <span className={styles.addressCity}>{addr.city}</span>
+                                                        </div>
+                                                        <div className={styles.addressActions}>
+                                                            <button
+                                                                className={`${styles.iconBtn} ${styles.editBtn}`}
+                                                                onClick={(e) => { e.stopPropagation(); handleEditAddress(addr, index); }}
+                                                            >
+                                                                <Edit2 size={14} />
+                                                            </button>
+                                                            <button
+                                                                className={`${styles.iconBtn} ${styles.deleteBtn}`}
+                                                                onClick={(e) => { e.stopPropagation(); handleDeleteAddress(index); }}
+                                                            >
+                                                                <Trash2 size={14} />
+                                                            </button>
+                                                        </div>
                                                     </div>
-                                                    <div className={styles.addressInfo}>
-                                                        <span className={styles.addressStreet}>
-                                                            {formatAddress(addr.street, addr.number) || "Sem endereço"}
-                                                        </span>
-                                                        <span className={styles.addressCity}>{addr.city}</span>
-                                                    </div>
-                                                    <div className={styles.addressActions}>
-                                                        <button 
-                                                            className={`${styles.iconBtn} ${styles.editBtn}`}
-                                                            onClick={(e) => { e.stopPropagation(); handleEditAddress(addr, index); }}
-                                                        >
-                                                            <Edit2 size={14} />
-                                                        </button>
-                                                        <button 
-                                                            className={`${styles.iconBtn} ${styles.deleteBtn}`}
-                                                            onClick={(e) => { e.stopPropagation(); handleDeleteAddress(index); }}
-                                                        >
-                                                            <Trash2 size={14} />
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            ))}
+                                                ))}
+                                            </div>
+
+                                            <span className={styles.sectionTitle}>Opções</span>
+                                            <button
+                                                className={styles.actionItem}
+                                                onClick={() => {
+                                                    setLocationFromGPS();
+                                                    setShowLocationDropdown(false);
+                                                }}
+                                            >
+                                                <MapPin className={styles.actionIcon} size={18} />
+                                                Usar localização atual
+                                            </button>
+                                            <button
+                                                className={styles.actionItem}
+                                                onClick={() => {
+                                                    setEditingIndex(-1); // -1 means new delivery address
+                                                    setAddressForm({
+                                                        street: '', number: '', complement: '', city: '', zip: '', lat: '', lng: ''
+                                                    });
+                                                    setShowAddressModal(true);
+                                                    setShowLocationDropdown(false);
+                                                }}
+                                            >
+                                                <Plus className={styles.actionIcon} size={18} />
+                                                Adicionar novo endereço
+                                            </button>
                                         </div>
-
-                                        <span className={styles.sectionTitle}>Opções</span>
-                                        <button 
-                                            className={styles.actionItem}
-                                            onClick={() => {
-                                                setLocationFromGPS();
-                                                setShowLocationDropdown(false);
-                                            }}
-                                        >
-                                            <MapPin className={styles.actionIcon} size={18} />
-                                            Usar localização atual
-                                        </button>
-                                        <button 
-                                            className={styles.actionItem}
-                                            onClick={() => {
-                                                setEditingIndex(-1); // -1 means new delivery address
-                                                setAddressForm({
-                                                    street: '', number: '', complement: '', city: '', zip: '', lat: '', lng: ''
-                                                });
-                                                setShowAddressModal(true);
-                                                setShowLocationDropdown(false);
-                                            }}
-                                        >
-                                            <Plus className={styles.actionIcon} size={18} />
-                                            Adicionar novo endereço
-                                        </button>
                                     </div>
-                                </div>
                                 </>
                             )}
                         </div>
@@ -524,7 +544,7 @@ export default function Header() {
                         ) : session ? (
                             <>
                                 {/* Logged in: notifications, cart, profile */}
-                                <div 
+                                <div
                                     className={styles.notificationWrapper}
                                     onClick={() => {
                                         fetchNotifications();
@@ -538,7 +558,7 @@ export default function Header() {
                                     )}
                                 </div>
 
-                                <div 
+                                <div
                                     className={styles.cartWrapper}
                                     onClick={() => setShowCartDrawer(true)}
                                     style={{ cursor: 'pointer' }}
@@ -549,7 +569,7 @@ export default function Header() {
                                     )}
                                 </div>
 
-                                <div 
+                                <div
                                     className={styles.profileMenuWrapper}
                                     onMouseEnter={() => setShowProfileDropdown(true)}
                                     onMouseLeave={() => setShowProfileDropdown(false)}
@@ -580,7 +600,7 @@ export default function Header() {
 
                                     {showProfileDropdown && (
                                         <div className={styles.profileDropdown}>
-                                            <button 
+                                            <button
                                                 className={styles.dropdownItem}
                                                 onClick={() => {
                                                     router.push(getProfileLink());
@@ -590,7 +610,7 @@ export default function Header() {
                                                 <UserCircle size={18} color="#272727" />
                                                 Ver Perfil
                                             </button>
-                                            <button 
+                                            <button
                                                 className={styles.dropdownItem}
                                                 onClick={() => {
                                                     router.push('/orders');
@@ -601,7 +621,7 @@ export default function Header() {
                                                 Meus Pedidos
                                             </button>
                                             <div className={styles.dropdownDivider} />
-                                            <button 
+                                            <button
                                                 className={`${styles.dropdownItem} ${styles.logoutItem}`}
                                                 onClick={() => {
                                                     signOut({ callbackUrl: '/' });
@@ -730,7 +750,7 @@ export default function Header() {
 
             {/* Mobile Profile & Notifications Modal */}
             {showMobileProfileModal && (
-                <div 
+                <div
                     style={{
                         position: 'fixed',
                         top: 0,
@@ -742,7 +762,7 @@ export default function Header() {
                         alignItems: 'stretch',
                         justifyContent: 'flex-end',
                         zIndex: 9999,
-                    }} 
+                    }}
                     onClick={() => setShowMobileProfileModal(false)}
                 >
                     <style>{`
@@ -751,7 +771,7 @@ export default function Header() {
                             to { transform: translateX(0); }
                         }
                     `}</style>
-                    <div 
+                    <div
                         style={{
                             background: 'white',
                             borderTopLeftRadius: '24px',
@@ -766,7 +786,7 @@ export default function Header() {
                             animation: 'slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
                             display: 'flex',
                             flexDirection: 'column',
-                        }} 
+                        }}
                         onClick={e => e.stopPropagation()}
                     >
                         {/* Header */}
@@ -788,17 +808,17 @@ export default function Header() {
                                     </span>
                                 </div>
                             </div>
-                            <button 
-                                onClick={() => setShowMobileProfileModal(false)} 
+                            <button
+                                onClick={() => setShowMobileProfileModal(false)}
                                 style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}
                             >
                                 <X size={24} color="#272727" />
                             </button>
                         </div>
- 
+
                         {/* Profile Menu Links */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
-                            <button 
+                            <button
                                 onClick={() => {
                                     router.push(getProfileLink());
                                     setShowMobileProfileModal(false);
@@ -808,7 +828,7 @@ export default function Header() {
                                 <UserCircle size={20} color="#3BB77E" />
                                 Ver Perfil
                             </button>
-                            <button 
+                            <button
                                 onClick={() => {
                                     router.push('/orders');
                                     setShowMobileProfileModal(false);
@@ -818,7 +838,7 @@ export default function Header() {
                                 <Package size={20} color="#3BB77E" />
                                 Meus Pedidos
                             </button>
-                            <button 
+                            <button
                                 onClick={() => {
                                     signOut({ callbackUrl: '/' });
                                     setShowMobileProfileModal(false);
@@ -829,9 +849,9 @@ export default function Header() {
                                 Sair da Conta
                             </button>
                         </div>
- 
+
                         <hr style={{ border: 'none', height: '1px', background: '#DDE1E6', margin: '0 0 20px 0' }} />
- 
+
                         {/* Notifications Section */}
                         <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -839,7 +859,7 @@ export default function Header() {
                                     Notificações {unreadCount > 0 && <span style={{ background: '#FF3B30', color: 'white', fontSize: '11px', fontWeight: 'bold', padding: '2px 8px', borderRadius: '12px', marginLeft: '6px' }}>{unreadCount}</span>}
                                 </span>
                                 {unreadCount > 0 && (
-                                    <button 
+                                    <button
                                         onClick={handleMarkAllAsRead}
                                         style={{ background: 'none', border: 'none', color: '#3BB77E', fontWeight: 600, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
                                     >
@@ -847,7 +867,7 @@ export default function Header() {
                                     </button>
                                 )}
                             </div>
- 
+
                             {notificationsLoading ? (
                                 <div style={{ textAlign: 'center', padding: '20px 0', color: '#878787' }}>Carregando notificações...</div>
                             ) : notifications.length === 0 ? (
@@ -858,7 +878,7 @@ export default function Header() {
                             ) : (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', overflowY: 'auto', maxHeight: 'calc(100vh - 330px)', paddingRight: '4px' }}>
                                     {notifications.map(n => (
-                                        <div 
+                                        <div
                                             key={n._id}
                                             onClick={() => {
                                                 if (!n.read) handleMarkAsRead(n._id);
@@ -916,12 +936,12 @@ export default function Header() {
 
             {/* Cart Side Drawer */}
             {showCartDrawer && (
-                <div 
-                    className={styles.drawerOverlay} 
+                <div
+                    className={styles.drawerOverlay}
                     onClick={() => setShowCartDrawer(false)}
                 >
-                    <div 
-                        className={styles.drawerCard} 
+                    <div
+                        className={styles.drawerCard}
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Header */}
@@ -929,7 +949,7 @@ export default function Header() {
                             <h3 className={styles.drawerTitle}>
                                 Carrinho {count > 0 && <span className={styles.drawerTitleBadge}>{count}</span>}
                             </h3>
-                            <button 
+                            <button
                                 className={styles.drawerCloseBtn}
                                 onClick={() => setShowCartDrawer(false)}
                             >
@@ -948,8 +968,8 @@ export default function Header() {
                                 cartItems.map((item) => (
                                     <div key={item.id} className={styles.drawerCartItem}>
                                         <div className={styles.drawerItemImgWrapper}>
-                                            <Image 
-                                                src={item.image || 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?w=80&h=80&fit=crop'} 
+                                            <Image
+                                                src={item.image || 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?w=80&h=80&fit=crop'}
                                                 alt={item.title}
                                                 fill
                                                 sizes="80px"
@@ -959,15 +979,15 @@ export default function Header() {
                                         <div className={styles.drawerItemDetails}>
                                             <h4 className={styles.drawerItemTitle}>{item.title}</h4>
                                             <span className={styles.drawerItemShop}>Vendido por: {item.shopName}</span>
-                                            
+
                                             <div className={styles.drawerItemPriceRow}>
                                                 <span className={styles.drawerItemPrice}>
                                                     R$ {item.price.toFixed(2)}
                                                 </span>
-                                                
+
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                     <div className={styles.qtySelector}>
-                                                        <button 
+                                                        <button
                                                             className={styles.qtyBtn}
                                                             onClick={() => updateQuantity(item.id, item.quantity - 1)}
                                                             title="Diminuir quantidade"
@@ -975,7 +995,7 @@ export default function Header() {
                                                             <Minus size={14} />
                                                         </button>
                                                         <span className={styles.qtyValue}>{item.quantity}</span>
-                                                        <button 
+                                                        <button
                                                             className={styles.qtyBtn}
                                                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
                                                             title="Aumentar quantidade"
@@ -983,8 +1003,8 @@ export default function Header() {
                                                             <Plus size={14} />
                                                         </button>
                                                     </div>
-                                                    
-                                                    <button 
+
+                                                    <button
                                                         className={styles.itemRemoveBtn}
                                                         onClick={() => removeFromCart(item.id)}
                                                         title="Remover do carrinho"
@@ -1009,7 +1029,7 @@ export default function Header() {
                                     </span>
                                 </div>
                                 <div className={styles.footerButtons}>
-                                    <button 
+                                    <button
                                         className={styles.viewCartBtn}
                                         onClick={() => {
                                             router.push('/cart');
@@ -1018,7 +1038,7 @@ export default function Header() {
                                     >
                                         Ver meu carrinho
                                     </button>
-                                    <button 
+                                    <button
                                         className={styles.checkoutSolidBtn}
                                         onClick={() => {
                                             router.push('/checkout');
@@ -1036,25 +1056,25 @@ export default function Header() {
 
             {/* Notifications Side Drawer */}
             {showNotificationsDrawer && (
-                <div 
-                    className={styles.drawerOverlay} 
+                <div
+                    className={styles.drawerOverlay}
                     onClick={() => setShowNotificationsDrawer(false)}
                 >
-                    <div 
-                        className={styles.drawerCard} 
+                    <div
+                        className={styles.drawerCard}
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Header */}
                         <div className={styles.drawerHeader}>
                             <h3 className={styles.drawerTitle}>
-                                Notificações 
+                                Notificações
                                 {unreadCount > 0 && (
                                     <span className={styles.drawerTitleBadge}>{unreadCount}</span>
                                 )}
                             </h3>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                 {unreadCount > 0 && (
-                                    <button 
+                                    <button
                                         className={styles.markAllReadBtn}
                                         onClick={handleMarkAllAsRead}
                                     >
@@ -1062,14 +1082,14 @@ export default function Header() {
                                     </button>
                                 )}
                                 {notifications.length > 0 && (
-                                    <button 
+                                    <button
                                         className={styles.clearAllBtn}
                                         onClick={handleClearAllNotifications}
                                     >
                                         Limpar todas
                                     </button>
                                 )}
-                                <button 
+                                <button
                                     className={styles.drawerCloseBtn}
                                     onClick={() => setShowNotificationsDrawer(false)}
                                 >
@@ -1092,7 +1112,7 @@ export default function Header() {
                             ) : (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                     {notifications.map((n) => (
-                                        <div 
+                                        <div
                                             key={n._id}
                                             onClick={() => {
                                                 if (!n.read) handleMarkAsRead(n._id);
@@ -1112,15 +1132,15 @@ export default function Header() {
                                                 <span className={styles.notifTitle}>{n.title}</span>
                                                 <span className={styles.notifMsg}>{n.message}</span>
                                                 <span className={styles.notifTime}>
-                                                    {new Date(n.createdAt).toLocaleDateString('pt-BR', { 
-                                                        day: '2-digit', 
-                                                        month: 'short', 
-                                                        hour: '2-digit', 
-                                                        minute: '2-digit' 
+                                                    {new Date(n.createdAt).toLocaleDateString('pt-BR', {
+                                                        day: '2-digit',
+                                                        month: 'short',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit'
                                                     })}
                                                 </span>
                                             </div>
-                                            <button 
+                                            <button
                                                 className={styles.deleteNotifBtn}
                                                 onClick={(e) => {
                                                     e.stopPropagation();

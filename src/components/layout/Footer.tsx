@@ -1,13 +1,31 @@
 "use client";
 
 import Link from 'next/link';
+import Image from 'next/image';
 import styles from './Footer.module.css';
 
 export default function Footer() {
     return (
         <footer className={styles.footer}>
             <div className={styles.topRow}>
-                <div className={styles.logo}>ClickPet.</div>
+                <div className={styles.logoContainer}>
+                    <div className={styles.logoRow}>
+                        <Image 
+                            src="/assets/icons/Logo mascote - V2.png" 
+                            alt="ClickPet Mascote" 
+                            width={110} 
+                            height={110} 
+                            className={styles.logoMascote}
+                        />
+                        <Image 
+                            src="/assets/titles/Logo texto - V2.png" 
+                            alt="ClickPet" 
+                            width={360} 
+                            height={110} 
+                            className={styles.logoTexto}
+                        />
+                    </div>
+                </div>
                 
                 <div className={styles.linksContainer}>
                     <div className={styles.linkGroup}>

@@ -8,6 +8,7 @@ export async function proxy(req: NextRequest) {
     // Global API protection (except auth and public routes)
     const publicApiRoutes = [
         '/api/auth',
+        '/api/chat',
         '/api/register',
         '/api/products',
         '/api/services',

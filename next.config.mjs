@@ -22,6 +22,22 @@ const nextConfig = {
             },
         ];
     },
+    async rewrites() {
+        return [
+            {
+                source: '/app.js',
+                destination: '/investidores/app.js',
+            },
+            {
+                source: '/styles.css',
+                destination: '/investidores/styles.css',
+            },
+            {
+                source: '/assets/images/:path*',
+                destination: '/investidores/assets/images/:path*',
+            },
+        ];
+    },
     images: {
         remotePatterns: [
             {

@@ -1361,3 +1361,9 @@
 .headerLoggedIn .dropdownMenu {
     top: 42px;
 }
+
+@media (max-width: 768px) {
+    .headerLoggedIn .logoTexto {
+        display: none !important;
+    }
+}

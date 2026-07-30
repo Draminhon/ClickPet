@@ -134,6 +134,7 @@
     cursor: pointer;
     display: flex;
     align-items: center;
+    margin: 0 12px;
 }
 
 .badge {
@@ -1363,7 +1364,7 @@
 }
 
 @media (max-width: 768px) {
-    .headerLoggedIn .logoTexto {
+    .headerLoggedIn .logoMascote {
         display: none !important;
     }
 }

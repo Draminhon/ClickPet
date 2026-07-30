@@ -240,4 +240,8 @@
         width: 100%;
         max-width: 388px;
     }
+
+    .registerLink {
+        padding-bottom: 48px;
+    }
 }

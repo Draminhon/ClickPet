@@ -311,4 +311,8 @@
     .topSection, .bottomSection {
         width: 100%;
     }
+
+    .footer {
+        padding-bottom: 48px;
+    }
 }

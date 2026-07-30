@@ -1,0 +1,1200 @@
+{
+  "companies": [
+    {
+      "id": "11111111-1111-1111-1111-111111111111",
+      "name": "ClickPet",
+      "slug": "clickpet",
+      "slogan": "Tudo o que você precisa, a um click de distância",
+      "short_description": "Plataforma B2B2C para digitalizar pet shops independentes, conectando consumidores, lojistas e serviços pet em uma experiência unificada.",
+      "institutional_description": "A ClickPet é uma plataforma digital criada para transformar pet shops independentes em operações digitais, oferecendo aplicativo para consumidores, painel administrativo para lojistas, catálogo digital, gestão de pedidos, serviços, marketplace regional e recursos de logística e atendimento.",
+      "business_context": "O mercado pet brasileiro é grande e recorrente, mas muitos pequenos e médios pet shops ainda operam vendas por WhatsApp, Instagram e atendimento manual, com baixa padronização, baixa eficiência operacional e pouca presença digital estruturada.",
+      "business_model_summary": "Modelo baseado principalmente em comissão sobre vendas realizadas na plataforma, com possibilidade de expansão para planos premium, publicidade interna, serviços financeiros, logística integrada e ferramentas de marketing para lojistas.",
+      "target_audience": "Investidores, pequenos e médios pet shops independentes, clínicas, hospitais veterinários, prestadores de serviços pet e consumidores finais que buscam compra e atendimento pet com conveniência.",
+      "market_segment": "Mercado pet, marketplace vertical, delivery local, serviços agendados e digitalização de negócios independentes.",
+      "positioning": "Parceiro tecnológico dos pet shops independentes, não concorrente direto dos lojistas. A empresa busca fortalecer a competitividade local contra grandes redes, marketplaces e apps generalistas.",
+      "value_proposition": "Centralizar produtos, serviços, agendamentos, entrega e gestão operacional em uma plataforma especializada para o ecossistema pet.",
+      "current_stage": "pre_seed",
+      "headquarters_country": "Brasil",
+      "website_url": null,
+      "app_status": "MVP concluído, aplicativo publicado, plataforma operacional, website operacional e primeiros pet shops utilizando a solução.",
+      "visibility": "investor",
+      "metadata": {
+        "seed_version": "1.0",
+        "focus": "investor consultation",
+        "ai_role": "natural language layer over structured data"
+      }
+    }
+  ],
+  "institutional_sources": [
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "title": "ClickPet PitchDeck",
+      "source_type": "pitch_deck",
+      "file_name": "ClickPet PitchDeck.pdf",
+      "source_reference": "uploaded_file",
+      "description": "Material de pitch com problema, solução, nascimento da ClickPet, mercado, posicionamento competitivo, operação, estratégia B2B2C e equipe.",
+      "reference_date": null,
+      "version": 1,
+      "reliability_notes": "Material institucional fornecido pelo usuário.",
+      "metadata": {
+        "pages": 9
+      }
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "title": "ClickPet - Análise de Concorrência",
+      "source_type": "competitive_analysis",
+      "file_name": "ClickPet - Análise de Concorrência.pdf",
+      "source_reference": "uploaded_file",
+      "description": "Análise estratégica de concorrência da ClickPet frente a delivery generalista, e-commerce pet nacional, redes varejistas e marketplace pet.",
+      "reference_date": null,
+      "version": 1,
+      "reliability_notes": "Material institucional fornecido pelo usuário.",
+      "metadata": {
+        "pages": 11
+      }
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "title": "ClickPet - Apresentação de Projeto",
+      "source_type": "project_presentation",
+      "file_name": "ClickPet - Apresentação de Projeto.pdf",
+      "source_reference": "uploaded_file",
+      "description": "Apresentação do produto com módulos de experiência de compra, dashboard do parceiro, pedidos, atendimento, promoções, logística, licenciamento e parametrização operacional.",
+      "reference_date": null,
+      "version": 1,
+      "reliability_notes": "Material institucional fornecido pelo usuário.",
+      "metadata": {
+        "pages": 12
+      }
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "title": "Investment Memo ClickPet",
+      "source_type": "investment_memo",
+      "file_name": null,
+      "source_reference": "user_provided_text",
+      "description": "Memo de investimento com rodada Pré-Seed, valuation, problema, solução, mercado, modelo de negócio, tração, projeções, uso de recursos, riscos e visão de longo prazo.",
+      "reference_date": null,
+      "version": 1,
+      "reliability_notes": "Texto fornecido diretamente pelo usuário.",
+      "metadata": {}
+    }
+  ],
+  "content_sections": [
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "category": "company",
+      "title": "Executive Summary",
+      "summary": "A ClickPet digitaliza pet shops independentes com uma infraestrutura B2B2C pronta para operação.",
+      "full_content": "O ClickPet é uma plataforma B2B2C desenvolvida para digitalizar pet shops independentes, oferecendo infraestrutura completa para vendas online, gestão de pedidos e conexão direta com consumidores. A empresa está em estágio Pré-Seed, com MVP concluído, aplicativo publicado, plataforma operacional e primeiros estabelecimentos utilizando a solução.",
+      "display_order": 1,
+      "page_reference": null,
+      "section_reference": "executive_summary",
+      "tags": [
+        "empresa",
+        "resumo",
+        "investidor"
+      ]
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "category": "problem",
+      "title": "Problema de Mercado",
+      "summary": "Pet shops independentes ainda dependem de canais informais e baixa estrutura digital.",
+      "full_content": "Grande parte dos pet shops independentes enfrenta ausência de e-commerce, custos elevados para desenvolver tecnologia própria, dependência de atendimento manual, dificuldade de fidelização, baixa eficiência operacional e presença digital limitada. Como consequência, perdem competitividade para grandes redes e marketplaces consolidados.",
+      "display_order": 2,
+      "page_reference": null,
+      "section_reference": "problema",
+      "tags": [
+        "problema",
+        "mercado",
+        "petshops"
+      ]
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "category": "solution",
+      "title": "Solução ClickPet",
+      "summary": "Plataforma completa para transformar qualquer pet shop em uma operação digital.",
+      "full_content": "A solução contempla aplicativo para consumidores, painel administrativo para lojistas, gestão de pedidos, catálogo digital, marketplace regional, integração entre consumidores e estabelecimentos e tecnologia pronta para operação.",
+      "display_order": 3,
+      "page_reference": null,
+      "section_reference": "solucao",
+      "tags": [
+        "solucao",
+        "produto",
+        "plataforma"
+      ]
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=ClickPet PitchDeck)",
+      "category": "market",
+      "title": "Mercado em expansão",
+      "summary": "O setor pet cresce, mas a experiência ainda é analógica e fragmentada.",
+      "full_content": "O Pitch Deck apresenta o mercado pet como um setor em expansão, pronto para inovação digital, com alta demanda e baixa digitalização. O material destaca 3º maior mercado de petshop do mundo, 10% de crescimento ao ano, R$ 78 bilhões de faturamento anual e 160 milhões de pets no país.",
+      "display_order": 4,
+      "page_reference": "p.5",
+      "section_reference": "crescimento_do_mercado",
+      "tags": [
+        "mercado",
+        "crescimento",
+        "dados"
+      ]
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=ClickPet - Análise de Concorrência)",
+      "category": "competition",
+      "title": "Panorama competitivo",
+      "summary": "A ClickPet atua nas três frentes concorrenciais simultaneamente.",
+      "full_content": "A análise de concorrência divide o mercado em delivery generalista, e-commerce nacional pet e plataforma especializada pet. A ClickPet é posicionada como a única plataforma que combina gestão completa do pet shop, delivery, serviços agendados e marketplace dedicado.",
+      "display_order": 5,
+      "page_reference": "p.3",
+      "section_reference": "tres_frentes_concorrencia",
+      "tags": [
+        "concorrencia",
+        "posicionamento",
+        "benchmark"
+      ]
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=ClickPet - Apresentação de Projeto)",
+      "category": "product",
+      "title": "Produto e operação",
+      "summary": "O produto combina experiência de compra, dashboard, pedidos, atendimento, promoções, logística e parametrização do negócio.",
+      "full_content": "A apresentação do projeto descreve a plataforma digital como integração de produtos e serviços para pets com entrega sob demanda. O material detalha módulos de filtragem de produtos, tela de produto, dashboard do parceiro, gestão de pedidos, agenda de atendimento, cupons, entregadores, licenciamento e configurações operacionais.",
+      "display_order": 6,
+      "page_reference": null,
+      "section_reference": "produto",
+      "tags": [
+        "produto",
+        "dashboard",
+        "modulos"
+      ]
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "category": "funding",
+      "title": "Rodada Pré-Seed",
+      "summary": "Rodada proposta de R$ 500 mil com valuation pré-money de R$ 3,2 milhões.",
+      "full_content": "A rodada proposta é Pré-Seed, com valuation pré-money de R$ 3.200.000, captação pretendida de R$ 500.000, valuation pós-money de R$ 3.700.000 e participação ofertada de 13,5%.",
+      "display_order": 7,
+      "page_reference": null,
+      "section_reference": "rodada",
+      "tags": [
+        "rodada",
+        "valuation",
+        "captação"
+      ]
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "category": "vision",
+      "title": "Visão de longo prazo",
+      "summary": "Construir a principal infraestrutura digital para pet shops independentes no Brasil.",
+      "full_content": "A missão de longo prazo é consolidar um ecossistema que conecte consumidores, estabelecimentos e tecnologia em uma plataforma única, ampliando a competitividade das lojas parceiras e acompanhando a evolução do mercado pet brasileiro.",
+      "display_order": 8,
+      "page_reference": null,
+      "section_reference": "visao_longo_prazo",
+      "tags": [
+        "visao",
+        "estrategia",
+        "longo-prazo"
+      ]
+    }
+  ],
+  "investment_theses": [
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "title": "Digitalização vertical do pet shop independente",
+      "thesis_summary": "A ClickPet captura uma lacuna entre um mercado pet grande, recorrente e pulverizado e a baixa maturidade digital dos pet shops independentes.",
+      "thesis_detail": "A tese combina mercado recorrente, dor clara, produto já desenvolvido, baixo custo de entrada para lojistas e potencial de escala regional e nacional. A plataforma atua como infraestrutura digital para pequenos e médios pet shops, não como substituta desses lojistas.",
+      "market_reason": "O mercado pet brasileiro possui grande volume, recorrência de compra e forte presença de pequenos e médios estabelecimentos ainda pouco digitalizados.",
+      "product_reason": "O produto já contempla aplicativo, painel administrativo, catálogo, pedidos, serviços, promoções, logística, licenciamento e parametrização operacional.",
+      "traction_reason": "MVP concluído, aplicativo publicado, plataforma operacional, website em funcionamento e primeiros estabelecimentos usando a solução.",
+      "timing_reason": "O momento é favorável porque consumidores buscam conveniência e negócios locais precisam competir digitalmente com redes maiores e marketplaces.",
+      "investor_takeaway": "A oportunidade está em financiar aquisição comercial e expansão de uma plataforma cujo risco tecnológico inicial já foi reduzido.",
+      "display_order": 1
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=ClickPet - Análise de Concorrência)",
+      "title": "Unificação de uma jornada fragmentada",
+      "thesis_summary": "A vantagem competitiva vem da integração de compra, serviço, agenda, entrega e gestão em uma única plataforma especializada.",
+      "thesis_detail": null,
+      "market_reason": null,
+      "product_reason": null,
+      "traction_reason": null,
+      "timing_reason": null,
+      "investor_takeaway": null,
+      "display_order": null
+    }
+  ],
+  "investment_rounds": [
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "round_name": "Pré-Seed",
+      "stage": "pre_seed",
+      "currency": "BRL",
+      "pre_money_valuation": 3200000,
+      "target_raise_amount": 500000,
+      "post_money_valuation": 3700000,
+      "equity_offered_percent": 13.5,
+      "valuation_rationale": "Valuation proposto considera produto desenvolvido, tecnologia proprietária, aplicativo publicado, plataforma operacional, infraestrutura própria, validação inicial da solução e potencial de escalabilidade.",
+      "round_objective": "Acelerar aquisição de clientes, fortalecer evolução do produto e validar expansão comercial em escala.",
+      "status": "proposed"
+    }
+  ],
+  "funding_use_allocations": [
+    {
+      "round_id": "(SELECT id FROM investment_rounds WHERE company_id=11111111-1111-1111-1111-111111111111 AND round_name=Pré-Seed)",
+      "allocation_area": "Produto e tecnologia",
+      "allocation_percent": 40,
+      "estimated_amount": 200000,
+      "purpose": "Desenvolvimento de produto, evolução da plataforma, melhorias técnicas, automações e infraestrutura.",
+      "expected_impact": "Aumentar robustez do produto, reduzir fricção operacional e preparar a plataforma para escala.",
+      "display_order": 1
+    },
+    {
+      "round_id": "(SELECT id FROM investment_rounds WHERE company_id=11111111-1111-1111-1111-111111111111 AND round_name=Pré-Seed)",
+      "allocation_area": "Marketing e aquisição de clientes",
+      "allocation_percent": 30,
+      "estimated_amount": 150000,
+      "purpose": "Campanhas, canais digitais, aquisição de lojistas e consumidores e validação de canais de crescimento.",
+      "expected_impact": "Acelerar entrada de pet shops e fortalecer reconhecimento regional da marca.",
+      "display_order": 2
+    },
+    {
+      "round_id": "(SELECT id FROM investment_rounds WHERE company_id=11111111-1111-1111-1111-111111111111 AND round_name=Pré-Seed)",
+      "allocation_area": "Expansão comercial",
+      "allocation_percent": 20,
+      "estimated_amount": 100000,
+      "purpose": "Prospecção ativa, parcerias, operação comercial e expansão para novas regiões.",
+      "expected_impact": "Validar modelo comercial e aumentar base de parceiros.",
+      "display_order": 3
+    },
+    {
+      "round_id": "(SELECT id FROM investment_rounds WHERE company_id=11111111-1111-1111-1111-111111111111 AND round_name=Pré-Seed)",
+      "allocation_area": "Capital de giro",
+      "allocation_percent": 10,
+      "estimated_amount": 50000,
+      "purpose": "Reserva operacional para sustentação das atividades durante a fase de validação e crescimento.",
+      "expected_impact": "Maior segurança financeira na execução da rodada.",
+      "display_order": 4
+    }
+  ],
+  "market_opportunities": [
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=ClickPet - Análise de Concorrência)",
+      "title": "Mercado pet brasileiro pulverizado",
+      "market_context": "Material de análise aponta R$ 78 bilhões em faturamento em 2025, 168 milhões de animais estimados, 48,7% de market share em PME pet shops e crescimento previsto de 9,6% para 2026.",
+      "opportunity_summary": "A oportunidade-chave é atuar nos pequenos e médios pet shops locais, que representam parte relevante do mercado e ainda não possuem plataforma especializada de gestão e delivery integrados.",
+      "target_segment": "Pequenos e médios pet shops independentes e negócios locais do setor pet.",
+      "timing_factor": "Consumidores tratam pets como membros da família e buscam conveniência, enquanto a experiência digital ainda é fragmentada.",
+      "scalability_factor": "Modelo com potencial de expansão regional por parceiros locais, marketplace e padronização de operação digital.",
+      "investor_relevance": "Mostra que a ClickPet endereça um segmento grande, recorrente e ainda pouco servido por soluções verticais completas.",
+      "display_order": 1
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "title": "Digitalização acessível para negócios independentes",
+      "market_context": "Grandes redes já possuem presença digital, mas milhares de pequenos e médios pet shops dependem de canais informais.",
+      "opportunity_summary": "A ClickPet reduz a barreira tecnológica ao oferecer uma solução pronta para operação, sem exigir que cada lojista desenvolva sistemas próprios.",
+      "target_segment": "Pet shops independentes com baixa maturidade digital.",
+      "timing_factor": "A digitalização do consumo e a busca por conveniência aumentam a pressão competitiva sobre lojas locais.",
+      "scalability_factor": "A solução pode ser replicada em novas regiões mantendo foco vertical no setor pet.",
+      "investor_relevance": "A tese depende de transformar uma dor operacional real em receita transacional e recorrente.",
+      "display_order": 2
+    }
+  ],
+  "market_problems": [
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=ClickPet PitchDeck)",
+      "title": "Tempo perdido e canais múltiplos",
+      "problem_summary": "Donos de pets precisam resolver uma única necessidade em múltiplos canais.",
+      "problem_detail": "A experiência atual exige alternar entre lojas, WhatsApp, redes sociais, sites, ligações e atendimento manual para compra, agendamento e acompanhamento.",
+      "affected_audience": "Consumidores finais e pet shops que precisam atender manualmente.",
+      "severity_level": "medium",
+      "business_impact": "Reduz conversão, aumenta esforço do cliente e dificulta recorrência.",
+      "evidence_notes": "Pitch Deck: problema de tempo perdido e experiência fragmentada.",
+      "display_order": 1
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "title": "Ausência de e-commerce estruturado",
+      "problem_summary": "Muitos pet shops independentes não possuem estrutura própria de venda online.",
+      "problem_detail": "A falta de e-commerce limita alcance, controle de catálogo, disponibilidade de produtos e capacidade de competir com redes maiores.",
+      "affected_audience": "Pet shops independentes.",
+      "severity_level": "high",
+      "business_impact": "Perda de competitividade e dependência de vendas manuais.",
+      "evidence_notes": "Investment Memo: ausência de estrutura de e-commerce.",
+      "display_order": 2
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "title": "Dependência de WhatsApp e Instagram",
+      "problem_summary": "Vendas e atendimento ainda ocorrem por canais informais e pouco escaláveis.",
+      "problem_detail": "A dependência desses canais gera atendimento manual, baixa padronização, baixa visibilidade de dados e pouca automação.",
+      "affected_audience": "Lojistas e consumidores.",
+      "severity_level": "high",
+      "business_impact": "Dificulta escala, métricas, fidelização e previsibilidade operacional.",
+      "evidence_notes": "Investment Memo e análise concorrencial destacam dependência de WhatsApp e processos manuais.",
+      "display_order": 3
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=ClickPet PitchDeck)",
+      "title": "Falta de transparência",
+      "problem_summary": "Consumidores têm dificuldade em comparar preços, disponibilidade e qualidade.",
+      "problem_detail": "A ausência de um ambiente centralizado limita comparação entre produtos, serviços, avaliações e disponibilidade real.",
+      "affected_audience": "Consumidores finais.",
+      "severity_level": "medium",
+      "business_impact": "Gera incerteza na decisão de compra e reduz confiança.",
+      "evidence_notes": "Pitch Deck: falta de transparência em preços, disponibilidade e qualidade.",
+      "display_order": 4
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "title": "Baixa eficiência operacional",
+      "problem_summary": "Processos manuais reduzem produtividade e dificultam acompanhamento de pedidos, serviços e entregas.",
+      "problem_detail": "Sem painel operacional, lojistas têm dificuldade para gerir pedidos, agenda, catálogo, promoções, entregadores, métricas e regras de entrega.",
+      "affected_audience": "Pet shops, clínicas e serviços pet.",
+      "severity_level": "high",
+      "business_impact": "Eleva erro operacional, tempo de resposta e custo de gestão.",
+      "evidence_notes": "Investment Memo e Apresentação de Projeto.",
+      "display_order": 5
+    }
+  ],
+  "solutions": [
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=ClickPet PitchDeck)",
+      "title": "Tudo em um único lugar",
+      "solution_summary": "Produtos, serviços e atendimentos integrados em uma jornada única.",
+      "solution_detail": "A ClickPet centraliza lojas, produtos, serviços, agendamentos e comparação de preços, reduzindo a fragmentação da experiência.",
+      "delivered_value": "Conveniência para consumidores e padronização para lojistas.",
+      "implementation_status": "mvp_completed",
+      "display_order": 1
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "title": "Plataforma pronta para operação",
+      "solution_summary": "Infraestrutura completa para vendas online, gestão de pedidos e conexão com consumidores.",
+      "solution_detail": "Inclui aplicativo, painel administrativo, catálogo digital, marketplace regional, gestão de pedidos e integração entre consumidores e estabelecimentos.",
+      "delivered_value": "Reduz custo e tempo de digitalização para pet shops independentes.",
+      "implementation_status": "operational_platform",
+      "display_order": 2
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=ClickPet PitchDeck)",
+      "title": "Transparente e confiável",
+      "solution_summary": "Comparação clara e avaliações reais entre produtos, lojas e serviços.",
+      "solution_detail": "A plataforma busca permitir escolha melhor informada pelo usuário, aumentando confiança e qualidade percebida.",
+      "delivered_value": "Aumenta confiança, conversão e retenção.",
+      "implementation_status": "presented_in_product",
+      "display_order": 3
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=ClickPet - Apresentação de Projeto)",
+      "title": "Gestão operacional para parceiros",
+      "solution_summary": "Dashboard operacional para vendas, pedidos, produtos, agenda, promoções, entregadores e parametrização.",
+      "solution_detail": "O painel do parceiro concentra métricas em tempo real, gestão de catálogo, controle de pedidos, agenda de atendimento, cupons, logística e configurações de operação.",
+      "delivered_value": "Melhora eficiência, reduz erros e aumenta retenção do lojista.",
+      "implementation_status": "presented_in_product",
+      "display_order": 4
+    }
+  ],
+  "product_modules": [
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=ClickPet - Apresentação de Projeto)",
+      "module_name": "Aplicativo do consumidor",
+      "module_slug": "app-consumidor",
+      "module_summary": "Experiência de compra e descoberta para consumidores finais.",
+      "module_detail": "Permite encontrar produtos e serviços pet, filtrar catálogo, visualizar detalhes, avaliações, preço, quantidade e produtos relacionados.",
+      "user_group": "Consumidor final",
+      "business_value": "Aumenta conversão e recorrência de compra.",
+      "status": "operational_or_presented",
+      "display_order": 1
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=ClickPet - Apresentação de Projeto)",
+      "module_name": "Dashboard do parceiro",
+      "module_slug": "dashboard-parceiro",
+      "module_summary": "Painel administrativo para centralizar vendas, pedidos e gestão de produtos.",
+      "module_detail": "Oferece controle simples e visão consolidada do negócio, com métricas em tempo real, catálogo, preços e insights visuais.",
+      "user_group": "Pet shop parceiro",
+      "business_value": "Melhora eficiência e retenção da plataforma.",
+      "status": "operational_or_presented",
+      "display_order": 2
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=ClickPet - Apresentação de Projeto)",
+      "module_name": "Gestão de pedidos",
+      "module_slug": "gestao-pedidos",
+      "module_summary": "Controle completo de pedidos com status, histórico e ciclo de entrega.",
+      "module_detail": "Centraliza informações de pagamento, cliente, valor, status e volume para suporte à tomada de decisão.",
+      "user_group": "Pet shop parceiro",
+      "business_value": "Reduz erros e melhora tempo de resposta.",
+      "status": "operational_or_presented",
+      "display_order": 3
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=ClickPet - Apresentação de Projeto)",
+      "module_name": "Gestão de fluxo de atendimento",
+      "module_slug": "gestao-atendimento",
+      "module_summary": "Painel para controle de horários e serviços agendados.",
+      "module_detail": "Permite visualizar ocupação da agenda, status de compromissos e volume de agendamentos realizados versus concluídos.",
+      "user_group": "Pet shop, clínica e serviço pet",
+      "business_value": "Aumenta pontualidade, experiência do cliente e retenção.",
+      "status": "operational_or_presented",
+      "display_order": 4
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=ClickPet - Apresentação de Projeto)",
+      "module_name": "Gestão de promoções",
+      "module_slug": "gestao-promocoes",
+      "module_summary": "Criação e controle de campanhas de desconto e cupons.",
+      "module_detail": "Permite configurar cupons de primeira compra, influenciadores, datas sazonais, validade, limite de uso e valor mínimo.",
+      "user_group": "Pet shop parceiro",
+      "business_value": "Aumenta aquisição, conversão e performance de campanhas.",
+      "status": "operational_or_presented",
+      "display_order": 5
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=ClickPet - Apresentação de Projeto)",
+      "module_name": "Gestão logística",
+      "module_slug": "gestao-logistica",
+      "module_summary": "Cadastro e controle de parceiros de entrega.",
+      "module_detail": "Permite registrar entregadores, CNH, veículos, dados cadastrais e contatos para demanda de leva e traz.",
+      "user_group": "Pet shop parceiro e entregadores",
+      "business_value": "Apoia confiabilidade, organização e segurança operacional.",
+      "status": "operational_or_presented",
+      "display_order": 6
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=ClickPet - Apresentação de Projeto)",
+      "module_name": "Licenciamento e sustentabilidade",
+      "module_slug": "licenciamento-sustentabilidade",
+      "module_summary": "Controle do vínculo entre pet shop e plataforma ClickPet.",
+      "module_detail": "Dá visibilidade sobre custo fixo de software, continuidade operacional, cota de produtos e serviços, renovação automática e upgrades.",
+      "user_group": "Pet shop parceiro",
+      "business_value": "Apoia receita recorrente e expansão de planos.",
+      "status": "operational_or_presented",
+      "display_order": 7
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=ClickPet - Apresentação de Projeto)",
+      "module_name": "Parametrização operacional",
+      "module_slug": "parametrizacao-operacional",
+      "module_summary": "Configuração de regras fundamentais da operação.",
+      "module_detail": "Permite configurar contato, localização, políticas de frete, valor mínimo de pedido, horários semanais, raio de entrega e meios de pagamento.",
+      "user_group": "Pet shop parceiro",
+      "business_value": "Viabiliza operação local com regras próprias.",
+      "status": "operational_or_presented",
+      "display_order": 8
+    }
+  ],
+  "product_features": [
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "module_id": "(SELECT id FROM product_modules WHERE module_slug=app-consumidor)",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=ClickPet - Apresentação de Projeto)",
+      "feature_name": "Filtragem de produtos",
+      "feature_slug": "filtragem-produtos",
+      "feature_summary": "Busca inteligente por espécie, raça, faixa de preço e categorias.",
+      "feature_detail": "Sistema de filtragem desenvolvido para otimizar a busca do usuário e facilitar escolha do produto adequado.",
+      "user_benefit": "Menos tempo procurando e mais precisão na compra.",
+      "investor_relevance": "Melhora experiência e taxa de conversão.",
+      "status": "presented",
+      "display_order": 1
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "module_id": "(SELECT id FROM product_modules WHERE module_slug=app-consumidor)",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=ClickPet - Apresentação de Projeto)",
+      "feature_name": "Tela de produto otimizada",
+      "feature_slug": "tela-produto-otimizada",
+      "feature_summary": "Página com informações claras, variações, avaliações e CTA direto.",
+      "feature_detail": "Estrutura com preço, quantidade, prova social e produtos relacionados para incentivar upsell e cross-sell.",
+      "user_benefit": "Decisão rápida com menor fricção.",
+      "investor_relevance": "Aumenta conversão e ticket médio.",
+      "status": "presented",
+      "display_order": 2
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "module_id": "(SELECT id FROM product_modules WHERE module_slug=dashboard-parceiro)",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=ClickPet - Apresentação de Projeto)",
+      "feature_name": "Métricas em tempo real",
+      "feature_slug": "metricas-tempo-real",
+      "feature_summary": "Indicadores de vendas, pedidos e produtos no dashboard.",
+      "feature_detail": "Permite visão consolidada e tomada de decisão baseada em dados.",
+      "user_benefit": "Gestão mais prática e objetiva.",
+      "investor_relevance": "Aumenta valor percebido pelo lojista e retenção.",
+      "status": "presented",
+      "display_order": 3
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "module_id": "(SELECT id FROM product_modules WHERE module_slug=gestao-pedidos)",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=ClickPet - Apresentação de Projeto)",
+      "feature_name": "Segmentação por status de pedido",
+      "feature_slug": "segmentacao-status-pedido",
+      "feature_summary": "Organização dos pedidos por status para priorização.",
+      "feature_detail": "Ajuda a controlar ciclo de entrega, pagamento, cliente, valor e histórico.",
+      "user_benefit": "Reduz atrasos e melhora previsibilidade.",
+      "investor_relevance": "Aumenta eficiência operacional.",
+      "status": "presented",
+      "display_order": 4
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "module_id": "(SELECT id FROM product_modules WHERE module_slug=gestao-atendimento)",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=ClickPet - Apresentação de Projeto)",
+      "feature_name": "Agenda por ciclo de vida",
+      "feature_slug": "agenda-ciclo-vida",
+      "feature_summary": "Status Pendente, Confirmado, Concluído ou Cancelado.",
+      "feature_detail": "Permite medir comparecimento, volume de agendamentos e desempenho mensal.",
+      "user_benefit": "Melhor organização do atendimento.",
+      "investor_relevance": "Expande a plataforma para serviços, não apenas produtos.",
+      "status": "presented",
+      "display_order": 5
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "module_id": "(SELECT id FROM product_modules WHERE module_slug=gestao-promocoes)",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=ClickPet - Apresentação de Projeto)",
+      "feature_name": "Cupons e campanhas",
+      "feature_slug": "cupons-campanhas",
+      "feature_summary": "Configuração de gatilhos, prazos, limites de uso e regras de ativação.",
+      "feature_detail": "Inclui cupons de primeira compra, parcerias com influenciadores e datas sazonais.",
+      "user_benefit": "Mais controle sobre ações promocionais.",
+      "investor_relevance": "Apoia aquisição e geração de demanda.",
+      "status": "presented",
+      "display_order": 6
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "module_id": "(SELECT id FROM product_modules WHERE module_slug=gestao-logistica)",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=ClickPet - Apresentação de Projeto)",
+      "feature_name": "Cadastro de entregadores",
+      "feature_slug": "cadastro-entregadores",
+      "feature_summary": "Registro de dados de entregadores, CNH e veículos.",
+      "feature_detail": "Centraliza dados cadastrais, frota, contatos e manutenção da base logística.",
+      "user_benefit": "Mais segurança e organização na entrega.",
+      "investor_relevance": "Fortalece logística local e confiabilidade da operação.",
+      "status": "presented",
+      "display_order": 7
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "module_id": "(SELECT id FROM product_modules WHERE module_slug=parametrizacao-operacional)",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=ClickPet - Apresentação de Projeto)",
+      "feature_name": "Regras de frete e raio de entrega",
+      "feature_slug": "regras-frete-raio-entrega",
+      "feature_summary": "Configuração de alcance, taxa, horários e valor mínimo.",
+      "feature_detail": "Permite adaptar a operação à realidade de cada pet shop e região.",
+      "user_benefit": "Operação mais personalizada e previsível.",
+      "investor_relevance": "Facilita escala regional mantendo flexibilidade local.",
+      "status": "presented",
+      "display_order": 8
+    }
+  ],
+  "traction_metrics": [
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "metric_name": "MVP concluído",
+      "metric_slug": "mvp-concluido",
+      "value_type": "boolean",
+      "boolean_value": true,
+      "text_value": "MVP concluído",
+      "unit": null,
+      "context": "Produto inicial finalizado antes da captação externa.",
+      "investor_relevance": "Reduz risco tecnológico inicial."
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "metric_name": "Aplicativo publicado",
+      "metric_slug": "aplicativo-publicado",
+      "value_type": "boolean",
+      "boolean_value": true,
+      "text_value": "Aplicativo publicado",
+      "unit": null,
+      "context": "Aplicativo já disponibilizado segundo o memo.",
+      "investor_relevance": "Demonstra execução de produto."
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "metric_name": "Plataforma operacional",
+      "metric_slug": "plataforma-operacional",
+      "value_type": "boolean",
+      "boolean_value": true,
+      "text_value": "Plataforma operacional",
+      "unit": null,
+      "context": "Plataforma funcional e utilizável.",
+      "investor_relevance": "Indica prontidão para validação comercial."
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "metric_name": "Website operacional",
+      "metric_slug": "website-operacional",
+      "value_type": "boolean",
+      "boolean_value": true,
+      "text_value": "Website operacional",
+      "unit": null,
+      "context": "Website em funcionamento.",
+      "investor_relevance": "Complementa presença institucional e aquisição."
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "metric_name": "Primeiros pet shops utilizando",
+      "metric_slug": "primeiros-petshops-utilizando",
+      "value_type": "boolean",
+      "boolean_value": true,
+      "text_value": "Primeiros estabelecimentos utilizando a solução",
+      "unit": null,
+      "context": "Primeiros pet shops usando a plataforma.",
+      "investor_relevance": "Validação inicial de uso."
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=ClickPet - Análise de Concorrência)",
+      "metric_name": "Faturamento mercado pet 2025",
+      "metric_slug": "faturamento-mercado-pet-2025",
+      "value_type": "money",
+      "boolean_value": null,
+      "text_value": "R$ 78 bilhões",
+      "unit": "BRL",
+      "context": "Mercado pet brasileiro estimado no material de concorrência.",
+      "investor_relevance": "Dimensiona a oportunidade de mercado.",
+      "money_value": 78000000000
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=ClickPet - Análise de Concorrência)",
+      "metric_name": "Market share PME pet shops",
+      "metric_slug": "market-share-pme-petshops",
+      "value_type": "percentage",
+      "boolean_value": null,
+      "text_value": "48,7%",
+      "unit": "percentual",
+      "context": "Percentual do mercado em pequenos e médios pet shops segundo material de concorrência.",
+      "investor_relevance": "Indica relevância do segmento-alvo.",
+      "percentage_value": 48.7
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=ClickPet - Análise de Concorrência)",
+      "metric_name": "Crescimento previsto 2026",
+      "metric_slug": "crescimento-previsto-2026",
+      "value_type": "percentage",
+      "boolean_value": null,
+      "text_value": "9,6%",
+      "unit": "percentual",
+      "context": "Crescimento previsto para 2026 no material de concorrência.",
+      "investor_relevance": "Indica timing favorável.",
+      "percentage_value": 9.6
+    }
+  ],
+  "revenue_streams": [
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "stream_name": "Comissão sobre vendas",
+      "stream_slug": "comissao-sobre-vendas",
+      "description": "Principal fonte de receita prevista: comissão sobre vendas realizadas dentro da plataforma.",
+      "monetization_logic": "Receita acompanha o aumento do volume transacionado pelas lojas parceiras.",
+      "maturity_stage": "core_planned",
+      "priority_level": 10,
+      "investor_relevance": "Modelo escalável vinculado ao GMV."
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "stream_name": "Planos premium",
+      "stream_slug": "planos-premium",
+      "description": "Monetização futura com planos pagos para lojistas.",
+      "monetization_logic": "Pode destravar recursos adicionais, limites maiores, analytics e suporte.",
+      "maturity_stage": "future",
+      "priority_level": 8,
+      "investor_relevance": "Cria potencial de receita recorrente."
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "stream_name": "Publicidade interna",
+      "stream_slug": "publicidade-interna",
+      "description": "Receita futura com destaque de produtos, lojas e campanhas internas.",
+      "monetization_logic": "Lojistas podem pagar por visibilidade e conversão dentro do marketplace.",
+      "maturity_stage": "future",
+      "priority_level": 6,
+      "investor_relevance": "Aumenta monetização por lojista sem depender apenas de comissão."
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "stream_name": "Serviços financeiros",
+      "stream_slug": "servicos-financeiros",
+      "description": "Possibilidade futura de serviços financeiros para lojistas e consumidores.",
+      "monetization_logic": "Pode incluir meios de pagamento, antecipação, crédito ou soluções financeiras relacionadas.",
+      "maturity_stage": "future",
+      "priority_level": 5,
+      "investor_relevance": "Amplia margem e profundidade do ecossistema."
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "stream_name": "Logística integrada",
+      "stream_slug": "logistica-integrada",
+      "description": "Monetização futura associada à operação logística e entrega local.",
+      "monetization_logic": "Pode capturar parte do valor de entrega, frota parceira ou serviços de leva e traz.",
+      "maturity_stage": "future",
+      "priority_level": 7,
+      "investor_relevance": "Fortalece controle da experiência e gera nova linha de receita."
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "stream_name": "Ferramentas de marketing para lojistas",
+      "stream_slug": "ferramentas-marketing-lojistas",
+      "description": "Recursos pagos para campanhas, cupons, CRM e performance comercial.",
+      "monetization_logic": "Lojistas podem usar ferramentas para aquisição, recorrência e fidelização.",
+      "maturity_stage": "future",
+      "priority_level": 7,
+      "investor_relevance": "Aumenta retenção e ARPU de parceiros."
+    }
+  ],
+  "growth_strategies": [
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "strategy_name": "Prospecção comercial ativa",
+      "strategy_summary": "Abordagem direta a pet shops independentes para aquisição inicial.",
+      "strategy_detail": "Contato com lojistas, demonstração da plataforma, onboarding e validação do modelo comercial.",
+      "channel": "vendas diretas",
+      "objective": "Alcançar massa crítica inicial de lojas parceiras.",
+      "expected_outcome": "Aumento da base de pet shops cadastrados.",
+      "display_order": 1
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "strategy_name": "Parcerias estratégicas",
+      "strategy_summary": "Construção de canais de expansão por parceiros locais e setoriais.",
+      "strategy_detail": "Parcerias podem ampliar entrada em novas regiões, serviços e ecossistema pet.",
+      "channel": "parcerias",
+      "objective": "Reduzir custo de aquisição e ampliar capilaridade.",
+      "expected_outcome": "Expansão regional mais eficiente.",
+      "display_order": 2
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "strategy_name": "Marketing digital",
+      "strategy_summary": "Campanhas para atrair lojistas e consumidores.",
+      "strategy_detail": "Uso de canais digitais para aquisição, awareness, educação de mercado e geração de demanda.",
+      "channel": "marketing digital",
+      "objective": "Fortalecer canais de aquisição.",
+      "expected_outcome": "Aumento de cadastros e reconhecimento da marca.",
+      "display_order": 3
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "strategy_name": "Programa de indicação",
+      "strategy_summary": "Estimular indicação entre lojistas, consumidores e parceiros.",
+      "strategy_detail": "Modelo de crescimento baseado em rede local e recomendação.",
+      "channel": "referral",
+      "objective": "Reduzir CAC e acelerar aquisição.",
+      "expected_outcome": "Crescimento orgânico e validação de confiança.",
+      "display_order": 4
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "strategy_name": "Ações regionais de expansão",
+      "strategy_summary": "Entrada planejada em novas regiões com foco local.",
+      "strategy_detail": "Expansão por regiões prioritárias, combinando prospecção, parceiros, marketing e onboarding.",
+      "channel": "regional",
+      "objective": "Validar replicabilidade do modelo.",
+      "expected_outcome": "Escala geográfica progressiva.",
+      "display_order": 5
+    }
+  ],
+  "growth_targets": [
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "target_name": "100 pet shops ativas",
+      "period_type": "date",
+      "period_label": "Até dezembro",
+      "target_metric": "pet shops ativas",
+      "target_value": 100,
+      "target_unit": "lojas",
+      "target_description": "Meta operacional de atingir 100 pet shops ativas até dezembro.",
+      "strategic_relevance": "Valida aquisição inicial e massa crítica local.",
+      "display_order": 1
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "target_name": "300 lojas no ano 2",
+      "period_type": "year",
+      "period_label": "Ano 2",
+      "target_metric": "lojas cadastradas",
+      "target_value": 300,
+      "target_unit": "lojas",
+      "target_description": "Projeção de 300 lojas no segundo ano.",
+      "strategic_relevance": "Demonstra ambição de expansão pós-validação.",
+      "display_order": 2
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "target_name": "700 lojas no ano 3",
+      "period_type": "year",
+      "period_label": "Ano 3",
+      "target_metric": "lojas cadastradas",
+      "target_value": 700,
+      "target_unit": "lojas",
+      "target_description": "Projeção de 700 lojas no terceiro ano.",
+      "strategic_relevance": "Indica escala regional/nacional em desenvolvimento.",
+      "display_order": 3
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "target_name": "Mais de 2.000 lojas no ano 5",
+      "period_type": "year",
+      "period_label": "Ano 5",
+      "target_metric": "lojas cadastradas",
+      "target_value": 2000,
+      "target_unit": "lojas",
+      "target_description": "Projeção de mais de 2.000 lojas cadastradas no quinto ano.",
+      "strategic_relevance": "Tese de escala nacional.",
+      "display_order": 4
+    }
+  ],
+  "competitors": [
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=ClickPet - Análise de Concorrência)",
+      "name": "iFood",
+      "slug": "ifood",
+      "competitor_type": "delivery_app",
+      "description": "Plataforma de delivery generalista que atende pet shops como mais uma categoria, sem gestão dedicada ao setor pet.",
+      "market_position": "Líder em delivery generalista no Brasil."
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=ClickPet - Análise de Concorrência)",
+      "name": "Aiqfome",
+      "slug": "aiqfome",
+      "competitor_type": "delivery_app",
+      "description": "Plataforma generalista do Grupo Magalu com presença no interior do Brasil.",
+      "market_position": "Delivery generalista regional."
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=ClickPet - Análise de Concorrência)",
+      "name": "Grupo Petz-Cobasi",
+      "slug": "grupo-petz-cobasi",
+      "competitor_type": "retail_chain",
+      "description": "Grande rede varejista pet com presença física e digital, focada principalmente em venda de produtos próprios.",
+      "market_position": "Grande rede varejista nacional."
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=ClickPet - Análise de Concorrência)",
+      "name": "Petlove",
+      "slug": "petlove",
+      "competitor_type": "marketplace",
+      "description": "Marketplace pet e e-commerce nacional, com foco em produtos e modelo whitelabel, mas lacunas em serviços agendados, logística e gestão operacional completa para pequenos negócios.",
+      "market_position": "E-commerce/marketplace pet nacional."
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=ClickPet PitchDeck)",
+      "name": "Pet shops locais",
+      "slug": "petshops-locais",
+      "competitor_type": "informal_channel",
+      "description": "Pet shops independentes com operação local, mas baixa integração digital, atendimento manual e dependência de canais informais.",
+      "market_position": "Base pulverizada e público-alvo da ClickPet."
+    }
+  ],
+  "competitor_analysis": [
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "competitor_id": "(SELECT id FROM competitors WHERE slug=ifood)",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=ClickPet - Análise de Concorrência)",
+      "comparison_dimension": "Delivery generalista",
+      "competitor_strength": "Grande base de clientes, parceiros cadastrados, infraestrutura de delivery e marca forte.",
+      "competitor_weakness": "Comissão elevada, pet shop é apenas mais uma categoria, sem gestão de agenda, banho, tosa, serviços ou catálogo especializado.",
+      "clickpet_advantage": "Plataforma 100% dedicada ao ecossistema pet, com dashboard completo, agenda, status, métricas e gestão de parceiros de entrega.",
+      "threat_level": "medium",
+      "opportunity_for_clickpet": "Capturar lojistas que precisam de operação pet vertical, não apenas entrega.",
+      "strategic_note": "Material cita comissão iFood de 12% a 31% e comissão média de 28,7%.",
+      "display_order": 1
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "competitor_id": "(SELECT id FROM competitors WHERE slug=aiqfome)",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=ClickPet - Análise de Concorrência)",
+      "comparison_dimension": "Delivery regional generalista",
+      "competitor_strength": "Presença em cidades do interior e operação ligada ao Grupo Magalu.",
+      "competitor_weakness": "Não oferece gestão especializada de pet shop, serviços, agenda e logística pet dedicada.",
+      "clickpet_advantage": "Modelo especializado com foco em produtos, serviços, agenda e relacionamento do pet shop.",
+      "threat_level": "medium",
+      "opportunity_for_clickpet": "Entrar em regiões onde apps generalistas atendem demanda sem resolver operação do lojista.",
+      "strategic_note": "Aiqfome é tratado como concorrente indireto generalista.",
+      "display_order": 2
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "competitor_id": "(SELECT id FROM competitors WHERE slug=grupo-petz-cobasi)",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=ClickPet - Análise de Concorrência)",
+      "comparison_dimension": "Grande rede varejista",
+      "competitor_strength": "Marca forte, lojas físicas, e-commerce e escala nacional.",
+      "competitor_weakness": null,
+      "clickpet_advantage": null,
+      "threat_level": null,
+      "opportunity_for_clickpet": null,
+      "strategic_note": null,
+      "display_order": null
+    }
+  ],
+  "competitive_advantages": [
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "advantage_name": "Foco em pequenos e médios pet shops",
+      "advantage_summary": "A ClickPet é desenhada para o segmento independente pouco digitalizado.",
+      "advantage_detail": null,
+      "defensibility_level": null,
+      "investor_relevance": null,
+      "display_order": null
+    }
+  ],
+  "risks": [
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "risk_name": "Velocidade de aquisição de clientes",
+      "risk_summary": "Risco de crescimento comercial mais lento que o previsto.",
+      "risk_detail": "A empresa precisa adquirir pet shops cadastrados e ativos para validar o modelo e iniciar geração de receita recorrente.",
+      "risk_level": "high",
+      "mitigation_strategy": "Uso da rodada para marketing, aquisição, expansão comercial, prospecção ativa e parcerias estratégicas.",
+      "investor_note": "Principal risco da etapa Pré-Seed está na execução comercial.",
+      "display_order": 1
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "risk_name": "Adoção pelos estabelecimentos",
+      "risk_summary": "Pet shops podem ter resistência operacional ou baixa maturidade digital.",
+      "risk_detail": "A adoção depende de onboarding simples, valor percebido rápido e suporte à mudança de processos manuais.",
+      "risk_level": "medium",
+      "mitigation_strategy": "Plataforma pronta para operação, baixo custo de entrada e foco em resolver dores operacionais do lojista.",
+      "investor_note": "Risco típico de transformação digital em PME.",
+      "display_order": 2
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "risk_name": "Necessidade de capital para expansão",
+      "risk_summary": "Escala comercial e evolução de produto exigem capital.",
+      "risk_detail": "Marketing, tecnologia, equipe comercial e expansão regional dependem de investimento externo.",
+      "risk_level": "medium",
+      "mitigation_strategy": "Captação proposta de R$ 500.000 com alocação clara por área.",
+      "investor_note": "Rodada busca financiar validação e crescimento inicial.",
+      "display_order": 3
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "risk_name": "Aumento da concorrência",
+      "risk_summary": "Players maiores podem ampliar atuação no setor pet.",
+      "risk_detail": "Apps generalistas, varejistas e marketplaces podem investir em soluções específicas para o setor.",
+      "risk_level": "medium",
+      "mitigation_strategy": "Especialização vertical, relacionamento com pet shops independentes e execução rápida em nichos locais.",
+      "investor_note": "Defensibilidade dependerá de base de parceiros, dados, operação local e produto especializado.",
+      "display_order": 4
+    }
+  ],
+  "investor_faqs": [
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "question": "O que é a ClickPet?",
+      "short_answer": "A ClickPet é uma plataforma B2B2C para digitalizar pet shops independentes.",
+      "detailed_answer": "Ela oferece aplicativo para consumidores, painel administrativo para lojistas, catálogo digital, marketplace regional, gestão de pedidos e integração entre consumidores e estabelecimentos pet.",
+      "category": "company",
+      "display_order": 1,
+      "tags": [
+        "empresa",
+        "resumo"
+      ]
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "question": "Qual problema a ClickPet resolve?",
+      "short_answer": "Resolve a baixa digitalização e fragmentação operacional dos pet shops independentes.",
+      "detailed_answer": "Muitos pet shops dependem de WhatsApp, Instagram, atendimento manual e baixa presença digital, perdendo competitividade para redes e marketplaces maiores.",
+      "category": "problem",
+      "display_order": 2,
+      "tags": [
+        "problema",
+        "mercado"
+      ]
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "question": "Como a ClickPet ganha dinheiro?",
+      "short_answer": "A principal receita prevista é comissão sobre vendas realizadas na plataforma.",
+      "detailed_answer": "No médio e longo prazo, a empresa também poderá monetizar por planos premium, publicidade interna, serviços financeiros, logística integrada e ferramentas de marketing para lojistas.",
+      "category": "business_model",
+      "display_order": 3,
+      "tags": [
+        "receita",
+        "modelo-de-negocio"
+      ]
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "question": "Qual é o estágio atual da empresa?",
+      "short_answer": "A empresa está em estágio Pré-Seed, com MVP concluído e plataforma operacional.",
+      "detailed_answer": "O memo informa MVP concluído, aplicativo publicado, website operacional, infraestrutura própria e primeiros pet shops utilizando a solução.",
+      "category": "traction",
+      "display_order": 4,
+      "tags": [
+        "tracao",
+        "status"
+      ]
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "question": "Qual é a rodada de investimento?",
+      "short_answer": "Rodada Pré-Seed de R$ 500.000 com valuation pré-money proposto de R$ 3.200.000.",
+      "detailed_answer": "A rodada propõe valuation pós-money de R$ 3.700.000 e participação ofertada de 13,5%.",
+      "category": "funding",
+      "display_order": 5,
+      "tags": [
+        "rodada",
+        "valuation"
+      ]
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "question": "Como os recursos serão usados?",
+      "short_answer": "40% produto e tecnologia, 30% marketing e aquisição, 20% expansão comercial e 10% capital de giro.",
+      "detailed_answer": "A distribuição busca fortalecer produto, acelerar aquisição, validar canais comerciais e dar sustentação operacional à fase de crescimento.",
+      "category": "funding",
+      "display_order": 6,
+      "tags": [
+        "uso-dos-recursos",
+        "captação"
+      ]
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "question": "Quais são os diferenciais competitivos?",
+      "short_answer": "Foco em pet shops independentes, plataforma pronta para operação, marketplace especializado e integração da jornada pet.",
+      "detailed_answer": "A ClickPet se posiciona como parceiro tecnológico dos lojistas, integrando consumidor, catálogo, pedidos, serviços, agenda, logística e gestão operacional.",
+      "category": "competition",
+      "display_order": 7,
+      "tags": [
+        "diferenciais",
+        "concorrencia"
+      ]
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "question": "Quais são os principais riscos?",
+      "short_answer": "Aquisição de clientes, adoção dos estabelecimentos, necessidade de capital e aumento da concorrência.",
+      "detailed_answer": "Esses riscos são parcialmente mitigados pelo produto já desenvolvido, MVP funcional, plataforma operacional, primeiros usuários e tendência de digitalização do setor pet.",
+      "category": "risk",
+      "display_order": 8,
+      "tags": [
+        "riscos"
+      ]
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=Investment Memo ClickPet)",
+      "question": "Qual é a visão de longo prazo?",
+      "short_answer": "Construir a principal infraestrutura digital para pet shops independentes no Brasil.",
+      "detailed_answer": "A visão é consolidar um ecossistema que conecte consumidores, estabelecimentos e tecnologia em uma plataforma única, ampliando a competitividade das lojas parceiras.",
+      "category": "vision",
+      "display_order": 9,
+      "tags": [
+        "visao",
+        "longo-prazo"
+      ]
+    },
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=ClickPet - Análise de Concorrência)",
+      "question": "Por que investir agora?",
+      "short_answer": "Porque o produto já existe, o mercado é grande e a digitalização de pet shops independentes ainda está em estágio inicial.",
+      "detailed_answer": "A rodada financia a transição de produto validado tecnicamente para validação comercial e expansão, em um mercado recorrente com lacuna clara entre consumidores digitais e lojistas locais pouco estruturados.",
+      "category": "investment_thesis",
+      "display_order": 10,
+      "tags": [
+        "tese",
+        "investimento"
+      ]
+    }
+  ],
+  "knowledge_entries": [
+    {
+      "company_id": "11111111-1111-1111-1111-111111111111",
+      "source_id": "(SELECT id FROM institutional_sources WHERE title=ClickPet PitchDeck)",
+      "category": "company",
+      "title": "Origem da ClickPet",
+      "answer_summary": "A ClickPet nasceu de uma dor real: compras e serviços pet fragmentados.",
+      "answer_detail": null,
+      "investor_relevance": null,
+      "confidence_score": null,
+      "tags": null
+    }
+  ]
+}

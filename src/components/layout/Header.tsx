@@ -374,7 +374,7 @@ export default function Header() {
 
     return (
         <>
-            <header className={`${styles.header} ${!session ? styles.headerTransparent : ''}`}>
+            <header className={`${styles.header} ${session ? styles.headerLoggedIn : styles.headerTransparent}`}>
                 <div className={styles.headerContent}>
                     {/* Logo */}
                     <Link

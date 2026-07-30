@@ -21,12 +21,16 @@ export default function Header() {
     const router = useRouter();
     const pathname = usePathname();
     const isLogoWhite = !session && pathname !== '/about' && pathname !== '/partner-about';
-    const mascoteSrc = isLogoWhite
-        ? "/assets/icons/Logo mascote - Branco.png"
-        : "/assets/icons/Logo mascote - Preto.png";
-    const textoSrc = isLogoWhite
-        ? "/assets/titles/Logo texto - Branco.png"
-        : "/assets/titles/Logo texto - Preto.png";
+    let mascoteSrc = "/assets/icons/Logo mascote - Preto.png";
+    let textoSrc = "/assets/titles/Logo texto - Preto.png";
+
+    if (session) {
+        mascoteSrc = "/assets/icons/Logo mascote - V2.png";
+        textoSrc = "/assets/titles/Logo texto - V2.png";
+    } else if (isLogoWhite) {
+        mascoteSrc = "/assets/icons/Logo mascote - Branco.png";
+        textoSrc = "/assets/titles/Logo texto - Branco.png";
+    }
     const { address, setLocationFromGPS, clearLocation, setLocationManual } = useLocation();
 
     const [showAddressModal, setShowAddressModal] = useState(false);

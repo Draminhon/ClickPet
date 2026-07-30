@@ -1339,3 +1339,25 @@
         gap: 8px;
     }
 }
+
+/* Logged In Header Adjustments (Reduced Size) */
+.headerLoggedIn {
+    height: 70px;
+    margin-top: 8px;
+}
+
+.headerLoggedIn .logoMascote {
+    height: 55px;
+}
+
+.headerLoggedIn .logoTexto {
+    height: 50px;
+}
+
+.headerLoggedIn .profileDropdown {
+    top: 52px;
+}
+
+.headerLoggedIn .dropdownMenu {
+    top: 42px;
+}

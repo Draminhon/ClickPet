@@ -24,10 +24,7 @@ export default function Header() {
     let mascoteSrc = "/assets/icons/Logo mascote - Preto.png";
     let textoSrc = "/assets/titles/Logo texto - Preto.png";
 
-    if (session) {
-        mascoteSrc = "/assets/icons/Logo mascote - V2.png";
-        textoSrc = "/assets/titles/Logo texto - V2.png";
-    } else if (isLogoWhite) {
+    if (isLogoWhite) {
         mascoteSrc = "/assets/icons/Logo mascote - Branco.png";
         textoSrc = "/assets/titles/Logo texto - Branco.png";
     }

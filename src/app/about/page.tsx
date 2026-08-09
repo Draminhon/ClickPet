@@ -30,7 +30,7 @@ const solutions = [
 ];
 
 const team = [
-    { name: 'Luis Soares', role: 'CEO', bio: 'Liderança estratégica e visão de negócio, focado na expansão e governança executiva da ClickPet.', photo: '/assets/team/luis.jpg' },
+    { name: 'Luis Soares', role: 'CEO', bio: 'Liderança estratégica e visão de negócio, focado na expansão e governança executiva da ClickPet.', photo: '/assets/team/luis.jpg', photoSize: 180, photoStyle: { objectPosition: '50% 25%', transform: 'scale(1.8)' } },
     { name: 'Murilo Rodrigues', role: 'CTO', bio: 'Arquitetura tecnológica e inovação escalável, liderando o desenvolvimento de soluções disruptivas.', photo: '/assets/team/Murilo.jpg' },
     { name: 'Gustavo Macedo', role: 'Brand Strategist', bio: 'Estratégia de marca e posicionamento global, construindo a identidade visual e verbal do ecossistema.', photo: '/assets/team/gustavo.PNG' },
 ];
@@ -118,9 +118,11 @@ export default function AboutPage() {
                                         <Image
                                             src={member.photo}
                                             alt={member.name}
-                                            width={96}
-                                            height={96}
+                                            width={member.photoSize ?? 96}
+                                            height={member.photoSize ?? 96}
+                                            quality={90}
                                             className={styles.teamPhoto}
+                                            style={member.photoStyle}
                                         />
                                     </div>
                                     <h3>{member.name}</h3>

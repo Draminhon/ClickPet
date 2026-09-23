@@ -30,7 +30,23 @@ const solutions = [
 ];
 
 const team = [
-    { name: 'Luis Soares', role: 'CEO', bio: 'Liderança estratégica e visão de negócio, focado na expansão e governança executiva da ClickPet.', photo: '/assets/team/luis.jpg', photoSize: 180, photoStyle: { objectPosition: '50% 25%', transform: 'scale(1.8)' } },
+    {
+        name: 'Luis Soares',
+        role: 'CEO',
+        bio: 'Liderança estratégica e visão de negócio, focado na expansão e governança executiva da ClickPet.',
+        photo: '/assets/team/luis.jpg',
+        photoSize: 180,
+        photoStyle: {
+            width: '180px',
+            height: '180px',
+            maxWidth: 'none',
+            position: 'absolute' as const,
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            objectPosition: '50% 20%',
+        },
+    },
     { name: 'Murilo Rodrigues', role: 'CTO', bio: 'Arquitetura tecnológica e inovação escalável, liderando o desenvolvimento de soluções disruptivas.', photo: '/assets/team/Murilo.jpg' },
     { name: 'Gustavo Macedo', role: 'Brand Strategist', bio: 'Estratégia de marca e posicionamento global, construindo a identidade visual e verbal do ecossistema.', photo: '/assets/team/gustavo.PNG' },
 ];

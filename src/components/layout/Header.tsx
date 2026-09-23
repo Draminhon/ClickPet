@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { ShoppingCart, User, Bell, X, MapPin, ChevronDown, Package, UserCircle, LogOut, Edit2, Trash2, Plus, Check, CheckCheck, Minus } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useSession, signOut } from 'next-auth/react';
@@ -19,15 +19,8 @@ export default function Header() {
     const { data: session, status } = useSession();
     const { showToast } = useToast();
     const router = useRouter();
-    const pathname = usePathname();
-    const isLogoWhite = !session && pathname !== '/about' && pathname !== '/partner-about';
-    let mascoteSrc = "/assets/icons/Logo mascote - Preto.png";
-    let textoSrc = "/assets/titles/Logo texto - Preto.png";
-
-    if (isLogoWhite) {
-        mascoteSrc = "/assets/icons/Logo mascote - Branco.png";
-        textoSrc = "/assets/titles/Logo texto - Branco.png";
-    }
+    const mascoteSrc = "/assets/icons/Logo mascote - V2.png";
+    const textoSrc = "/assets/titles/Logo texto - V2.png";
     const { address, setLocationFromGPS, clearLocation, setLocationManual } = useLocation();
 
     const [showAddressModal, setShowAddressModal] = useState(false);

@@ -1131,7 +1131,7 @@ export default function PartnerOrders() {
                                         </div>
                                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                             <span style={{ color: '#757575' }}>Instituição Financeira:</span>
-                                            <span style={{ fontWeight: 600, color: '#253D4E' }}>AbacatePay IP S.A.</span>
+                                            <span style={{ fontWeight: 600, color: '#253D4E' }}>ASAAS Gestão Financeira S.A.</span>
                                         </div>
                                     </div>
                                 </div>
@@ -1198,10 +1198,6 @@ export default function PartnerOrders() {
                                             <span>Comissão Bruta ClickPet (15%):</span>
                                             <span>R$ {selectedOrder.platformFee?.toFixed(2).replace('.', ',')}</span>
                                         </div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', color: '#3BB77E', fontWeight: 600 }}>
-                                            <span>Taxas da Operação (Absorvidas pela ClickPet):</span>
-                                            <span>R$ 1,60</span>
-                                        </div>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: 700, color: '#253D4E', borderTop: '1.5px solid #3BB77E', paddingTop: '8px', marginTop: '6px' }}>
                                             <span>Valor Líquido Recebido pelo Petshop (85%):</span>
                                             <span style={{ color: '#3BB77E', fontSize: '15px' }}>R$ {selectedOrder.splitAmount?.toFixed(2).replace('.', ',')}</span>
@@ -1220,7 +1216,7 @@ export default function PartnerOrders() {
                                 paddingTop: '1rem',
                                 marginTop: '0.5rem'
                             }}>
-                                Este comprovante é emitido automaticamente pela ClickPet em conformidade com as diretrizes do Banco Central do Brasil para transferências PIX. A transação correspondente foi liquidada de forma irreversível na conta do recebedor através do gateway de pagamento AbacatePay IP S.A.
+                                Este comprovante é emitido automaticamente pela ClickPet em conformidade com as diretrizes do Banco Central do Brasil para transferências PIX. A transação correspondente foi liquidada de forma irreversível na conta do recebedor através do gateway de pagamento ASAAS Gestão Financeira S.A.
                             </div>
                         </div>
 

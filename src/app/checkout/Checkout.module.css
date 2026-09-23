@@ -737,3 +737,136 @@
     flex-shrink: 0;
 }
 
+/* PIX Modal (transparent checkout) */
+.pixModalCard {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 20px;
+    max-width: 420px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+    animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.pixQrImage {
+    width: 220px;
+    height: 220px;
+    margin: 0.5rem auto 1.5rem;
+    display: block;
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+    padding: 0.5rem;
+}
+
+.pixCodeBox {
+    background: #F8FAF9;
+    border: 1px solid #E5E8E6;
+    border-radius: 10px;
+    padding: 0.9rem 1rem;
+    margin-bottom: 1rem;
+    max-height: 80px;
+    overflow-y: auto;
+}
+
+.pixCodeText {
+    font-family: monospace;
+    font-size: 0.8rem;
+    color: #4B5563;
+    word-break: break-all;
+    line-height: 1.4;
+}
+
+.pixCopyBtn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    padding: 1rem;
+    background: #3BB77E;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(59, 183, 126, 0.2);
+    transition: background 0.2s;
+    font-family: inherit;
+}
+
+.pixCopyBtn:hover {
+    background: #2d9063;
+}
+
+.pixWaitingRow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    margin-top: 1.2rem;
+    color: #7E8D9E;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.pixSpinner {
+    animation: pixSpin 1s linear infinite;
+}
+
+@keyframes pixSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.pixSuccessIconWrapper {
+    width: 64px;
+    height: 64px;
+    background: #E8F5EE;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto 1.5rem;
+    color: #16A34A;
+}
+
+/* Card Checkout (saved card selector / new card entry) */
+.cardPaymentArea {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #F0F2F5;
+}
+
+.cardsLoadingText {
+    color: #7E8D9E;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.saveCardCheckboxRow {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    margin-top: 1.2rem;
+    padding-top: 1.2rem;
+    border-top: 1px solid #E5E8E6;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #253D4E;
+    cursor: pointer;
+}
+
+.cardProcessingIconWrapper {
+    width: 64px;
+    height: 64px;
+    background: #EFF6FF;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto 1.5rem;
+    color: #2563EB;
+}
+

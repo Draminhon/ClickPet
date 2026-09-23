@@ -1,0 +1,138 @@
+.cardForm {
+    display: grid;
+    gap: 1.2rem;
+}
+
+.fieldGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.fieldLabel {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #4B5563;
+}
+
+.fieldInput {
+    padding: 0.85rem 1rem;
+    border-radius: 8px;
+    border: 1px solid #D1D5DB;
+    width: 100%;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s;
+    font-family: inherit;
+    background: white;
+}
+
+.fieldInput:focus {
+    border-color: #3BB77E;
+    box-shadow: 0 0 0 3px rgba(59, 183, 126, 0.1);
+}
+
+.inputWithIcon {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.inputWithIcon .fieldInput {
+    padding-left: 2.6rem;
+}
+
+.inputIcon {
+    position: absolute;
+    left: 0.9rem;
+    color: #9CA3AF;
+    pointer-events: none;
+}
+
+.brandBadge {
+    position: absolute;
+    right: 0.9rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #3BB77E;
+    background: #F3FAF6;
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+}
+
+.fieldRow2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.2rem;
+}
+
+.formError {
+    color: #EF4444;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.securityNote {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #7E8D9E;
+    font-size: 0.8rem;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.formActions {
+    display: flex;
+    gap: 0.8rem;
+    margin-top: 0.4rem;
+}
+
+.cancelBtn {
+    flex: 1;
+    padding: 0.9rem;
+    background: transparent;
+    color: #7E8D9E;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.95rem;
+    transition: background 0.2s;
+}
+
+.cancelBtn:hover:not(:disabled) {
+    background: #F8FAF9;
+}
+
+.submitBtn {
+    flex: 2;
+    padding: 0.9rem;
+    background: #3BB77E;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-family: inherit;
+}
+
+.submitBtn:hover:not(:disabled) {
+    background: #2d9063;
+}
+
+.submitBtn:disabled,
+.cancelBtn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+    .fieldRow2 {
+        grid-template-columns: 1fr;
+    }
+}

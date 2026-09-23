@@ -1,14 +1,30 @@
 "use client";
 
-import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/context/ToastContext';
 import { useLocation } from '@/context/LocationContext';
-import { AlertCircle, Truck, MapPin, CreditCard, QrCode, Plus, User } from 'lucide-react';
+import { AlertCircle, Truck, MapPin, CreditCard, QrCode, Plus, User, Copy, Check, Loader2 } from 'lucide-react';
 import MapPicker from '@/components/ui/MapPicker';
+import CardForm, { CardFormData } from '@/components/payments/CardForm';
 import { maskZip, formatAddress } from '@/utils/masks';
 import styles from './Checkout.module.css';
+
+interface SavedCard {
+    _id: string;
+    // NOT reliably unique per card — ASAAS's sandbox returns the same token
+    // for a customer no matter which card is tokenized, so `_id` (the saved
+    // row's own identity) is what selection/keys/delete use; `cardToken` is
+    // only ever read at charge time, when we send it to create-billing.
+    cardToken: string;
+    lastFourDigits: string;
+    brand: string;
+    expirationMonth: number;
+    expirationYear: number;
+    cardholderName: string;
+    addedAt?: string;
+}
 
 function CheckoutContent() {
     const router = useRouter();
@@ -36,7 +52,13 @@ function CheckoutContent() {
         lat: '',
         lng: '',
     });
+    // The backend keeps one primary address (`user.address`) separate from a
+    // list of additional ones (`user.deliveryAddresses`) — both need to be
+    // shown together here, or the primary silently disappears whenever the
+    // user also has secondary addresses saved.
+    const [primaryAddress, setPrimaryAddress] = useState<any | null>(null);
     const [deliveryAddresses, setDeliveryAddresses] = useState<any[]>([]);
+    const displayAddresses = primaryAddress ? [primaryAddress, ...deliveryAddresses] : deliveryAddresses;
     const [selectedAddressIndex, setSelectedAddressIndex] = useState<number | null>(null);
     const [showMissingDocModal, setShowMissingDocModal] = useState(false);
     const [showAddressForm, setShowAddressForm] = useState(false);
@@ -68,6 +90,36 @@ function CheckoutContent() {
     const [errorMessage, setErrorMessage] = useState('');
     const [createdOrders, setCreatedOrders] = useState<any[]>([]);
 
+    // Transparent PIX checkout: QR code shown in-app, never redirects to the
+    // gateway's hosted invoice page (which displays the ASAAS account holder's
+    // own registered name/CNPJ, not "ClickPet").
+    const [pixData, setPixData] = useState<{
+        orderId: string;
+        payload: string;
+        qrCodeImage: string;
+        expiresAt: string;
+    } | null>(null);
+    const [pixStatus, setPixStatus] = useState<'waiting' | 'paid' | 'expired'>('waiting');
+    const [pixCopied, setPixCopied] = useState(false);
+    const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+    // Card checkout ("Somente Cartão"): pick a previously-saved card (tokenized
+    // via /api/payments/cards) or enter a new one inline with CardForm. Same
+    // transparent-in-app philosophy as PIX above — never redirect to ASAAS's
+    // hosted invoice page.
+    const [savedCards, setSavedCards] = useState<SavedCard[]>([]);
+    const [cardsLoading, setCardsLoading] = useState(false);
+    const [cardsLoaded, setCardsLoaded] = useState(false);
+    const [selectedCardId, setSelectedCardId] = useState<string | 'new' | null>(null);
+    const [saveNewCard, setSaveNewCard] = useState(true);
+    const [cardFormLoading, setCardFormLoading] = useState(false);
+
+    // In-app "charging the card" modal — mirrors the PIX modal's states.
+    const [cardChargeOrderId, setCardChargeOrderId] = useState<string | null>(null);
+    const [cardChargeStatus, setCardChargeStatus] = useState<'processing' | 'polling' | 'success' | 'declined' | 'timeout' | null>(null);
+    const [cardChargeError, setCardChargeError] = useState('');
+    const cardPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
     useEffect(() => {
         // Fetch user addresses from profile
         fetch('/api/profile')
@@ -77,31 +129,22 @@ function CheckoutContent() {
                     setUserHasRequiredDocs(!!data.cpf && !!data.phone);
                 }
                 
-                if (data && data.deliveryAddresses && data.deliveryAddresses.length > 0) {
-                    setDeliveryAddresses(data.deliveryAddresses);
-                    setSelectedAddressIndex(0);
-                    // Update main address pointer
-                    setAddress({
-                        street: data.deliveryAddresses[0].street || '',
-                        number: data.deliveryAddresses[0].number || '',
-                        complement: data.deliveryAddresses[0].complement || '',
-                        city: data.deliveryAddresses[0].city || '',
-                        zip: data.deliveryAddresses[0].zip || '',
-                        lat: data.deliveryAddresses[0].coordinates?.coordinates?.[1]?.toString() || '',
-                        lng: data.deliveryAddresses[0].coordinates?.coordinates?.[0]?.toString() || '',
-                    });
-                } else if (data && data.address && data.address.street) {
-                    // Legacy fallback
-                    setDeliveryAddresses([data.address]);
+                const primary = data && data.address && data.address.street ? data.address : null;
+                const secondary = data && Array.isArray(data.deliveryAddresses) ? data.deliveryAddresses : [];
+                setPrimaryAddress(primary);
+                setDeliveryAddresses(secondary);
+
+                const combined = primary ? [primary, ...secondary] : secondary;
+                if (combined.length > 0) {
                     setSelectedAddressIndex(0);
                     setAddress({
-                        street: data.address.street || '',
-                        number: data.address.number || '',
-                        complement: data.address.complement || '',
-                        city: data.address.city || '',
-                        zip: data.address.zip || '',
-                        lat: data.address.coordinates?.coordinates?.[1]?.toString() || '',
-                        lng: data.address.coordinates?.coordinates?.[0]?.toString() || '',
+                        street: combined[0].street || '',
+                        number: combined[0].number || '',
+                        complement: combined[0].complement || '',
+                        city: combined[0].city || '',
+                        zip: combined[0].zip || '',
+                        lat: combined[0].coordinates?.coordinates?.[1]?.toString() || '',
+                        lng: combined[0].coordinates?.coordinates?.[0]?.toString() || '',
                     });
                 }
             })
@@ -293,12 +336,125 @@ function CheckoutContent() {
         setAppliedCoupons(prev => prev.filter(c => c.code !== code));
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    // Poll payment status while the PIX modal is open; stop on paid/expired/unmount.
+    useEffect(() => {
+        if (!pixData || pixStatus !== 'waiting') return;
 
+        const poll = async () => {
+            try {
+                const res = await fetch(`/api/payments/check-status?orderId=${pixData.orderId}`);
+                const data = await res.json();
+                if (data.status === 'PAID') {
+                    setPixStatus('paid');
+                    if (pollRef.current) clearInterval(pollRef.current);
+                    clearCart();
+                    setTimeout(() => router.push(`/payment/success?orderId=${pixData.orderId}`), 1200);
+                }
+            } catch (err) {
+                console.error('PIX status poll error:', err instanceof Error ? err.message : err);
+            }
+        };
+
+        poll();
+        pollRef.current = setInterval(poll, 4000);
+        return () => {
+            if (pollRef.current) clearInterval(pollRef.current);
+        };
+    }, [pixData, pixStatus, router, clearCart]);
+
+    // Flip to "expired" once the PIX charge's expiration timestamp passes.
+    useEffect(() => {
+        if (!pixData || pixStatus !== 'waiting') return;
+        const msLeft = new Date(pixData.expiresAt).getTime() - Date.now();
+        if (msLeft <= 0) {
+            setPixStatus('expired');
+            return;
+        }
+        const timer = setTimeout(() => setPixStatus('expired'), msLeft);
+        return () => clearTimeout(timer);
+    }, [pixData, pixStatus]);
+
+    // Fetch saved cards once the user picks "Somente Cartão" — no need to hit
+    // this endpoint for PIX-only checkouts.
+    useEffect(() => {
+        if (paymentMethod !== 'cartao' || cardsLoaded) return;
+
+        setCardsLoading(true);
+        fetch('/api/payments/cards')
+            .then(res => res.json())
+            .then(data => {
+                const cards: SavedCard[] = Array.isArray(data) ? data : [];
+                setSavedCards(cards);
+                setSelectedCardId(cards.length > 0 ? cards[0]._id : 'new');
+            })
+            .catch(err => {
+                console.error('Error fetching saved cards:', err instanceof Error ? err.message : err);
+                setSelectedCardId('new');
+            })
+            .finally(() => {
+                setCardsLoading(false);
+                setCardsLoaded(true);
+            });
+    }, [paymentMethod, cardsLoaded]);
+
+    // Poll payment status while a card charge is under risk analysis
+    // (AWAITING_RISK_ANALYSIS/PENDING) — same pattern as the PIX poll above,
+    // just capped at ~60s since a card charge that stays unresolved that long
+    // is unusual and shouldn't poll forever.
+    useEffect(() => {
+        if (!cardChargeOrderId || cardChargeStatus !== 'polling') return;
+
+        const startedAt = Date.now();
+        const POLL_TIMEOUT_MS = 60000;
+
+        const poll = async () => {
+            try {
+                const res = await fetch(`/api/payments/check-status?orderId=${cardChargeOrderId}`);
+                const data = await res.json();
+                if (data.status === 'PAID') {
+                    setCardChargeStatus('success');
+                    if (cardPollRef.current) clearInterval(cardPollRef.current);
+                    clearCart();
+                    setTimeout(() => router.push(`/payment/success?orderId=${cardChargeOrderId}`), 1200);
+                    return;
+                }
+                if (Date.now() - startedAt >= POLL_TIMEOUT_MS) {
+                    setCardChargeStatus('timeout');
+                    if (cardPollRef.current) clearInterval(cardPollRef.current);
+                }
+            } catch (err) {
+                console.error('Card status poll error:', err instanceof Error ? err.message : err);
+            }
+        };
+
+        poll();
+        cardPollRef.current = setInterval(poll, 4000);
+        return () => {
+            if (cardPollRef.current) clearInterval(cardPollRef.current);
+        };
+    }, [cardChargeOrderId, cardChargeStatus, router, clearCart]);
+
+    const handleCopyPixCode = async () => {
+        if (!pixData) return;
+        try {
+            await navigator.clipboard.writeText(pixData.payload);
+            setPixCopied(true);
+            setTimeout(() => setPixCopied(false), 2500);
+        } catch {
+            showToast('Não foi possível copiar automaticamente. Selecione o código manualmente.', 'error');
+        }
+    };
+
+    // Shared validation + order-creation preamble. Used by the main "Pagar e
+    // Finalizar Pedido" button (PIX / a saved card) AND by the inline
+    // CardForm's own submit button (brand-new card) — both need an order to
+    // exist before they can call create-billing, and re-clicking either one
+    // after a failed billing attempt must reuse the same order rather than
+    // creating a duplicate.
+    const prepareOrders = async (): Promise<any[] | null> => {
         if (!userHasRequiredDocs) {
             setShowMissingDocModal(true);
-            return;
+            return null;
         }
 
         // Validate each partner
@@ -309,85 +465,153 @@ function CheckoutContent() {
 
             if (pId !== 'unknown' && pInfo?.outOfRange && !isPickup) {
                 showToast(`Não é possível entregar itens da loja ${pInfo?.shopName || 'parceira'}`, 'error');
-                return;
+                return null;
             }
 
             if (pId !== 'unknown' && partnerSubtotal < (pInfo?.minimumOrder || 0)) {
                 showToast(`Subtotal da loja ${pInfo?.shopName || ''} (R$ ${partnerSubtotal.toFixed(2)}) é menor que o mínimo (R$ ${pInfo?.minimumOrder.toFixed(2)})`, 'error');
-                return;
+                return null;
             }
         }
 
         if (!isPickup && (!address.street || !address.city)) {
             showToast('Preencha o endereço de entrega', 'error');
+            return null;
+        }
+
+        if (createdOrders.length > 0) {
+            return createdOrders;
+        }
+
+        try {
+            const orderResults: any[] = [];
+            for (const pId of partnerIds) {
+                const pInfo = partnerData[pId];
+                const partnerItems = itemsByPartner[pId];
+                const partnerSubtotal = partnerItems.reduce((sum: number, i: any) => sum + (i.price * i.quantity), 0);
+
+                // Find coupon for this partner
+                const partnerCoupon = appliedCoupons.find(c => c.partnerId === pId);
+                const partnerDiscount = partnerCoupon ? partnerCoupon.amount : 0;
+
+                const partnerDelivery = isPickup ? 0 : (pInfo?.deliveryFee || 0);
+                const partnerTotal = partnerSubtotal - partnerDiscount + partnerDelivery;
+
+                const orderPayload: any = {
+                    items: partnerItems.map((item: any) => ({
+                        ...item,
+                        productId: item.id
+                    })),
+                    partnerId: pId === 'unknown' ? undefined : pId,
+                    total: partnerTotal,
+                    deliveryFee: partnerDelivery,
+                    distance: pInfo?.distance || 0,
+                    isPickup,
+                    paymentMethod,
+                    address: isPickup ? {} : {
+                        ...address,
+                        coordinates: address.lat && address.lng ? {
+                            type: 'Point',
+                            coordinates: [parseFloat(address.lng), parseFloat(address.lat)]
+                        } : undefined,
+                    },
+                    coupon: partnerCoupon?.code || undefined,
+                    discount: partnerDiscount,
+                    // If multiple partners, we only apply points to the FIRST order to be simple
+                    pointsRedeemed: (orderResults.length === 0 && usePoints) ? pointsToRedeem : 0,
+                };
+
+                const orderRes = await fetch('/api/orders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(orderPayload),
+                });
+
+                if (!orderRes.ok) {
+                    setErrorMessage('Houve um problema ao criar seu pedido. Por favor, tente novamente.');
+                    setShowErrorModal(true);
+                    return null;
+                }
+
+                const orderData = await orderRes.json();
+                orderResults.push(orderData);
+            }
+            setCreatedOrders(orderResults);
+            return orderResults;
+        } catch (error) {
+            console.error('Checkout error:', error);
+            setErrorMessage('Ocorreu um erro ao processar sua compra.');
+            setShowErrorModal(true);
+            return null;
+        }
+    };
+
+    // Charges a saved-card token synchronously via create-billing and drives
+    // the in-app card modal through its three possible outcomes: paid right
+    // away, declined outright (route throws → non-ok response), or still
+    // resolving (AWAITING_RISK_ANALYSIS/PENDING) — in which case we poll
+    // check-status, same as PIX does.
+    const chargeWithCard = async (orderId: string, cardToken: string) => {
+        setCardChargeOrderId(orderId);
+        setCardChargeStatus('processing');
+        setCardChargeError('');
+
+        try {
+            const res = await fetch('/api/payments/create-billing', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderId, cardToken }),
+            });
+            const data = await res.json();
+
+            if (!res.ok) {
+                setCardChargeStatus('declined');
+                setCardChargeError(data.message || 'Pagamento recusado. Verifique os dados do cartão ou tente outro cartão.');
+                return;
+            }
+
+            if (data.paid) {
+                setCardChargeStatus('success');
+                clearCart();
+                setTimeout(() => router.push(`/payment/success?orderId=${orderId}`), 1200);
+                return;
+            }
+
+            // Not declined, not yet confirmed (e.g. AWAITING_RISK_ANALYSIS/PENDING).
+            setCardChargeStatus('polling');
+        } catch (err) {
+            console.error('Card charge error:', err instanceof Error ? err.message : err);
+            setCardChargeStatus('declined');
+            setCardChargeError('Houve uma falha ao comunicar-se com o gateway de pagamento.');
+        }
+    };
+
+    // Main submit button: PIX / PIX-ou-Cartão (unchanged in-app PIX flow), or
+    // "Somente Cartão" with an already-selected saved card. Entering a brand
+    // new card is handled separately by CardForm's own submit button below
+    // (see handleNewCardSubmit) since ASAAS can only charge a token — the
+    // card has to be tokenized before create-billing can even be called.
+    const handleSubmit = async () => {
+        if (paymentMethod === 'cartao' && selectedCardId === 'new') {
+            showToast('Preencha os dados do novo cartão para continuar.', 'error');
             return;
         }
 
         setLoading(true);
-
         try {
-            // Submit separate orders for each partner if not already created
-            let orderResults = [...createdOrders];
-
-            if (orderResults.length === 0) {
-                for (const pId of partnerIds) {
-                    const pInfo = partnerData[pId];
-                    const partnerItems = itemsByPartner[pId];
-                    const partnerSubtotal = partnerItems.reduce((sum: number, i: any) => sum + (i.price * i.quantity), 0);
-
-                    // Find coupon for this partner
-                    const partnerCoupon = appliedCoupons.find(c => c.partnerId === pId);
-                    const partnerDiscount = partnerCoupon ? partnerCoupon.amount : 0;
-
-                    const partnerDelivery = isPickup ? 0 : (pInfo?.deliveryFee || 0);
-                    const partnerTotal = partnerSubtotal - partnerDiscount + partnerDelivery;
-
-                    const orderPayload: any = {
-                        items: partnerItems.map((item: any) => ({
-                            ...item,
-                            productId: item.id
-                        })),
-                        partnerId: pId === 'unknown' ? undefined : pId,
-                        total: partnerTotal,
-                        deliveryFee: partnerDelivery,
-                        distance: pInfo?.distance || 0,
-                        isPickup,
-                        paymentMethod,
-                        address: isPickup ? {} : {
-                            ...address,
-                            coordinates: address.lat && address.lng ? {
-                                type: 'Point',
-                                coordinates: [parseFloat(address.lng), parseFloat(address.lat)]
-                            } : undefined,
-                        },
-                        coupon: partnerCoupon?.code || undefined,
-                        discount: partnerDiscount,
-                        // If multiple partners, we only apply points to the FIRST order to be simple
-                        pointsRedeemed: (orderResults.length === 0 && usePoints) ? pointsToRedeem : 0,
-                    };
-
-                    const orderRes = await fetch('/api/orders', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(orderPayload),
-                    });
-
-                    if (!orderRes.ok) {
-                        setErrorMessage('Houve um problema ao criar seu pedido. Por favor, tente novamente.');
-                        setShowErrorModal(true);
-                        setLoading(false);
-                        return;
-                    }
-
-                    const orderData = await orderRes.json();
-                    orderResults.push(orderData);
-                }
-                setCreatedOrders(orderResults);
-            }
-
-            // Create billing for the first order (AbacatePay)
-            // Note: If multiple orders, we process the first one for now
+            const orderResults = await prepareOrders();
+            if (!orderResults) return;
             const mainOrder = orderResults[0];
+
+            if (paymentMethod === 'cartao') {
+                const selectedCard = savedCards.find(c => c._id === selectedCardId);
+                if (!selectedCard) {
+                    showToast('Selecione um cartão para continuar.', 'error');
+                    return;
+                }
+                await chargeWithCard(mainOrder._id, selectedCard.cardToken);
+                return;
+            }
 
             try {
                 const billingRes = await fetch('/api/payments/create-billing', {
@@ -398,29 +622,86 @@ function CheckoutContent() {
 
                 const billingData = await billingRes.json();
 
-                if (billingRes.ok && billingData.billingUrl) {
-                    clearCart();
-                    // Redirect to AbacatePay payment page
-                    window.location.href = billingData.billingUrl;
-                    return;
+                if (billingRes.ok && billingData.pix) {
+                    // PIX: stay in-app and show the QR code/copia-e-cola instead of
+                    // redirecting to the gateway's hosted invoice page.
+                    setPixData({
+                        orderId: mainOrder._id,
+                        payload: billingData.pix.payload,
+                        qrCodeImage: billingData.pix.qrCodeImage,
+                        expiresAt: billingData.pix.expiresAt,
+                    });
+                    setPixStatus('waiting');
                 } else if (billingRes.status === 400 && billingData.message && (billingData.message.includes('CPF') || billingData.message.includes('CNPJ'))) {
                     setShowMissingDocModal(true);
                 } else {
-                    console.error('Billing error:', billingData);
-                    setErrorMessage(billingData.message || 'Houve um erro ao processar o seu pagamento no AbacatePay.');
+                    console.error('Billing error:', billingRes.status, billingData);
+                    setErrorMessage(billingData.message || 'Houve um erro ao processar o seu pagamento.');
                     setShowErrorModal(true);
                 }
             } catch (billingError) {
-                console.error('Billing error:', billingError);
+                console.error('Billing error:', billingError instanceof Error ? billingError.message : billingError);
                 setErrorMessage('Houve uma falha ao comunicar-se com o gateway de pagamento.');
                 setShowErrorModal(true);
             }
-        } catch (error) {
-            console.error('Checkout error:', error);
-            setErrorMessage('Ocorreu um erro ao processar sua compra.');
-            setShowErrorModal(true);
         } finally {
             setLoading(false);
+        }
+    };
+
+    // CardForm's own submit button (brand new card, no saved token yet):
+    // tokenizes the card first (mandatory — ASAAS only charges via a saved
+    // token, there's no one-off transparent card charge in this API), then
+    // charges it. If the user didn't want it kept for next time, the
+    // freshly-created token is deleted right after the charge attempt.
+    const handleNewCardSubmit = async (data: CardFormData) => {
+        setCardFormLoading(true);
+        try {
+            const orderResults = await prepareOrders();
+            if (!orderResults) return;
+            const mainOrder = orderResults[0];
+
+            const tokenizeRes = await fetch('/api/payments/cards', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+            const tokenizeData = await tokenizeRes.json();
+
+            if (!tokenizeRes.ok) {
+                showToast(tokenizeData.message || 'Não foi possível salvar o cartão.', 'error');
+                return;
+            }
+
+            const updatedCards: SavedCard[] = Array.isArray(tokenizeData) ? tokenizeData : [];
+            setSavedCards(updatedCards);
+            const newCard = updatedCards[updatedCards.length - 1];
+            if (!newCard) {
+                showToast('Não foi possível processar o cartão.', 'error');
+                return;
+            }
+
+            if (saveNewCard) {
+                setSelectedCardId(newCard._id);
+            }
+
+            await chargeWithCard(mainOrder._id, newCard.cardToken);
+
+            // Tokenizing was mandatory regardless of the checkbox — if the user
+            // didn't actually want it kept on file, remove it now rather than
+            // leaving an unwanted card saved to their account. Deleted by its
+            // own `_id`, not `cardToken` — the token alone can't tell this row
+            // apart from another saved card that happens to share it.
+            if (!saveNewCard) {
+                fetch(`/api/payments/cards/${newCard._id}`, { method: 'DELETE' }).catch(err => {
+                    console.error('Error removing non-saved card:', err instanceof Error ? err.message : err);
+                });
+            }
+        } catch (err) {
+            console.error('New card checkout error:', err instanceof Error ? err.message : err);
+            showToast('Ocorreu um erro ao processar o pagamento.', 'error');
+        } finally {
+            setCardFormLoading(false);
         }
     };
 
@@ -453,7 +734,7 @@ function CheckoutContent() {
 
     const handleSelectAddress = (idx: number) => {
         setSelectedAddressIndex(idx);
-        const addr = deliveryAddresses[idx];
+        const addr = displayAddresses[idx];
         setAddress({
             street: addr.street || '',
             number: addr.number || '',
@@ -487,15 +768,14 @@ function CheckoutContent() {
                 }
             };
 
-            const updatedAddrs = [...deliveryAddresses, formData];
-            
-            const payload: any = { deliveryAddresses: updatedAddrs };
-            
-            // Check if there's no primary address already, make this the primary as well
-            const hasPrimary = deliveryAddresses.length > 0;
-            if (!hasPrimary) {
-                payload.address = formData;
-            }
+            // The first address ever saved becomes the primary (`user.address`);
+            // every one after that goes into the secondary `deliveryAddresses`
+            // list — mirrors how /profile saves addresses, so the two stay
+            // in the same shape on the backend.
+            const hasPrimary = !!primaryAddress;
+            const payload: any = hasPrimary
+                ? { deliveryAddresses: [...deliveryAddresses, formData] }
+                : { address: formData };
 
             const res = await fetch('/api/profile', {
                 method: 'PUT',
@@ -504,11 +784,17 @@ function CheckoutContent() {
             });
 
             if (res.ok) {
-                setDeliveryAddresses(updatedAddrs);
-                setSelectedAddressIndex(updatedAddrs.length - 1);
+                if (hasPrimary) {
+                    const updatedSecondary = [...deliveryAddresses, formData];
+                    setDeliveryAddresses(updatedSecondary);
+                    setSelectedAddressIndex(updatedSecondary.length); // last in [primary, ...secondary]
+                } else {
+                    setPrimaryAddress(formData);
+                    setSelectedAddressIndex(0);
+                }
                 setShowAddressForm(false);
                 showToast('Endereço adicionado aos seus locais!');
-                
+
                 // Update LocationContext top bar immediately if this is the primary address
                 if (!hasPrimary) {
                     setLocationManual(
@@ -543,7 +829,16 @@ function CheckoutContent() {
             <h1 className="section-title">Finalizar Pedido</h1>
 
             <div className={styles.checkoutGrid}>
-                <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '1.5rem' }}>
+                {/*
+                    Not a native <form>: CardForm below (used for the "enter a
+                    new card" step) renders its own <form>, and nesting a
+                    <form> inside a <form> is invalid HTML that browsers won't
+                    reliably submit correctly. Submission is instead driven
+                    explicitly by the "Pagar e Finalizar Pedido" button's
+                    onClick (and, for a brand-new card, by CardForm's own
+                    submit button — see handleNewCardSubmit).
+                */}
+                <div style={{ display: 'grid', gap: '1.5rem' }}>
                     {/* Delivery Option */}
                     <div className={styles.checkoutCard}>
                         <h3 className={styles.cardTitle}>Opção de Entrega</h3>
@@ -576,7 +871,7 @@ function CheckoutContent() {
                         <div className={styles.checkoutCard}>
                             <div className={styles.cardHeader}>
                                 <h3 className={styles.cardTitle}>Local de Entrega</h3>
-                                {deliveryAddresses.length > 0 && !showAddressForm && (
+                                {displayAddresses.length > 0 && !showAddressForm && (
                                     <button 
                                         type="button" 
                                         onClick={() => setShowAddressForm(true)}
@@ -587,7 +882,7 @@ function CheckoutContent() {
                                 )}
                             </div>
 
-                            {deliveryAddresses.length === 0 && !showAddressForm && (
+                            {displayAddresses.length === 0 && !showAddressForm && (
                                 <div className={styles.addressEmptyState}>
                                     <MapPin size={40} className={styles.addressEmptyIcon} />
                                     <p className={styles.addressEmptyText}>
@@ -603,9 +898,9 @@ function CheckoutContent() {
                                 </div>
                             )}
 
-                            {deliveryAddresses.length > 0 && !showAddressForm && (
+                            {displayAddresses.length > 0 && !showAddressForm && (
                                 <div className={styles.addressList}>
-                                    {deliveryAddresses.map((addr, idx) => (
+                                    {displayAddresses.map((addr, idx) => (
                                         <label key={idx} className={`${styles.addressLabel} ${selectedAddressIndex === idx ? styles.addressLabelActive : ''}`}>
                                             <input 
                                                 type="radio" 
@@ -631,7 +926,7 @@ function CheckoutContent() {
                                 <div className={styles.newAddressForm}>
                                     <div className={styles.newAddressFormHeader}>
                                         <h4 className={styles.newAddressFormTitle}>Novo Endereço</h4>
-                                        {deliveryAddresses.length > 0 && (
+                                        {displayAddresses.length > 0 && (
                                             <button type="button" onClick={() => setShowAddressForm(false)} className={styles.cancelFormBtn}>
                                                 Cancelar
                                             </button>
@@ -842,16 +1137,97 @@ function CheckoutContent() {
                                 <span className={`${styles.paymentLabelText} ${paymentMethod === 'cartao' ? styles.paymentLabelTextActive : ''}`}>Somente Cartão</span>
                             </label>
                         </div>
+
+                        {paymentMethod === 'cartao' && (
+                            <div className={styles.cardPaymentArea}>
+                                {cardsLoading && (
+                                    <p className={styles.cardsLoadingText}>Carregando seus cartões...</p>
+                                )}
+
+                                {!cardsLoading && savedCards.length > 0 && selectedCardId !== 'new' && (
+                                    <div className={styles.addressList}>
+                                        {savedCards.map((card) => (
+                                            <label
+                                                key={card._id}
+                                                className={`${styles.addressLabel} ${selectedCardId === card._id ? styles.addressLabelActive : ''}`}
+                                            >
+                                                <input
+                                                    type="radio"
+                                                    name="selectedCard"
+                                                    checked={selectedCardId === card._id}
+                                                    onChange={() => setSelectedCardId(card._id)}
+                                                    className={styles.addressInputRadio}
+                                                />
+                                                <div className={styles.addressCardContent}>
+                                                    <div className={styles.addressCardTitle}>
+                                                        {card.brand || 'Cartão'} •••• {card.lastFourDigits}
+                                                    </div>
+                                                    <div className={styles.addressCardSubtitle}>{card.cardholderName}</div>
+                                                    <div className={styles.addressCardZip}>
+                                                        Validade {String(card.expirationMonth).padStart(2, '0')}/{String(card.expirationYear).slice(-2)}
+                                                    </div>
+                                                </div>
+                                            </label>
+                                        ))}
+                                        <button
+                                            type="button"
+                                            onClick={() => setSelectedCardId('new')}
+                                            className={styles.addAddressButton}
+                                        >
+                                            <Plus size={16} /> Usar novo cartão
+                                        </button>
+                                    </div>
+                                )}
+
+                                {!cardsLoading && (savedCards.length === 0 || selectedCardId === 'new') && (
+                                    <div className={styles.newAddressForm}>
+                                        <div className={styles.newAddressFormHeader}>
+                                            <h4 className={styles.newAddressFormTitle}>Novo Cartão</h4>
+                                            {savedCards.length > 0 && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setSelectedCardId(savedCards[0]._id)}
+                                                    className={styles.cancelFormBtn}
+                                                >
+                                                    Cancelar
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        <CardForm
+                                            onSubmit={handleNewCardSubmit}
+                                            submitLabel="Pagar com este cartão"
+                                            loading={cardFormLoading}
+                                        />
+
+                                        <label className={styles.saveCardCheckboxRow}>
+                                            <input
+                                                type="checkbox"
+                                                checked={saveNewCard}
+                                                onChange={(e) => setSaveNewCard(e.target.checked)}
+                                                className={styles.addressInputRadio}
+                                            />
+                                            <span>Salvar cartão para próximas compras</span>
+                                        </label>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     <button
-                        type="submit"
-                        disabled={loading}
+                        type="button"
+                        onClick={handleSubmit}
+                        disabled={loading || (paymentMethod === 'cartao' && selectedCardId === 'new')}
                         className={styles.submitCheckoutBtn}
                     >
-                        {loading ? 'Preparando Integração Segura...' : 'Pagar e Finalizar Pedido'}
+                        {loading
+                            ? 'Preparando Integração Segura...'
+                            : (paymentMethod === 'cartao' && selectedCardId === 'new')
+                                ? 'Preencha os dados do cartão acima'
+                                : 'Pagar e Finalizar Pedido'}
                     </button>
-                </form>
+                </div>
 
                 {/* Summary */}
                 <div>
@@ -944,6 +1320,141 @@ function CheckoutContent() {
                     </div>
                 </div>
             </div>
+
+            {/* PIX Modal (transparent checkout — never leaves ClickPet) */}
+            {pixData && (
+                <div className={styles.modalOverlay}>
+                    <div className={styles.pixModalCard}>
+                        {pixStatus === 'paid' ? (
+                            <>
+                                <div className={styles.pixSuccessIconWrapper}>
+                                    <Check size={32} />
+                                </div>
+                                <h2 className={styles.modalTitle}>Pagamento confirmado!</h2>
+                                <p className={styles.modalDesc}>Redirecionando...</p>
+                            </>
+                        ) : pixStatus === 'expired' ? (
+                            <>
+                                <div className={styles.modalIconWrapper}>
+                                    <AlertCircle size={32} />
+                                </div>
+                                <h2 className={styles.modalTitle}>QR Code expirado</h2>
+                                <p className={styles.modalDesc}>
+                                    O tempo para pagamento deste PIX acabou. Gere um novo código para continuar.
+                                </p>
+                                <button
+                                    type="button"
+                                    onClick={() => { setPixData(null); setPixStatus('waiting'); }}
+                                    className={styles.modalActionBtn}
+                                >
+                                    Gerar novo QR Code
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <h2 className={styles.modalTitle}>Pague com PIX</h2>
+                                <p className={styles.modalDesc}>
+                                    Escaneie o QR Code no app do seu banco ou copie o código abaixo.
+                                </p>
+
+                                {pixData.qrCodeImage && (
+                                    <img
+                                        src={`data:image/png;base64,${pixData.qrCodeImage}`}
+                                        alt="QR Code PIX"
+                                        className={styles.pixQrImage}
+                                    />
+                                )}
+
+                                <div className={styles.pixCodeBox}>
+                                    <span className={styles.pixCodeText}>{pixData.payload}</span>
+                                </div>
+
+                                <button type="button" onClick={handleCopyPixCode} className={styles.pixCopyBtn}>
+                                    {pixCopied ? <Check size={18} /> : <Copy size={18} />}
+                                    {pixCopied ? 'Código copiado!' : 'Copiar código PIX'}
+                                </button>
+
+                                <div className={styles.pixWaitingRow}>
+                                    <Loader2 size={16} className={styles.pixSpinner} />
+                                    Aguardando confirmação do pagamento...
+                                </div>
+
+                                <button
+                                    type="button"
+                                    onClick={() => { setPixData(null); setPixStatus('waiting'); }}
+                                    className={styles.modalCancelBtn}
+                                >
+                                    Cancelar
+                                </button>
+                            </>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* Card Charge Modal (transparent checkout — never leaves ClickPet) */}
+            {cardChargeStatus && (
+                <div className={styles.modalOverlay}>
+                    <div className={styles.pixModalCard}>
+                        {cardChargeStatus === 'success' ? (
+                            <>
+                                <div className={styles.pixSuccessIconWrapper}>
+                                    <Check size={32} />
+                                </div>
+                                <h2 className={styles.modalTitle}>Pagamento aprovado!</h2>
+                                <p className={styles.modalDesc}>Redirecionando...</p>
+                            </>
+                        ) : cardChargeStatus === 'declined' ? (
+                            <>
+                                <div className={styles.modalIconWrapper}>
+                                    <AlertCircle size={32} />
+                                </div>
+                                <h2 className={styles.modalTitle}>Pagamento não aprovado</h2>
+                                <p className={styles.modalDesc}>
+                                    {cardChargeError || 'O pagamento foi recusado pela operadora do cartão. Verifique os dados ou tente outro cartão.'}
+                                </p>
+                                <button
+                                    type="button"
+                                    onClick={() => { setCardChargeStatus(null); setCardChargeOrderId(null); }}
+                                    className={styles.modalActionBtn}
+                                >
+                                    Tentar novamente
+                                </button>
+                            </>
+                        ) : cardChargeStatus === 'timeout' ? (
+                            <>
+                                <div className={styles.modalIconWrapper}>
+                                    <AlertCircle size={32} />
+                                </div>
+                                <h2 className={styles.modalTitle}>Ainda estamos confirmando</h2>
+                                <p className={styles.modalDesc}>
+                                    Seu pagamento está em análise e pode levar mais alguns minutos para ser confirmado.
+                                    Você pode acompanhar o status do seu pedido em "Meus Pedidos".
+                                </p>
+                                <button
+                                    type="button"
+                                    onClick={() => { setCardChargeStatus(null); setCardChargeOrderId(null); router.push('/orders'); }}
+                                    className={styles.modalActionBtn}
+                                >
+                                    Ver meus pedidos
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <div className={styles.cardProcessingIconWrapper}>
+                                    <Loader2 size={32} className={styles.pixSpinner} />
+                                </div>
+                                <h2 className={styles.modalTitle}>Processando pagamento...</h2>
+                                <p className={styles.modalDesc}>
+                                    {cardChargeStatus === 'polling'
+                                        ? 'Estamos confirmando seu pagamento com a operadora do cartão. Isso pode levar alguns instantes.'
+                                        : 'Não feche esta janela enquanto processamos o pagamento do seu cartão.'}
+                                </p>
+                            </>
+                        )}
+                    </div>
+                </div>
+            )}
 
             {/* Missing Document Modal */}
             {showMissingDocModal && (

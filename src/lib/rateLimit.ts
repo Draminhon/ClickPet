@@ -49,5 +49,20 @@ export class RateLimiter {
 // Limits: 10 requests per 5 minutes per IP
 export const authRateLimiter = new RateLimiter({
     maxRequests: 10,
-    windowMs: 5 * 60 * 1000, 
+    windowMs: 5 * 60 * 1000,
+});
+
+// Ações de escrita autenticadas fora do login (agendamento, mensagem, chat).
+// Chavear por userId, não por IP — são rotas que já exigem sessão.
+// Limites: 30 requisições por minuto por usuário.
+export const writeRateLimiter = new RateLimiter({
+    maxRequests: 30,
+    windowMs: 60 * 1000,
+});
+
+// /api/chat é público de propósito (bot institucional/investidor, sem login).
+// Chaveado por IP para conter abuso de custo de LLM sem exigir autenticação.
+export const chatRateLimiter = new RateLimiter({
+    maxRequests: 15,
+    windowMs: 5 * 60 * 1000,
 });

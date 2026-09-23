@@ -28,7 +28,7 @@ function PaymentSuccessContent() {
                 const res = await fetch(`/api/payments/check-status?${params}`);
                 const data = await res.json();
 
-                if (data.status === 'PAID' || data.status === 'COMPLETED' || data.status === 'FINISHED') {
+                if (data.status === 'PAID') {
                     if (!isCancelled) setStatus('approved');
                     return true;
                 }
@@ -49,7 +49,7 @@ function PaymentSuccessContent() {
                 if (confirmed) return; // Exit loop if approved
                 
                 if (i === MAX_ATTEMPTS && !isCancelled) {
-                    // After max attempts, assume it worked since AbacatePay redirected here
+                    // After max attempts, assume it worked since the gateway redirected here
                     setStatus('approved');
                     return;
                 }

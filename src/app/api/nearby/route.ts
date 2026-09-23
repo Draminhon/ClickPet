@@ -126,6 +126,20 @@ export async function GET(req: Request) {
                 // SECURITY: Never leak encrypted PII strings (whatsapp/phone) to the public frontend
                 whatsapp: '', 
                 crmv: partner.role === 'veterinarian' ? partner.crmv || '' : '',
+                // Endereço comercial público da loja — usado pelo mapa do perfil.
+                // Só os campos do estabelecimento, sem complemento (que costuma
+                // guardar referências pessoais).
+                address: partner.address
+                    ? {
+                        street: partner.address.street || '',
+                        number: partner.address.number || '',
+                        neighborhood: partner.address.neighborhood || '',
+                        city: partner.address.city || '',
+                        state: partner.address.state || '',
+                        zip: partner.address.zip || '',
+                        coordinates: partner.address.coordinates || null,
+                    }
+                    : null,
                 distance,
                 deliveryFee,
                 deliveryRadius: partner.deliveryRadius || 10,
@@ -138,7 +152,16 @@ export async function GET(req: Request) {
             });
         }
 
-        nearbyPartners.sort((a, b) => a.distance - b.distance);
+        // Partners without a saved address pin get `distance: null` (never
+        // computed, never will be) — `a.distance - b.distance` on those is
+        // NaN, which scatters them unpredictably through the list instead of
+        // just sorting last, where an unranked entry belongs.
+        nearbyPartners.sort((a, b) => {
+            if (a.distance == null && b.distance == null) return 0;
+            if (a.distance == null) return 1;
+            if (b.distance == null) return -1;
+            return a.distance - b.distance;
+        });
 
         const realPartnerIds = realPartners.map(p => String(p._id));
         const nearbyRealIds = nearbyPartners.filter(p => realPartnerIds.includes(p._id)).map(p => p._id);

@@ -5,15 +5,15 @@ import Subscription from '@/models/Subscription';
 import User from '@/models/User';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import { getBilling } from '@/lib/abacatepay';
+import { getPayment } from '@/lib/asaas';
 import notificationService from '@/lib/notification-service';
 import { processPartnerPayout } from '@/lib/split-service';
 
 /**
  * GET /api/payments/check-status?orderId=xxx
  * or  /api/payments/check-status?subscriptionId=xxx
- * 
- * Polls AbacatePay for the current billing status.
+ *
+ * Polls ASAAS for the current charge status.
  * Used as alternative to webhooks during development.
  */
 export async function GET(req: Request) {
@@ -47,7 +47,7 @@ export async function GET(req: Request) {
                 record.partnerId?.toString() !== session.user.id) {
                 return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
             }
-            billingId = record.abacatepayBillingId;
+            billingId = record.asaasPaymentId;
             type = 'order';
         } else if (subscriptionId) {
             record = await Subscription.findById(subscriptionId);
@@ -58,7 +58,7 @@ export async function GET(req: Request) {
             if (record.partnerId.toString() !== session.user.id) {
                 return NextResponse.json({ message: 'Unauthorized access to subscription' }, { status: 401 });
             }
-            billingId = record.abacatepayBillingId;
+            billingId = record.asaasPaymentId;
             type = 'subscription';
         }
 
@@ -69,49 +69,77 @@ export async function GET(req: Request) {
             });
         }
 
-        // Poll AbacatePay for the billing status
-        let billing;
+        // Poll ASAAS for the charge status
+        let payment;
         try {
-            billing = await getBilling(billingId);
-            console.log(`[CheckStatus] Billing ${billingId} status from AbacatePay:`, billing.status);
+            payment = await getPayment(billingId);
+            console.log(`[CheckStatus] Payment ${billingId} status from ASAAS:`, payment.status);
         } catch (apiError: any) {
-            if (apiError.message && (apiError.message.includes('Not found') || apiError.message.includes('404'))) {
-                console.warn(`[CheckStatus] Billing ${billingId} not found in AbacatePay yet (eventual consistency). Retrying...`);
+            // 404 = a cobrança não existe mais na ASAAS (ex: apagada direto no
+            // painel/sandbox) — não é sincronização atrasada, é definitivo.
+            // Tratar isso como "PENDING, tenta de novo depois" faria o cliente
+            // (e qualquer polling automático) ficar preso nisso para sempre.
+            if (apiError.status === 404 && type === 'order' && record.paymentStatus === 'pending') {
+                record.paymentStatus = 'rejected';
+                record.status = 'cancelled';
+                record.cancelReason = 'Cobrança não encontrada na ASAAS (excluída)';
+                record.cancelledAt = new Date();
+                await record.save();
+                console.warn(`[CheckStatus] Payment ${billingId} not found on ASAAS (404) — order ${record._id} cancelled`);
                 return NextResponse.json({
-                    status: 'PENDING',
-                    paymentStatus: 'pending',
-                    message: 'Aguardando sincronização com gateway...'
+                    status: 'CANCELLED',
+                    paymentStatus: 'rejected',
+                    message: 'Cobrança não encontrada na ASAAS.'
                 });
             }
-            throw apiError;
+
+            console.warn(`[CheckStatus] Payment ${billingId} not reachable yet on ASAAS. Retrying...`, apiError.message);
+            return NextResponse.json({
+                status: 'PENDING',
+                paymentStatus: 'pending',
+                message: 'Aguardando sincronização com gateway...'
+            });
         }
 
-        // Update local record if payment is confirmed
-        // Added 'FINISHED' as a possible success status
-        if (billing.status === 'PAID' || billing.status === 'COMPLETED' || billing.status === 'FINISHED') {
+        // Update local record if payment is confirmed. ASAAS uses CONFIRMED for
+        // an authorized card charge and RECEIVED once the money settles (PIX
+        // settles immediately, so RECEIVED is the normal PIX-paid status).
+        if (payment.status === 'CONFIRMED' || payment.status === 'RECEIVED') {
             if (type === 'order' && record.paymentStatus !== 'approved') {
-                record.paymentStatus = 'approved';
-                await record.save();
+                // Atomic claim: only proceeds if this call is the one that
+                // actually flips pending → approved. The app polls this
+                // endpoint every few seconds while a webhook can land at the
+                // same moment — a plain "check then save" here let both race
+                // into processPartnerPayout with a stale 'pending' read.
+                const approvedOrder = await Order.findOneAndUpdate(
+                    { _id: record._id, paymentStatus: { $ne: 'approved' } },
+                    { $set: { paymentStatus: 'approved' } },
+                    { new: true },
+                );
 
-                // Notify partner
-                if (record.partnerId) {
-                    await notificationService.notifyPartnerNewOrder(
-                        record.partnerId.toString(),
-                        record._id.toString(),
-                        record.total
-                    );
-                }
+                if (approvedOrder) {
+                    record = approvedOrder;
 
-                // ── SPLIT: Send 85% pure to partner via PIX ──
-                try {
-                    const splitResult = await processPartnerPayout(record);
-                    if (splitResult.success) {
-                        console.log(`[CheckStatus] ✅ Split completed for order ${record._id}: R$ ${splitResult.splitAmount?.toFixed(2)} → partner`);
-                    } else {
-                        console.warn(`[CheckStatus] ⚠️ Split issue for order ${record._id}: ${splitResult.error}`);
+                    // Notify partner
+                    if (record.partnerId) {
+                        await notificationService.notifyPartnerNewOrder(
+                            record.partnerId.toString(),
+                            record._id.toString(),
+                            record.total
+                        );
                     }
-                } catch (splitErr: any) {
-                    console.error(`[CheckStatus] ❌ Split error for order ${record._id}:`, splitErr.message);
+
+                    // ── SPLIT: Send 85% pure to partner via PIX ──
+                    try {
+                        const splitResult = await processPartnerPayout(record);
+                        if (splitResult.success) {
+                            console.log(`[CheckStatus] ✅ Split completed for order ${record._id}: R$ ${splitResult.splitAmount?.toFixed(2)} → partner`);
+                        } else {
+                            console.warn(`[CheckStatus] ⚠️ Split issue for order ${record._id}: ${splitResult.error}`);
+                        }
+                    } catch (splitErr: any) {
+                        console.error(`[CheckStatus] ❌ Split error for order ${record._id}:`, splitErr.message);
+                    }
                 }
             } else if (type === 'subscription') {
                 const isAlreadyActive = record.status === 'active';
@@ -132,7 +160,7 @@ export async function GET(req: Request) {
                     action: isAlreadyActive ? 'upgraded' : 'renewed',
                     newPlan: intendedPlan,
                     date: new Date(),
-                    notes: 'Pagamento confirmado via AbacatePay (polling)',
+                    notes: 'Pagamento confirmado via ASAAS (polling)',
                 });
                 await record.save();
             }
@@ -146,11 +174,17 @@ export async function GET(req: Request) {
             console.log(`[Total Time] ${duration.toFixed(2)} seconds\n`);
         }
 
+        // Normalizado para o vocabulário que o checkout web já espera
+        // (`payment/success/page.tsx` só olha para `status === 'PAID'`), para
+        // não precisar tocar nessas páginas ao trocar de gateway.
+        const normalizedStatus =
+            payment.status === 'CONFIRMED' || payment.status === 'RECEIVED' ? 'PAID' : payment.status;
+
         return NextResponse.json({
-            status: billing.status,
+            status: normalizedStatus,
             paymentStatus: type === 'order' ? record.paymentStatus : record.status,
-            billingId: billing.id,
-            amount: billing.amount,
+            billingId: payment.id,
+            amount: payment.value,
         });
     } catch (error: any) {
         console.error('[CheckStatus] Error:', error);

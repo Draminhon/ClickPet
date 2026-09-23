@@ -88,10 +88,10 @@ const SubscriptionSchema = new mongoose.Schema({
     pendingAmount: {
         type: Number,
     },
-    abacatepayBillingId: {
+    asaasPaymentId: {
         type: String,
     },
-    abacatepayBillingUrl: {
+    asaasInvoiceUrl: {
         type: String,
     },
     paymentStartedAt: {

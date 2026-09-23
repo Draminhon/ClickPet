@@ -33,7 +33,7 @@ function PaymentContent() {
         }
     }, [status]);
 
-    const handlePayWithAbacatePay = async () => {
+    const handlePayWithAsaas = async () => {
         if (!plan) return;
 
         setLoading(true);
@@ -47,7 +47,7 @@ function PaymentContent() {
             const data = await response.json();
 
             if (response.ok && data.billingUrl) {
-                // Redirect to AbacatePay payment page
+                // Redirect to ASAAS payment page
                 window.location.href = data.billingUrl;
             } else if (response.status === 400 && data.message && data.message.includes('CPF')) {
                 showToast('Preencha seu CPF ou CNPJ no perfil antes de assinar. Redirecionando...', 'error');
@@ -136,7 +136,7 @@ function PaymentContent() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem', background: '#f8f9fa', borderRadius: '10px', marginBottom: '1.5rem' }}>
                     <ShieldCheck size={20} color="#2196F3" />
                     <span style={{ fontSize: '0.85rem', color: '#666' }}>
-                        Pagamento processado de forma segura via <strong>AbacatePay</strong>. Seus dados financeiros não são armazenados em nossos servidores.
+                        Pagamento processado de forma segura via <strong>ASAAS</strong>. Seus dados financeiros não são armazenados em nossos servidores.
                     </span>
                 </div>
 
@@ -156,7 +156,7 @@ function PaymentContent() {
 
                 {/* Pay Button */}
                 <button
-                    onClick={handlePayWithAbacatePay}
+                    onClick={handlePayWithAsaas}
                     disabled={loading}
                     style={{
                         width: '100%',

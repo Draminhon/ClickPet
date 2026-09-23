@@ -2,183 +2,151 @@ import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Order from '@/models/Order';
 import Subscription from '@/models/Subscription';
-import User from '@/models/User';
 import notificationService from '@/lib/notification-service';
-import { verifyWebhookSignature } from '@/lib/abacatepay';
+import { verifyWebhookToken } from '@/lib/asaas';
 import { processPartnerPayout } from '@/lib/split-service';
 
 /**
  * POST /api/payments/webhook
- * Receives payment notifications from AbacatePay.
- * 
- * v2 Events: checkout.completed, checkout.refunded, transparent.completed, transparent.refunded
- * v1 Events (backward compat): billing.paid, pix.paid, pix.expired
- * 
+ * Receives payment notifications from ASAAS.
+ *
+ * Events: PAYMENT_CONFIRMED, PAYMENT_RECEIVED, PAYMENT_OVERDUE,
+ * PAYMENT_REFUNDED, PAYMENT_DELETED.
+ * Payload: { event, payment: { id, status, externalReference, ... } }
+ *
  * NOTE: For local development without ngrok, use polling via /api/payments/check-status instead.
  * This endpoint is ready for production use.
  */
 export async function POST(req: Request) {
     try {
         await dbConnect();
-        
-        const rawBody = await req.text();
-        const signature = req.headers.get('x-abacatepay-signature');
-        const secret = process.env.ABACATEPAY_WEBHOOK_SECRET;
 
-        // VERIFY SIGNATURE (Security Hardening: Fail-Closed)
+        const rawBody = await req.text();
+        const headerToken = req.headers.get('asaas-access-token');
+        const secret = process.env.ASAAS_WEBHOOK_TOKEN;
+
+        // VERIFY TOKEN (Security Hardening: Fail-Closed)
+        // ASAAS doesn't sign the payload with HMAC — it just echoes back the
+        // static token configured when the webhook was registered.
         if (!secret) {
-            console.error('[Webhook] CRITICAL: ABACATEPAY_WEBHOOK_SECRET is not defined! Rejecting all webhooks for security.');
+            console.error('[Webhook] CRITICAL: ASAAS_WEBHOOK_TOKEN is not defined! Rejecting all webhooks for security.');
             return NextResponse.json({ message: 'Server configuration error' }, { status: 500 });
         }
 
-        const isValid = signature && verifyWebhookSignature(rawBody, signature, secret);
-        if (!isValid) {
-            console.error('[Webhook] Signature Mismatch!');
-            return NextResponse.json({ message: 'Invalid signature' }, { status: 401 });
+        if (!verifyWebhookToken(headerToken, secret)) {
+            console.error('[Webhook] Token Mismatch!');
+            return NextResponse.json({ message: 'Invalid token' }, { status: 401 });
         }
 
         const body = JSON.parse(rawBody);
-        console.log('[Webhook] Received:', JSON.stringify(body, null, 2));
+        const event: string | undefined = body.event;
+        const payment = body.payment;
 
-        const event = body.event || body.type;
-        const data = body.data || body;
-
-        if (!event) {
-            return NextResponse.json({ message: 'Missing event type' }, { status: 400 });
-        }
-
-        // Extract billing/checkout ID from the payload
-        // v2 sends data.id directly, v1 sent data.billing.id
-        const billingId = data?.billing?.id || data?.id;
-
-        if (!billingId) {
-            console.warn('[Webhook] No billing/checkout ID found in payload');
+        if (!event || !payment?.id) {
+            console.warn('[Webhook] Missing event type or payment id');
             return NextResponse.json({ received: true });
         }
 
-        // Normalize v2 event names to v1 for unified handling
-        let normalizedEvent = event;
-        if (event === 'checkout.completed' || event === 'transparent.completed') {
-            normalizedEvent = 'billing.paid';
-        } else if (event === 'checkout.refunded' || event === 'transparent.refunded') {
-            normalizedEvent = 'payment.refunded';
-        } else if (event === 'transparent.expired') {
-            normalizedEvent = 'pix.expired';
-        }
+        console.log(`[Webhook] Event: ${event} for payment ${payment.id}`);
 
-        console.log(`[Webhook] Event: ${event} → normalized: ${normalizedEvent}`);
-
-        switch (normalizedEvent) {
-            case 'billing.paid': {
-                // Try to find an Order with this billing ID
-                const order = await Order.findOne({ abacatepayBillingId: billingId });
+        switch (event) {
+            case 'PAYMENT_CONFIRMED':
+            case 'PAYMENT_RECEIVED': {
+                const order = await Order.findOne({ asaasPaymentId: payment.id });
                 if (order) {
-                    order.paymentStatus = 'approved';
-                    await order.save();
+                    // Atomic claim: only proceeds if this call is the one that
+                    // actually flips pending → approved. A webhook retry
+                    // landing alongside the app's check-status polling could
+                    // otherwise both read `paymentStatus !== 'approved'`
+                    // before either write lands, double-notifying the partner
+                    // and racing into processPartnerPayout twice.
+                    const approvedOrder = await Order.findOneAndUpdate(
+                        { _id: order._id, paymentStatus: { $ne: 'approved' } },
+                        { $set: { paymentStatus: 'approved' } },
+                        { new: true },
+                    );
 
-                    // Notify partner
-                    if (order.partnerId) {
-                        await notificationService.notifyPartnerNewOrder(
-                            order.partnerId.toString(),
-                            order._id.toString(),
-                            order.total
-                        );
-                    }
-
-                    console.log(`[Webhook] Order ${order._id} payment approved`);
-
-                    // ── SPLIT: Send 85% pure to partner via PIX ──
-                    // Must await (not fire-and-forget) because Vercel serverless
-                    // kills the function after the response is sent.
-                    try {
-                        const splitResult = await processPartnerPayout(order);
-                        if (splitResult.success) {
-                            console.log(`[Webhook] ✅ Split completed for order ${order._id}: R$ ${splitResult.splitAmount?.toFixed(2)} → partner`);
-                        } else {
-                            console.warn(`[Webhook] ⚠️ Split issue for order ${order._id}: ${splitResult.error}`);
+                    if (approvedOrder) {
+                        // Notify partner
+                        if (approvedOrder.partnerId) {
+                            await notificationService.notifyPartnerNewOrder(
+                                approvedOrder.partnerId.toString(),
+                                approvedOrder._id.toString(),
+                                approvedOrder.total
+                            );
                         }
-                    } catch (splitErr: any) {
-                        console.error(`[Webhook] ❌ Split error for order ${order._id}:`, splitErr.message);
-                    }
 
-                    // Calculate and log total time
-                    const startTime = (order as any).paymentStartedAt || order.createdAt;
-                    const duration = (Date.now() - new Date(startTime).getTime()) / 1000;
-                    console.log(`[PAYMENT CONFIRMED] ✅ Total Time: ${duration.toFixed(2)} seconds\n`);
+                        console.log(`[Webhook] Order ${approvedOrder._id} payment approved`);
+
+                        // ── SPLIT: Send partner's share via PIX ──
+                        // Must await (not fire-and-forget) because Vercel serverless
+                        // kills the function after the response is sent.
+                        try {
+                            const splitResult = await processPartnerPayout(approvedOrder);
+                            if (splitResult.success) {
+                                console.log(`[Webhook] ✅ Split completed for order ${approvedOrder._id}: R$ ${splitResult.splitAmount?.toFixed(2)} → partner`);
+                            } else {
+                                console.warn(`[Webhook] ⚠️ Split issue for order ${approvedOrder._id}: ${splitResult.error}`);
+                            }
+                        } catch (splitErr: any) {
+                            console.error(`[Webhook] ❌ Split error for order ${approvedOrder._id}:`, splitErr.message);
+                        }
+
+                        const startTime = (approvedOrder as any).paymentStartedAt || approvedOrder.createdAt;
+                        const duration = (Date.now() - new Date(startTime).getTime()) / 1000;
+                        console.log(`[PAYMENT CONFIRMED] ✅ Total Time: ${duration.toFixed(2)} seconds\n`);
+                    }
 
                     return NextResponse.json({ received: true, orderId: order._id });
                 }
 
-                // Try to find a Subscription with this billing ID
-                const subscription = await Subscription.findOne({ abacatepayBillingId: billingId });
+                const subscription = await Subscription.findOne({ asaasPaymentId: payment.id });
                 if (subscription) {
-                    const isAlreadyActive = subscription.status === 'active';
-                    
-                    // Use the safely stored pendingPlan
-                    const intendedPlan = subscription.pendingPlan || subscription.plan;
-                    
-                    // Apply new plan and features
-                    subscription.plan = intendedPlan;
-                    subscription.features = Subscription.getPlanFeatures(intendedPlan);
-                    subscription.amount = Subscription.getPlanFeatures(intendedPlan).price;
+                    if (subscription.status !== 'active') {
+                        const isAlreadyActive = subscription.status === 'active';
+                        const intendedPlan = subscription.pendingPlan || subscription.plan;
 
-                    subscription.status = 'active';
-                    subscription.startDate = new Date();
-                    subscription.endDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
-                    
-                    subscription.history.push({
-                        action: isAlreadyActive ? 'upgraded' : 'renewed',
-                        newPlan: intendedPlan,
-                        date: new Date(),
-                        notes: 'Pagamento confirmado via AbacatePay (webhook)',
-                    });
-                    await subscription.save();
+                        subscription.plan = intendedPlan;
+                        subscription.features = Subscription.getPlanFeatures(intendedPlan);
+                        subscription.amount = Subscription.getPlanFeatures(intendedPlan).price;
 
-                    console.log(`[Webhook] Subscription ${subscription._id} activated for user ${subscription.partnerId}`);
+                        subscription.status = 'active';
+                        subscription.startDate = new Date();
+                        subscription.endDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
 
-                    // Calculate and log total time
-                    const startTime = (subscription as any).paymentStartedAt || (subscription as any).createdAt;
-                    const duration = (Date.now() - new Date(startTime).getTime()) / 1000;
-                    console.log(`[PAYMENT CONFIRMED] ✅ Total Time: ${duration.toFixed(2)} seconds\n`);
+                        subscription.history.push({
+                            action: isAlreadyActive ? 'upgraded' : 'renewed',
+                            newPlan: intendedPlan,
+                            date: new Date(),
+                            notes: 'Pagamento confirmado via ASAAS (webhook)',
+                        });
+                        await subscription.save();
+
+                        console.log(`[Webhook] Subscription ${subscription._id} activated for user ${subscription.partnerId}`);
+
+                        const startTime = (subscription as any).paymentStartedAt || (subscription as any).createdAt;
+                        const duration = (Date.now() - new Date(startTime).getTime()) / 1000;
+                        console.log(`[PAYMENT CONFIRMED] ✅ Total Time: ${duration.toFixed(2)} seconds\n`);
+                    }
 
                     return NextResponse.json({ received: true, subscriptionId: subscription._id });
                 }
 
-                console.warn(`[Webhook] No order or subscription found for billing ${billingId}`);
+                console.warn(`[Webhook] No order or subscription found for payment ${payment.id}`);
                 break;
             }
 
-            case 'pix.paid': {
-                const order = await Order.findOne({ abacatepayBillingId: billingId });
-                if (order) {
-                    order.paymentStatus = 'approved';
-                    await order.save();
-                    console.log(`[Webhook] PIX payment confirmed for order ${order._id}`);
-
-                    // ── SPLIT: Send 85% pure to partner via PIX ──
-                    try {
-                        const splitResult = await processPartnerPayout(order);
-                        if (splitResult.success) {
-                            console.log(`[Webhook] ✅ Split completed for PIX order ${order._id}`);
-                        } else {
-                            console.warn(`[Webhook] ⚠️ Split issue for PIX order ${order._id}: ${splitResult.error}`);
-                        }
-                    } catch (splitErr: any) {
-                        console.error(`[Webhook] ❌ Split error for PIX order ${order._id}:`, splitErr.message);
-                    }
-                }
-                break;
-            }
-
-            case 'pix.expired': {
-                const order = await Order.findOne({ abacatepayBillingId: billingId });
+            case 'PAYMENT_OVERDUE':
+            case 'PAYMENT_REFUNDED':
+            case 'PAYMENT_DELETED': {
+                const order = await Order.findOne({ asaasPaymentId: payment.id });
                 if (order && order.paymentStatus === 'pending') {
                     order.paymentStatus = 'rejected';
                     order.status = 'cancelled';
-                    order.cancelReason = 'Pagamento PIX expirado';
+                    order.cancelReason = `Pagamento ${event === 'PAYMENT_OVERDUE' ? 'expirado' : 'cancelado'} (ASAAS)`;
                     order.cancelledAt = new Date();
                     await order.save();
-                    console.log(`[Webhook] PIX expired for order ${order._id}`);
+                    console.log(`[Webhook] Order ${order._id} cancelled: ${event}`);
                 }
                 break;
             }

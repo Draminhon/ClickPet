@@ -36,6 +36,7 @@ describe('Orders API Security', () => {
             name: 'Petshop Central',
             email: 'partner@example.com',
             role: 'partner',
+            bio: 'Petshop de teste',
             address: {
                 street: 'Rua Principal',
                 number: '123',

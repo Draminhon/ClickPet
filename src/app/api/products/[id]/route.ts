@@ -4,6 +4,7 @@ import Product from '@/models/Product';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../auth/[...nextauth]/route";
 import { sanitizeObject } from '@/lib/sanitize';
+import { checkImageSize, IMAGE_SIZE_LIMITS } from '@/lib/validation';
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
@@ -36,6 +37,19 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         await dbConnect();
         const rawBody = await req.json();
         const body = sanitizeObject(rawBody);
+
+        if (body.image !== undefined) {
+            const check = checkImageSize(body.image, IMAGE_SIZE_LIMITS.ITEM_IMAGE_MAX_BYTES, 'image');
+            if (!check.valid) {
+                return NextResponse.json({ message: check.message }, { status: 400 });
+            }
+        }
+        for (const extra of body.images || []) {
+            const check = checkImageSize(extra, IMAGE_SIZE_LIMITS.ITEM_IMAGE_MAX_BYTES, 'images');
+            if (!check.valid) {
+                return NextResponse.json({ message: check.message }, { status: 400 });
+            }
+        }
 
         // SECURITY: Whitelist allowed fields to prevent mass assignment
         const allowedFields = ['title', 'description', 'price', 'category', 'image', 'images',

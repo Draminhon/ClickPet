@@ -154,9 +154,12 @@ export default function StoreGrid({ partners, allPartners, limit, title = "Lojas
             <div className={styles.grid}>
                 {displayedPartners.map(partner => {
                     const shopType = partner.specialization || 'Petshop';
-                    const distanceStr = partner.distance != null 
-                        ? `${partner.distance.toFixed(1)} km` 
-                        : 'Calculando...';
+                    // `distance` is null when the partner never set a location
+                    // pin on their address — that's permanent, not a pending
+                    // calculation, so the label shouldn't imply it'll resolve.
+                    const distanceStr = partner.distance != null
+                        ? `${partner.distance.toFixed(1)} km`
+                        : 'Distância indisponível';
                     
                     const partnerRating = (partner.rating ?? 0).toFixed(1);
                     const partnerReviewCount = partner.reviewCount ?? 0;

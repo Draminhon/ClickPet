@@ -4,10 +4,11 @@ import { useState, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useToast } from '@/context/ToastContext';
 import { useLocation } from '@/context/LocationContext';
-import { User, Phone, Upload, Trash2, Plus, LogOut, Pencil, MapPin, Camera, Mail, AlertCircle } from 'lucide-react';
+import { User, Phone, Upload, Trash2, Plus, LogOut, Pencil, MapPin, Camera, Mail, AlertCircle, CreditCard } from 'lucide-react';
 import { maskPhone, maskZip, maskCPF } from '@/utils/masks';
 import Image from 'next/image';
 import MapPicker from '@/components/ui/MapPicker';
+import CardForm, { CardFormData } from '@/components/payments/CardForm';
 import styles from './Profile.module.css';
 
 export default function ProfilePage() {
@@ -38,6 +39,9 @@ export default function ProfilePage() {
     const [addressForm, setAddressForm] = useState({
         street: '', number: '', complement: '', neighborhood: '', city: '', state: '', zip: '', lat: '', lng: ''
     });
+    const [savedCards, setSavedCards] = useState<any[]>([]);
+    const [showCardForm, setShowCardForm] = useState(false);
+    const [cardFormLoading, setCardFormLoading] = useState(false);
     const [editingPetId, setEditingPetId] = useState<string | null>(null);
     const [petForm, setPetForm] = useState({
         name: '',
@@ -68,6 +72,10 @@ export default function ProfilePage() {
             const petsRes = await fetch('/api/pets');
             const petsData = await petsRes.json();
             setPets(Array.isArray(petsData) ? petsData : []);
+
+            const cardsRes = await fetch('/api/payments/cards');
+            const cardsData = await cardsRes.json();
+            setSavedCards(Array.isArray(cardsData) ? cardsData : []);
         } catch (error) {
             console.error('Error fetching data:', error);
         }
@@ -354,6 +362,48 @@ export default function ProfilePage() {
                 showToast('Endereço removido com sucesso!');
             }
         } catch(e) {}
+    };
+
+    const handleAddCard = async (data: CardFormData) => {
+        setCardFormLoading(true);
+        try {
+            const res = await fetch('/api/payments/cards', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+            const result = await res.json();
+
+            if (res.ok) {
+                setSavedCards(Array.isArray(result) ? result : []);
+                setShowCardForm(false);
+                showToast('Cartão adicionado com sucesso!');
+            } else {
+                showToast(result.message || 'Erro ao salvar cartão', 'error');
+            }
+        } catch (error) {
+            showToast('Erro ao conectar com o servidor', 'error');
+        } finally {
+            setCardFormLoading(false);
+        }
+    };
+
+    const handleDeleteCard = async (cardId: string) => {
+        if (!confirm('Tem certeza que deseja excluir este cartão?')) return;
+
+        try {
+            const res = await fetch(`/api/payments/cards/${cardId}`, { method: 'DELETE' });
+            const result = await res.json();
+
+            if (res.ok) {
+                setSavedCards(prev => prev.filter((c: any) => c._id !== cardId));
+                showToast(result.message || 'Cartão removido com sucesso!');
+            } else {
+                showToast(result.message || 'Erro ao remover cartão', 'error');
+            }
+        } catch (error) {
+            showToast('Erro ao conectar com o servidor', 'error');
+        }
     };
 
     const handlePetImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -743,6 +793,91 @@ export default function ProfilePage() {
                         {loading ? 'Salvando...' : 'Salvar Informações'}
                     </button>
                 </form>
+            </div>
+
+            {/* Cards Section */}
+            <div className={styles.card}>
+                <div className={styles.cardSectionHeader}>
+                    <h3 className={styles.cardSectionTitle}>
+                        <CreditCard size={20} color="#3BB77E" /> Meus Cartões
+                    </h3>
+                    {!showCardForm && (
+                        <button
+                            type="button"
+                            onClick={() => setShowCardForm(true)}
+                            className={styles.addCardBtn}
+                        >
+                            <Plus size={16} /> Adicionar Cartão
+                        </button>
+                    )}
+                </div>
+
+                {savedCards.length === 0 && !showCardForm && (
+                    <div className={styles.cardEmptyState}>
+                        <CreditCard size={40} color="#b0bec5" style={{ margin: '0 auto 1rem' }} />
+                        <p className={styles.cardEmptyText}>
+                            Você ainda não possui nenhum cartão salvo.
+                        </p>
+                        <button
+                            type="button"
+                            onClick={() => setShowCardForm(true)}
+                            className={styles.cardEmptyBtn}
+                        >
+                            Adicionar Cartão
+                        </button>
+                    </div>
+                )}
+
+                {!showCardForm && savedCards.length > 0 && (
+                    <div className={styles.cardsList}>
+                        {savedCards.map((card: any) => (
+                            <div key={card._id} className={styles.savedCardItem}>
+                                <div className={styles.savedCardMain}>
+                                    <div className={styles.savedCardIcon}>
+                                        <CreditCard size={22} color="#3BB77E" />
+                                    </div>
+                                    <div className={styles.savedCardInfo}>
+                                        <div className={styles.savedCardTitle}>
+                                            {card.brand && <span className={styles.cardBrandBadge}>{card.brand}</span>}
+                                            •••• {card.lastFourDigits}
+                                        </div>
+                                        <div className={styles.savedCardSubtitle}>{card.cardholderName}</div>
+                                        <div className={styles.savedCardExpiry}>
+                                            Validade: {String(card.expirationMonth).padStart(2, '0')}/{String(card.expirationYear).slice(-2)}
+                                        </div>
+                                    </div>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => handleDeleteCard(card._id)}
+                                    className={styles.cardDeleteBtn}
+                                    title="Excluir"
+                                >
+                                    <Trash2 size={16} />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                {showCardForm && (
+                    <div className={styles.newCardForm}>
+                        <div className={styles.newCardFormHeader}>
+                            <h4 className={styles.newCardFormTitle}>Novo Cartão</h4>
+                            {savedCards.length > 0 && (
+                                <button type="button" onClick={() => setShowCardForm(false)} className={styles.cancelFormBtn}>
+                                    Cancelar
+                                </button>
+                            )}
+                        </div>
+                        <CardForm
+                            onSubmit={handleAddCard}
+                            onCancel={() => setShowCardForm(false)}
+                            submitLabel="Salvar Cartão"
+                            loading={cardFormLoading}
+                        />
+                    </div>
+                )}
             </div>
 
             {/* Pets Section */}

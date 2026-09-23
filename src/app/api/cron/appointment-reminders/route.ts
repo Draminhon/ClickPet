@@ -59,8 +59,24 @@ export async function sendAppointmentReminders() {
 }
 
 // Export as API route for manual triggering or cron
-export async function GET() {
+export async function GET(req: Request) {
     try {
+        // Sem verificação nenhuma, era um endpoint público capaz de disparar
+        // notificação em massa pra todo mundo com agendamento amanhã, quantas
+        // vezes alguém quisesse chamar a URL. Falha fechado: se o segredo não
+        // estiver configurado, ninguém consegue disparar — mesmo padrão do
+        // webhook de pagamento.
+        const secret = process.env.CRON_SECRET;
+        if (!secret) {
+            console.error('[Cron] CRITICAL: CRON_SECRET is not defined! Rejecting all requests for security.');
+            return Response.json({ error: 'Server configuration error' }, { status: 500 });
+        }
+
+        const authHeader = req.headers.get('authorization');
+        if (authHeader !== `Bearer ${secret}`) {
+            return Response.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
         const result = await sendAppointmentReminders();
         return Response.json(result);
     } catch (error: any) {

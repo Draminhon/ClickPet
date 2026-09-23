@@ -108,7 +108,7 @@ export async function POST(req: Request) {
         let verifiedDistance = 0;
 
         if (!body.isPickup) {
-            const userCoords = body.address?.coordinates;
+            const userCoords = body.address?.coordinates?.coordinates;
             const shopCoords = partner.address?.coordinates?.coordinates;
 
             if (userCoords && shopCoords && Array.isArray(userCoords) && Array.isArray(shopCoords)) {

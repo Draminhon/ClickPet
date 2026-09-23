@@ -4,8 +4,20 @@ import Review from '@/models/Review';
 import Product from '@/models/Product';
 import User, { hashEmail } from '@/models/User';
 
+/**
+ * Rota de seed para desenvolvimento. Não tinha nenhuma verificação de sessão
+ * nem de ambiente — qualquer visitante podia chamá-la em produção
+ * repetidamente, e o usuário fake era criado com senha em texto puro (sem
+ * hash nenhum), gravada assim no banco. Agora: bloqueada fora de dev e o
+ * usuário de seed não tem senha (ele nunca precisou logar, só existir como
+ * autor das reviews).
+ */
 export async function GET(req: Request) {
     try {
+        if (process.env.NODE_ENV === 'production') {
+            return NextResponse.json({ message: 'Not found' }, { status: 404 });
+        }
+
         await dbConnect();
 
         // 1. Find a product to review
@@ -20,7 +32,6 @@ export async function GET(req: Request) {
             user = await User.create({
                 name: 'João Carlos',
                 email: 'seed_user@example.com',
-                password: 'password123', // In a real app, this should be hashed
                 role: 'customer'
             });
             if (user.decryptFieldsSync) {

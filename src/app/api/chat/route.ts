@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { chatRateLimiter } from '@/lib/rateLimit';
 
 // Load the Chat-ClickPet CommonJS engine
 const { classifyIntent } = require('../../../../Chat-ClickPet/src/intentClassifier');
@@ -14,9 +15,18 @@ function normalizeMessage(message: any) {
 
 export async function POST(request: Request) {
   try {
+    // Rota pública de propósito (bot institucional, sem exigir login) — sem
+    // isso, era possível gerar chamadas ilimitadas ao classificador/LLM
+    // sem custo nenhum pra quem abusasse. Chaveado por IP.
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
+      request.headers.get('x-real-ip') || '0.0.0.0';
+    if (!chatRateLimiter.check(ip).success) {
+      return NextResponse.json({ error: "Muitas perguntas em pouco tempo. Aguarde alguns minutos." }, { status: 429 });
+    }
+
     const body = await request.json();
     const message = normalizeMessage(body?.message);
-    
+
     console.log("[API Chat] Recebida pergunta:", message);
 
     if (!message) {

@@ -126,6 +126,25 @@ export const parseMaskedPrice = (value: string) => {
     return parseFloat(value.replace(/\./g, "").replace(",", "."));
 };
 
+export const maskCardNumber = (value: string) => {
+    return value
+        .replace(/\D/g, '')
+        .slice(0, 19)
+        .replace(/(\d{4})(?=\d)/g, '$1 ')
+        .trim();
+};
+
+export const maskExpiry = (value: string) => {
+    return value
+        .replace(/\D/g, '')
+        .slice(0, 4)
+        .replace(/(\d{2})(\d)/, '$1/$2');
+};
+
+export const maskCVV = (value: string, maxLength: number = 4) => {
+    return value.replace(/\D/g, '').slice(0, maxLength);
+};
+
 export const formatAddress = (street?: string, number?: string) => {
     const s = (street || '').trim();
     const n = (number || '').trim();

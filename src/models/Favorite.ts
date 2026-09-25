@@ -10,6 +10,10 @@ const FavoriteSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Product',
     },
+    serviceId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Service',
+    },
     partnerId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
@@ -23,6 +27,10 @@ const FavoriteSchema = new mongoose.Schema({
 FavoriteSchema.index(
     { userId: 1, productId: 1 },
     { unique: true, partialFilterExpression: { productId: { $exists: true } } },
+);
+FavoriteSchema.index(
+    { userId: 1, serviceId: 1 },
+    { unique: true, partialFilterExpression: { serviceId: { $exists: true } } },
 );
 FavoriteSchema.index(
     { userId: 1, partnerId: 1 },

@@ -1,7 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { notFound } from 'next/navigation';
 import { Trophy, Gift, TrendingUp, Users, Copy, Check, Star } from 'lucide-react';
+
+// Programa de fidelidade desativado por enquanto (fora do ar) — a
+// implementação inteira continua abaixo intacta, só não é roteável. Trocar
+// para `true` reativa a página sem precisar mexer em mais nada.
+const LOYALTY_ENABLED = false;
 
 interface LoyaltyAccount {
     totalPoints: number;
@@ -20,7 +26,7 @@ interface Transaction {
     balanceAfter: number;
 }
 
-export default function LoyaltyPage() {
+function LoyaltyPageContent() {
     const [account, setAccount] = useState<LoyaltyAccount | null>(null);
     const [benefits, setBenefits] = useState<string[]>([]);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -265,4 +271,11 @@ export default function LoyaltyPage() {
             </div>
         </div>
     );
+}
+
+export default function LoyaltyPage() {
+    if (!LOYALTY_ENABLED) {
+        notFound();
+    }
+    return <LoyaltyPageContent />;
 }

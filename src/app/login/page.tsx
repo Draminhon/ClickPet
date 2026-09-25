@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { useToast } from '@/context/ToastContext';
 import { Eye, EyeOff } from 'lucide-react';
@@ -15,8 +15,16 @@ const carouselImages = [
     '/assets/login-carosel/login_carosel3.jpg'
 ];
 
-export default function Login() {
+// Only ever redirect to a same-origin relative path. A bare `/` prefix is
+// safe; `//host` is protocol-relative and would leave the site, so it's
+// rejected too.
+const isSafeCallbackUrl = (url: string | null): url is string =>
+    !!url && url.startsWith('/') && !url.startsWith('//');
+
+function LoginContent() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const callbackUrl = searchParams.get('callbackUrl');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -46,6 +54,11 @@ export default function Login() {
                 showToast(result.error, 'error');
             } else {
                 showToast('Login realizado com sucesso!');
+
+                if (isSafeCallbackUrl(callbackUrl)) {
+                    router.push(callbackUrl);
+                    return;
+                }
 
                 // Fetch session to determine role
                 const sessionRes = await fetch('/api/auth/session');
@@ -154,7 +167,7 @@ export default function Login() {
 
                 <div className={styles.bottomSection}>
                     <div className={styles.socialContainer}>
-                        <button className={styles.socialButton} onClick={() => signIn('google', { callbackUrl: '/' })}>
+                        <button className={styles.socialButton} onClick={() => signIn('google', { callbackUrl: isSafeCallbackUrl(callbackUrl) ? callbackUrl : '/' })}>
                             <Image src="/assets/google2.png" alt="Google" width={28} height={28} className={styles.socialIcon} />
                             <span className={styles.socialText}>Entre com Google</span>
                         </button>
@@ -166,5 +179,13 @@ export default function Login() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function Login() {
+    return (
+        <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: '#3BB77E' }}>Carregando...</div>}>
+            <LoginContent />
+        </Suspense>
     );
 }

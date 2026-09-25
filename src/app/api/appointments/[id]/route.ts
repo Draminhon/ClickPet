@@ -40,7 +40,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
                     message: 'Clientes só podem cancelar agendamentos. Confirmações e finalizações são exclusivas do parceiro.' 
                 }, { status: 403 });
             }
-        } else if (userRole === 'partner') {
+        } else if (userRole === 'partner' || userRole === 'veterinarian') {
             const allowedPartnerStatuses = ['confirmed', 'completed', 'cancelled', 'no_show'];
             if (!allowedPartnerStatuses.includes(targetStatus)) {
                 return NextResponse.json({ message: 'Status inválido para o parceiro' }, { status: 400 });

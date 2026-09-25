@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Check, AlertTriangle } from 'lucide-react';
+import { Check, AlertTriangle, Clock } from 'lucide-react';
 import { useToast } from '@/context/ToastContext';
 import styles from './Subscription.module.css';
 
@@ -29,6 +29,15 @@ const PLAN_DISPLAY_NAMES: Record<string, string> = {
 
 const MONTHS_PT = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
 
+// Product/service limits per plan, kept in sync with the `plans` feature copy below.
+// -1 means unlimited.
+const PLAN_LIMITS: Record<string, { products: number; services: number }> = {
+    free: { products: 10, services: 5 },
+    basic: { products: 50, services: 20 },
+    premium: { products: -1, services: -1 },
+    enterprise: { products: -1, services: -1 },
+};
+
 export default function PartnerSubscriptionPage() {
     const { data: session } = useSession();
     const router = useRouter();
@@ -36,8 +45,16 @@ export default function PartnerSubscriptionPage() {
     const [subscription, setSubscription] = useState<SubscriptionDetails | null>(null);
     const [loading, setLoading] = useState(true);
 
-    const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+    // Holds the plan key being downgraded to (e.g. 'free', 'basic') while the
+    // confirmation modal is open; null means the modal is closed.
+    const [downgradeTarget, setDowngradeTarget] = useState<string | null>(null);
     const [isCancelling, setIsCancelling] = useState(false);
+
+    // Shown after payment status polling exhausts its attempts without a
+    // definitive success signal — an honest "still processing" state instead
+    // of assuming success or silently giving up.
+    const [showPendingBanner, setShowPendingBanner] = useState(false);
+    const [isRechecking, setIsRechecking] = useState(false);
 
     useEffect(() => {
         const status = new URLSearchParams(window.location.search).get('status');
@@ -73,6 +90,27 @@ export default function PartnerSubscriptionPage() {
         }
     };
 
+    // Single status check against our own subscription record. Returns true
+    // only when the subscription is confirmed active/paid; false covers both
+    // "still pending" and "request failed", neither of which should be
+    // reported as a success. Mirrors the pattern used by
+    // payment/success/page.tsx's checkPaymentStatus.
+    const checkSubscriptionStatus = useCallback(async (): Promise<boolean> => {
+        try {
+            const response = await fetch('/api/subscriptions/current');
+            if (response.ok) {
+                const data = await response.json();
+                setSubscription(data);
+                if (data.status === 'active' || data.status === 'PAID') {
+                    return true;
+                }
+            }
+        } catch (error) {
+            console.error('Error checking subscription status:', error);
+        }
+        return false;
+    }, []);
+
     // POLLING FOR PAYMENT STATUS
     useEffect(() => {
         const status = new URLSearchParams(window.location.search).get('status');
@@ -86,39 +124,73 @@ export default function PartnerSubscriptionPage() {
             const maxAttempts = 10;
             const interval = setInterval(async () => {
                 attempts++;
-                const response = await fetch('/api/subscriptions/current');
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.status === 'active' || data.status === 'PAID') {
-                        clearInterval(interval);
-                        setSubscription(data);
-                        setLoading(false);
-                        showToast('Pagamento confirmado! Sua assinatura está ativa.', 'success');
-                        // Clean URL and refresh session
-                        window.history.replaceState({}, '', '/partner/subscription');
-                        router.refresh();
-                        return;
-                    }
+                const confirmed = await checkSubscriptionStatus();
+                if (confirmed) {
+                    clearInterval(interval);
+                    setLoading(false);
+                    showToast('Pagamento confirmado! Sua assinatura está ativa.', 'success');
+                    // Clean URL and refresh session
+                    window.history.replaceState({}, '', '/partner/subscription');
+                    router.refresh();
+                    return;
                 }
 
                 if (attempts >= maxAttempts) {
                     clearInterval(interval);
                     setLoading(false);
-                    showToast('O pagamento ainda está sendo processado. Isso pode levar alguns minutos.', 'info');
+                    // We genuinely don't know if this is still settling or was
+                    // declined — the underlying status field doesn't distinguish
+                    // the two — so we say so honestly and let the owner recheck.
+                    setShowPendingBanner(true);
                     window.history.replaceState({}, '', '/partner/subscription');
                 }
             }, 3000);
 
             return () => clearInterval(interval);
         }
-    }, [showToast, router]);
+    }, [showToast, router, checkSubscriptionStatus]);
+
+    const handleRecheckPayment = async () => {
+        setIsRechecking(true);
+        try {
+            const confirmed = await checkSubscriptionStatus();
+            if (confirmed) {
+                setShowPendingBanner(false);
+                showToast('Pagamento confirmado! Sua assinatura está ativa.', 'success');
+                router.refresh();
+            } else {
+                showToast('Pagamento ainda não confirmado. Tente novamente em alguns instantes.', 'info');
+            }
+        } finally {
+            setIsRechecking(false);
+        }
+    };
 
     const handleSubscribe = (planName: string) => {
-        if (planName === 'free') {
-            setIsCancelModalOpen(true);
+        const planOrder = ['free', 'basic', 'premium', 'enterprise'];
+        const currentPlan = subscription?.plan || 'free';
+        const currentIdx = planOrder.indexOf(currentPlan);
+        const targetIdx = planOrder.indexOf(planName);
+
+        if (targetIdx < currentIdx) {
+            // Any downgrade (not just to Free) risks hiding products/services
+            // that exceed the target plan's limits, so it always gets the
+            // same confirmation step.
+            setDowngradeTarget(planName);
             return;
         }
         router.push(`/partner/subscription/payment?plan=${planName}`);
+    };
+
+    const handleConfirmDowngrade = () => {
+        if (!downgradeTarget) return;
+        if (downgradeTarget === 'free') {
+            handleDowngradeToFree();
+        } else {
+            const target = downgradeTarget;
+            setDowngradeTarget(null);
+            router.push(`/partner/subscription/payment?plan=${target}`);
+        }
     };
 
     const handleDowngradeToFree = async () => {
@@ -130,7 +202,7 @@ export default function PartnerSubscriptionPage() {
             const data = await response.json();
             if (response.ok) {
                 showToast(data.message, 'success');
-                setIsCancelModalOpen(false);
+                setDowngradeTarget(null);
                 fetchSubscription();
             } else {
                 showToast(data.message || 'Erro ao cancelar assinatura', 'error');
@@ -231,6 +303,50 @@ export default function PartnerSubscriptionPage() {
         <div className={styles.container}>
             <h1 className={styles.pageTitle}>MINHA ASSINATURA</h1>
 
+            {/* Pending payment banner: shown when polling exhausted its attempts
+                without a definitive success signal. Honest "still processing"
+                state instead of assuming success or silently giving up. */}
+            {showPendingBanner && (
+                <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '1rem',
+                    background: '#fffbeb',
+                    border: '1px solid #fde68a',
+                    borderRadius: '12px',
+                    padding: '1rem 1.5rem',
+                    marginBottom: '1.5rem',
+                }}>
+                    <Clock size={24} color="#d97706" style={{ flexShrink: 0 }} />
+                    <div style={{ flex: 1 }}>
+                        <p style={{ margin: 0, fontWeight: 700, color: '#92400e', fontSize: '0.95rem' }}>
+                            Ainda estamos confirmando seu pagamento
+                        </p>
+                        <p style={{ margin: '0.25rem 0 0', color: '#92400e', fontSize: '0.85rem' }}>
+                            Isso pode levar alguns minutos. Você pode verificar novamente a qualquer momento.
+                        </p>
+                    </div>
+                    <button
+                        onClick={handleRecheckPayment}
+                        disabled={isRechecking}
+                        style={{
+                            padding: '0.6rem 1.2rem',
+                            borderRadius: '8px',
+                            border: '1px solid #d97706',
+                            background: 'white',
+                            color: '#d97706',
+                            fontWeight: 700,
+                            fontSize: '0.85rem',
+                            cursor: isRechecking ? 'not-allowed' : 'pointer',
+                            opacity: isRechecking ? 0.7 : 1,
+                            flexShrink: 0,
+                        }}
+                    >
+                        {isRechecking ? 'Verificando...' : 'Verificar novamente'}
+                    </button>
+                </div>
+            )}
+
             {/* Top Row */}
             <div className={styles.topRow}>
                 {/* Account Status Container */}
@@ -262,9 +378,11 @@ export default function PartnerSubscriptionPage() {
                         }}>
                             FAZER UPGRADE
                         </button>
-                        <button className={styles.managePaymentBtn} onClick={() => router.push('/partner/subscription/payment?plan=' + (subscription?.plan || 'free'))}>
-                            GERENCIAR PAGAMENTO
-                        </button>
+                        {subscription?.plan && subscription.plan !== 'free' && (
+                            <button className={styles.managePaymentBtn} onClick={() => router.push('/partner/subscription/payment?plan=' + subscription.plan)}>
+                                GERENCIAR PAGAMENTO
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -371,7 +489,7 @@ export default function PartnerSubscriptionPage() {
             </div>
 
             {/* Downgrade Modal */}
-            {isCancelModalOpen && (
+            {downgradeTarget && (
                 <div style={{
                     position: 'fixed',
                     top: 0, left: 0, right: 0, bottom: 0,
@@ -408,16 +526,21 @@ export default function PartnerSubscriptionPage() {
                             Confirma o Downgrade?
                         </h2>
                         <p style={{ color: '#4b5563', fontSize: '0.95rem', marginBottom: '1rem', lineHeight: 1.5 }}>
-                            Ao retroceder para o <strong>Plano Free</strong>, você perderá os benefícios exclusivos da sua assinatura atual imediatamente.
+                            Ao retroceder para o <strong>{PLAN_DISPLAY_NAMES[downgradeTarget] || downgradeTarget}</strong>, você perderá os benefícios exclusivos da sua assinatura atual imediatamente.
                         </p>
                         <div style={{ background: '#fef2f2', border: '1px solid #fee2e2', borderRadius: '8px', padding: '1rem', marginBottom: '2rem' }}>
                             <p style={{ color: '#b91c1c', fontSize: '0.9rem', margin: 0, fontWeight: 500 }}>
-                                Produtos e serviços que excederem o limite do plano gratuito (10 produtos e 5 serviços) poderão ficar ocultos no seu catálogo.
+                                {(() => {
+                                    const limits = PLAN_LIMITS[downgradeTarget];
+                                    const productsLabel = !limits || limits.products === -1 ? 'produtos ilimitados' : `${limits.products} produtos`;
+                                    const servicesLabel = !limits || limits.services === -1 ? 'serviços ilimitados' : `${limits.services} serviços`;
+                                    return `Produtos e serviços que excederem o limite do novo plano (${productsLabel} e ${servicesLabel}) poderão ficar ocultos no seu catálogo.`;
+                                })()}
                             </p>
                         </div>
                         <div style={{ display: 'flex', gap: '1rem', flexDirection: 'column' }}>
                             <button
-                                onClick={handleDowngradeToFree}
+                                onClick={handleConfirmDowngrade}
                                 disabled={isCancelling}
                                 style={{
                                     width: '100%',
@@ -437,7 +560,7 @@ export default function PartnerSubscriptionPage() {
                                 {isCancelling ? 'Processando...' : 'Sim, quero retroceder'}
                             </button>
                             <button
-                                onClick={() => setIsCancelModalOpen(false)}
+                                onClick={() => setDowngradeTarget(null)}
                                 disabled={isCancelling}
                                 style={{
                                     width: '100%',

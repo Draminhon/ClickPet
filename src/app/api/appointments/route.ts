@@ -82,8 +82,8 @@ export async function GET(req: Request) {
 
         await dbConnect();
 
-        // If partner, show their schedule. If customer, show their appointments.
-        const query = session.user.role === 'partner'
+        // If partner/veterinarian, show their schedule. If customer, show their appointments.
+        const query = ['partner', 'veterinarian'].includes(session.user.role)
             ? { partnerId: session.user.id }
             : { userId: session.user.id };
 

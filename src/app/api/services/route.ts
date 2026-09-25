@@ -4,11 +4,12 @@ import Service from '@/models/Service';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]/route";
 import { sanitizeObject } from '@/lib/sanitize';
+import { checkImageSize, IMAGE_SIZE_LIMITS } from '@/lib/validation';
 
 export async function POST(req: Request) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session || session.user.role !== 'partner') {
+        if (!session || !['partner', 'veterinarian'].includes(session.user.role)) {
             return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
         }
 
@@ -44,6 +45,11 @@ export async function POST(req: Request) {
         // Basic validation
         if (!serviceData.name || serviceData.name.trim().length < 2) {
             return NextResponse.json({ message: 'Nome do serviço é obrigatório' }, { status: 400 });
+        }
+
+        const imageCheck = checkImageSize(serviceData.image, IMAGE_SIZE_LIMITS.ITEM_IMAGE_MAX_BYTES, 'image');
+        if (!imageCheck.valid) {
+            return NextResponse.json({ message: imageCheck.message }, { status: 400 });
         }
 
         const service = await Service.create(serviceData);

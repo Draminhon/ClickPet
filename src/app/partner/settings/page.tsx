@@ -1,15 +1,22 @@
 "use client";
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useToast } from '@/context/ToastContext';
 import { useLocation } from '@/context/LocationContext';
-import { Minus, Plus, ChevronUp, ChevronDown, QrCode, Upload, AlertTriangle } from 'lucide-react';
+import { Minus, Plus, ChevronUp, ChevronDown, QrCode, Upload, AlertTriangle, Info } from 'lucide-react';
 import { maskPhone, maskPrice, maskCPF, maskCNPJ, maskZip } from '@/utils/masks';
 import MapPicker from '@/components/ui/MapPicker';
 import ImageCropModal from '@/components/modals/ImageCropModal';
+import { IMAGE_SIZE_LIMITS, getMaxRawFileBytes } from '@/lib/validation';
 import styles from './Settings.module.css';
+
+// shopLogo/bannerImage are validated server-side (api/profile PUT) against
+// PROFILE_IMAGE_MAX_BYTES on the base64 string length. This is the raw-file
+// threshold for the pre-crop upload that guarantees agreement with the server.
+const MAX_RAW_PROFILE_IMAGE_BYTES = getMaxRawFileBytes(IMAGE_SIZE_LIMITS.PROFILE_IMAGE_MAX_BYTES);
+const MAX_RAW_PROFILE_IMAGE_MB = (MAX_RAW_PROFILE_IMAGE_BYTES / (1024 * 1024)).toFixed(1);
 
 // ... (InputContainer, WorkingHoursToggle, TimeSelector omitted)
 // I'll re-add the imports correctly
@@ -170,17 +177,19 @@ const TextAreaContainer = ({ id, label, value, onChange, placeholder = "", maxLe
     </div>
 );
 
-const WorkingHoursToggle = ({ active, onToggle }: any) => (
-    <button 
-        onClick={onToggle}
+const WorkingHoursToggle = ({ active, onToggle, disabled = false }: any) => (
+    <button
+        onClick={disabled ? undefined : onToggle}
         type="button"
-        style={{ 
-            width: '44px', 
-            height: '24px', 
-            borderRadius: '12px', 
-            background: active ? '#3BB77E' : '#D1D9E2', 
-            border: 'none', 
-            cursor: 'pointer', 
+        disabled={disabled}
+        style={{
+            width: '44px',
+            height: '24px',
+            borderRadius: '12px',
+            background: disabled ? '#E4E8ED' : (active ? '#3BB77E' : '#D1D9E2'),
+            border: 'none',
+            cursor: disabled ? 'not-allowed' : 'pointer',
+            opacity: disabled ? 0.7 : 1,
             position: 'relative',
             transition: 'background 0.3s',
             display: 'flex',
@@ -278,6 +287,63 @@ const TimeSelector = ({ value, onChange }: any) => {
     );
 };
 
+const DraftRecoveryBanner = ({ onRestore, onDiscard }: { onRestore: () => void; onDiscard: () => void }) => (
+    <div style={{
+        display: 'flex',
+        gap: '16px',
+        padding: '20px 24px',
+        borderRadius: '12px',
+        background: '#EDF6FF',
+        border: '1px solid #A8CDF0',
+        marginBottom: '32px',
+        alignItems: 'flex-start'
+    }}>
+        <Info size={22} color="#2C6FB0" style={{ flexShrink: 0, marginTop: '2px' }} />
+        <div style={{ flex: 1 }}>
+            <p style={{ fontSize: '14px', fontWeight: 700, color: '#1E4E7F', margin: '0 0 6px' }}>
+                ALTERAÇÕES NÃO SALVAS ENCONTRADAS
+            </p>
+            <p style={{ fontSize: '13px', color: '#1E4E7F', margin: '0 0 14px', lineHeight: '1.5' }}>
+                Encontramos alterações não salvas de uma sessão anterior. Deseja restaurá-las?
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                <button
+                    type="button"
+                    onClick={onRestore}
+                    style={{
+                        border: 'none',
+                        background: '#2C6FB0',
+                        color: 'white',
+                        borderRadius: '8px',
+                        padding: '8px 18px',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        cursor: 'pointer'
+                    }}
+                >
+                    RESTAURAR
+                </button>
+                <button
+                    type="button"
+                    onClick={onDiscard}
+                    style={{
+                        border: '1px solid #A8CDF0',
+                        background: 'white',
+                        color: '#1E4E7F',
+                        borderRadius: '8px',
+                        padding: '8px 18px',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        cursor: 'pointer'
+                    }}
+                >
+                    DESCARTAR
+                </button>
+            </div>
+        </div>
+    </div>
+);
+
 const WelcomeModal = ({ onClose }: { onClose: () => void }) => (
     <div style={{
         position: 'fixed',
@@ -362,6 +428,10 @@ export default function PartnerSettings() {
     const [showKeyTypeDropdown, setShowKeyTypeDropdown] = useState(false);
     const [showWelcomeModal, setShowWelcomeModal] = useState(false);
     const [hasLoaded, setHasLoaded] = useState(false);
+    const [pendingDraft, setPendingDraft] = useState<any>(null);
+    // Mirrors pendingDraft synchronously so the draft-write effect (below) never
+    // clobbers a not-yet-reviewed draft in the same render pass that discovers it.
+    const pendingDraftRef = useRef<any>(null);
     const [formData, setFormData] = useState({
         // ... (state preserved)
         cnpj: '',
@@ -490,29 +560,74 @@ export default function PartnerSettings() {
             });
     }, [session, hasLoaded]);
 
-    // Draft persistence
+    // Draft recovery: once the server profile has loaded, check whether a
+    // previous session left an unsaved draft behind. If it differs from what's
+    // now on the server, surface it via the banner instead of silently
+    // discarding it (or silently keeping it forever).
     useEffect(() => {
         if (!hasLoaded) return;
         const draft = localStorage.getItem('partner_settings_draft');
         if (draft) {
             try {
                 const parsed = JSON.parse(draft);
-                // Only load draft if it's more recent than the database load or if we want to restore incomplete work
-                // For simplicity, we'll ask later or just merge. Let's just save for now.
-            } catch (e) {}
+                if (JSON.stringify(parsed) !== JSON.stringify(initialData)) {
+                    pendingDraftRef.current = parsed;
+                    setPendingDraft(parsed);
+                } else {
+                    // Draft matches what's already saved server-side; nothing to recover.
+                    localStorage.removeItem('partner_settings_draft');
+                }
+            } catch (e) {
+                localStorage.removeItem('partner_settings_draft');
+            }
         }
+        // Runs once right after the initial load resolves.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [hasLoaded]);
 
+    // Draft persistence: skip writing while a draft is pending review so we
+    // don't overwrite it with the freshly-loaded server data before the user
+    // gets to decide. If the user starts typing while the banner is still up,
+    // treat that as an implicit discard and resume normal autosave-draft writes.
     useEffect(() => {
-        if (hasLoaded) {
-            localStorage.setItem('partner_settings_draft', JSON.stringify(formData));
+        if (!hasLoaded) return;
+        if (pendingDraftRef.current) {
+            if (JSON.stringify(formData) !== JSON.stringify(initialData)) {
+                pendingDraftRef.current = null;
+                setPendingDraft(null);
+            } else {
+                return;
+            }
         }
-    }, [formData, hasLoaded]);
+        localStorage.setItem('partner_settings_draft', JSON.stringify(formData));
+    }, [formData, hasLoaded, initialData]);
+
+    const handleRestoreDraft = () => {
+        if (pendingDraft) {
+            setFormData(pendingDraft);
+        }
+        pendingDraftRef.current = null;
+        setPendingDraft(null);
+        showToast('Rascunho restaurado');
+    };
+
+    const handleDiscardDraft = () => {
+        localStorage.removeItem('partner_settings_draft');
+        pendingDraftRef.current = null;
+        setPendingDraft(null);
+    };
 
     // Recomputed on every keystroke, so the alert clears itself as fields get filled.
     const missingFields = useMemo(
         () => REQUIRED_FIELDS.filter(field => !field.isFilled(formData)),
         [formData]
+    );
+
+    // Days where closing time isn't after opening time — HH:MM strings compare
+    // correctly as plain strings since they're always zero-padded 24h values.
+    const invalidWorkingHours = useMemo(
+        () => formData.workingHours.filter(row => row.active && row.open && row.close && row.close <= row.open),
+        [formData.workingHours]
     );
     // Only flag fields once the saved profile has loaded, so nothing flashes red mid-fetch.
     const isMissing = (id: string) => hasLoaded && missingFields.some(field => field.id === id);
@@ -540,8 +655,8 @@ export default function PartnerSettings() {
                 showToast('Apenas arquivos de imagem são aceitos', 'error');
                 return;
             }
-            if (file.size > 2 * 1024 * 1024) { // Increased to 2MB to allow original high-res before crop
-                showToast('A imagem original deve ter no máximo 2MB', 'error');
+            if (file.size > MAX_RAW_PROFILE_IMAGE_BYTES) {
+                showToast(`A imagem original deve ter no máximo ${MAX_RAW_PROFILE_IMAGE_MB}MB`, 'error');
                 return;
             }
 
@@ -708,7 +823,7 @@ export default function PartnerSettings() {
                             transition: 'all 0.2s'
                         }}
                     >
-                        RECOMPOR
+                        DESCARTAR
                     </button>
                     {saveStatus === 'saving' && (
                         <div className={`${styles.autoSaveStatus} ${styles.statusSaving}`}>
@@ -737,6 +852,10 @@ export default function PartnerSettings() {
                     )}
                 </div>
             </div>
+
+            {hasLoaded && pendingDraft && (
+                <DraftRecoveryBanner onRestore={handleRestoreDraft} onDiscard={handleDiscardDraft} />
+            )}
 
             {hasLoaded && missingFields.length > 0 && (
                 <RequiredFieldsAlert fields={missingFields} onFieldClick={focusField} />
@@ -878,7 +997,7 @@ export default function PartnerSettings() {
 
             {/* Working Hours Section */}
             <div>
-                <h3 style={{ fontSize: '12px', fontWeight: 400, color: '#253D4E', marginBottom: '24px' }}>HORÁRIO DE FUNCIONAMENTO</h3>
+                <h2 style={{ fontSize: '12px', fontWeight: 400, color: '#253D4E', marginBottom: '24px' }}>HORÁRIO DE FUNCIONAMENTO</h2>
                 
                 <div className={styles.tableWrapper}>
                     <table className={styles.workingHoursTable}>
@@ -924,11 +1043,20 @@ export default function PartnerSettings() {
                         </tbody>
                     </table>
                 </div>
+
+                {invalidWorkingHours.length > 0 && (
+                    <p style={{ fontSize: '12px', color: '#C87F0A', marginTop: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <AlertTriangle size={14} color="#C87F0A" style={{ flexShrink: 0 }} />
+                        {invalidWorkingHours.length === 1
+                            ? `${invalidWorkingHours[0].day.toUpperCase()}: o horário de fechamento deve ser depois do de abertura.`
+                            : `${invalidWorkingHours.map(r => r.day.toUpperCase()).join(', ')}: o horário de fechamento deve ser depois do de abertura.`}
+                    </p>
+                )}
             </div>
 
             {/* Payment Options Section */}
             <div style={{ marginTop: '64px' }}>
-                <h3 style={{ fontSize: '12px', fontWeight: 400, color: '#253D4E', marginBottom: '32px' }}>OPÇÕES DE PAGAMENTO</h3>
+                <h2 style={{ fontSize: '12px', fontWeight: 400, color: '#253D4E', marginBottom: '32px' }}>OPÇÕES DE PAGAMENTO</h2>
                 
                 <div className={styles.paymentRow}>
                     {/* Column 1: Accepted Methods */}
@@ -957,21 +1085,27 @@ export default function PartnerSettings() {
                             ))}
                         </div>
 
-                        <div className={styles.methodsFeeTableWrapper}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+                            <Info size={13} color="#909090" />
+                            <span style={{ fontSize: '11px', color: '#909090', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.02em' }}>
+                                Taxas padrão da ASAAS — informativo, não editável
+                            </span>
+                        </div>
+                        <div className={styles.methodsFeeTableWrapper} style={{ background: '#F7F9FB' }}>
                             <table style={{ width: '100%', height: '100%', borderCollapse: 'collapse' }}>
                                 <thead>
                                     <tr style={{ textAlign: 'left', borderBottom: '1px solid #D1D9E2' }}>
-                                        <th style={{ padding: '24px', fontSize: '13px', fontWeight: 700, color: '#253D4E' }}>MÉTODO</th>
-                                        <th style={{ padding: '24px', fontSize: '13px', fontWeight: 700, color: '#253D4E' }}>TAXA</th>
-                                        <th style={{ padding: '24px', fontSize: '13px', fontWeight: 700, color: '#253D4E' }}>PRAZO</th>
+                                        <th style={{ padding: '24px', fontSize: '13px', fontWeight: 700, color: '#8A94A0' }}>MÉTODO</th>
+                                        <th style={{ padding: '24px', fontSize: '13px', fontWeight: 700, color: '#8A94A0' }}>TAXA</th>
+                                        <th style={{ padding: '24px', fontSize: '13px', fontWeight: 700, color: '#8A94A0' }}>PRAZO</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {formData.paymentMethodsTable.map((row, index) => (
                                         <tr key={row.method} style={{ borderBottom: index === formData.paymentMethodsTable.length - 1 ? 'none' : '1px solid #F0F0F0' }}>
-                                            <td style={{ padding: '16px 24px', fontSize: '13px', fontWeight: 400, color: '#253D4E' }}>{row.method}</td>
-                                            <td style={{ padding: '16px 24px', fontSize: '13px', fontWeight: 400, color: '#253D4E' }}>{row.fee}%</td>
-                                            <td style={{ padding: '16px 24px', fontSize: '13px', fontWeight: 400, color: '#253D4E' }}>{row.term}</td>
+                                            <td style={{ padding: '16px 24px', fontSize: '13px', fontWeight: 400, color: '#6B7580' }}>{row.method}</td>
+                                            <td style={{ padding: '16px 24px', fontSize: '13px', fontWeight: 400, color: '#6B7580' }}>{row.fee}%</td>
+                                            <td style={{ padding: '16px 24px', fontSize: '13px', fontWeight: 400, color: '#6B7580' }}>{row.term}</td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -1105,13 +1239,16 @@ export default function PartnerSettings() {
                             </div>
                             <div style={{ flex: 1 }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                                    <span style={{ fontSize: '14px', fontWeight: 700, color: '#253D4E' }}>INTEGRAÇÃO PIX DINÂMICO</span>
-                                    <WorkingHoursToggle 
-                                        active={formData.pixConfig.dynamicPix} 
+                                    <span style={{ fontSize: '14px', fontWeight: 700, color: '#253D4E' }}>
+                                        INTEGRAÇÃO PIX DINÂMICO <span style={{ fontWeight: 400, color: '#909090', textTransform: 'none' }}>(em breve)</span>
+                                    </span>
+                                    <WorkingHoursToggle
+                                        active={formData.pixConfig.dynamicPix}
+                                        disabled
                                         onToggle={() => setFormData({
                                             ...formData,
                                             pixConfig: { ...formData.pixConfig, dynamicPix: !formData.pixConfig.dynamicPix }
-                                        })} 
+                                        })}
                                     />
                                 </div>
                                 <p style={{ fontSize: '12px', fontWeight: 400, color: '#757575', margin: 0, textTransform: 'uppercase', lineHeight: '1.4' }}>
@@ -1126,7 +1263,7 @@ export default function PartnerSettings() {
 
                 {/* Address Section */}
                 <div style={{ marginTop: '64px', marginBottom: '64px' }}>
-                    <h3 style={{ fontSize: '12px', fontWeight: 400, color: '#253D4E', marginBottom: '32px' }}>ENDEREÇO</h3>
+                    <h2 style={{ fontSize: '12px', fontWeight: 400, color: '#253D4E', marginBottom: '32px' }}>ENDEREÇO</h2>
                     
                     <div className={styles.addressSectionRow}>
                         {/* Column 1: Form */}

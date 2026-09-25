@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { ShoppingCart, User, Bell, X, MapPin, ChevronDown, Package, UserCircle, LogOut, Edit2, Trash2, Plus, Check, CheckCheck, Minus } from 'lucide-react';
+import { ShoppingCart, User, Bell, X, MapPin, ChevronDown, Package, UserCircle, LogOut, Edit2, Trash2, Plus, Check, CheckCheck, Minus, Heart } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useSession, signOut } from 'next-auth/react';
 import { useToast } from '@/context/ToastContext';
@@ -19,8 +19,10 @@ export default function Header() {
     const { data: session, status } = useSession();
     const { showToast } = useToast();
     const router = useRouter();
-    const mascoteSrc = "/assets/icons/Logo mascote - V2.png";
-    const textoSrc = "/assets/titles/Logo texto - V2.png";
+    // Deslogado: fundo transparente sobre a hero image, então usa a versão
+    // branca para ficar legível. Logado: header sólido, usa a versão V2 colorida.
+    const mascoteSrc = session ? "/assets/icons/Logo mascote - V2.png" : "/assets/icons/Logo mascote - Branco.png";
+    const textoSrc = session ? "/assets/titles/Logo texto - V2.png" : "/assets/titles/Logo texto - Branco.png";
     const { address, setLocationFromGPS, clearLocation, setLocationManual } = useLocation();
 
     const [showAddressModal, setShowAddressModal] = useState(false);
@@ -366,6 +368,10 @@ export default function Header() {
         return session.user.role === 'partner' ? '/partner/dashboard' : '/profile';
     };
 
+    // Favoritos é um conceito de compra, então só faz sentido para clientes
+    // comuns (parceiros/veterinários/admin têm suas próprias áreas via Sidebar)
+    const isCustomer = !!session && !['admin', 'veterinarian', 'partner'].includes(session.user.role);
+
     return (
         <>
             <header className={`${styles.header} ${session ? styles.headerLoggedIn : styles.headerTransparent}`}>
@@ -614,6 +620,18 @@ export default function Header() {
                                                 <Package size={18} color="#272727" />
                                                 Meus Pedidos
                                             </button>
+                                            {isCustomer && (
+                                                <button
+                                                    className={styles.dropdownItem}
+                                                    onClick={() => {
+                                                        router.push('/favorites');
+                                                        setShowProfileDropdown(false);
+                                                    }}
+                                                >
+                                                    <Heart size={18} color="#272727" />
+                                                    Favoritos
+                                                </button>
+                                            )}
                                             <div className={styles.dropdownDivider} />
                                             <button
                                                 className={`${styles.dropdownItem} ${styles.logoutItem}`}
@@ -832,6 +850,18 @@ export default function Header() {
                                 <Package size={20} color="#3BB77E" />
                                 Meus Pedidos
                             </button>
+                            {isCustomer && (
+                                <button
+                                    onClick={() => {
+                                        router.push('/favorites');
+                                        setShowMobileProfileModal(false);
+                                    }}
+                                    style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '12px', border: '1px solid #DDE1E6', background: 'white', fontFamily: "'Baloo 2', sans-serif", fontWeight: 600, fontSize: '15px', color: '#272727', cursor: 'pointer', textAlign: 'left' }}
+                                >
+                                    <Heart size={20} color="#3BB77E" />
+                                    Favoritos
+                                </button>
+                            )}
                             <button
                                 onClick={() => {
                                     signOut({ callbackUrl: '/' });
@@ -1148,6 +1178,19 @@ export default function Header() {
                                     ))}
                                 </div>
                             )}
+                        </div>
+
+                        {/* Footer: link to the dedicated notifications page */}
+                        <div className={styles.drawerFooter}>
+                            <button
+                                className={styles.viewCartBtn}
+                                onClick={() => {
+                                    router.push('/notifications');
+                                    setShowNotificationsDrawer(false);
+                                }}
+                            >
+                                Ver todas as notificações
+                            </button>
                         </div>
                     </div>
                 </div>

@@ -71,10 +71,17 @@ export default function LoggedInHomeContent({ defaultPartners }: LoggedInHomeCon
         p.specialization?.match(/Veterinária|Hospital|Clínica/i)
     );
 
-    const petshopsOnly = nearbyPartners.filter(p => 
-        p.role !== 'veterinarian' && 
+    const petshopsOnly = nearbyPartners.filter(p =>
+        p.role !== 'veterinarian' &&
         !p.specialization?.match(/Veterinária|Hospital|Clínica/i)
     );
+
+    // Carrosséis (diferente do StoreGrid abaixo, que continua mostrando todos):
+    // só faz sentido exibir quem tem endereço cadastrado — sem isso a distância
+    // nunca é calculada e o card fica com "Distância indisponível" pra sempre.
+    const hasAddress = (p: any) => !!p.address?.street;
+    const petshopsForCarousel = petshopsOnly.filter(hasAddress);
+    const clinicsForCarousel = clinicsOnly.filter(hasAddress);
 
     const hasLocation = lat && lng;
 
@@ -105,8 +112,8 @@ export default function LoggedInHomeContent({ defaultPartners }: LoggedInHomeCon
             <h2 style={{ fontFamily: "'Baloo 2', sans-serif", fontWeight: 600, fontSize: '24px', color: '#272727', margin: '0' }}>
                 Lojas em alta na sua região
             </h2>
-            {!hasLocation ? <NoLocationMessage /> : petshopsOnly.length > 0 ? (
-                <TrendingPartnersCarousel partners={petshopsOnly} />
+            {!hasLocation ? <NoLocationMessage /> : petshopsForCarousel.length > 0 ? (
+                <TrendingPartnersCarousel partners={petshopsForCarousel} />
             ) : (
                 <div style={{ textAlign: 'center', padding: '40px 20px', backgroundColor: '#fff', borderRadius: '12px', margin: '20px 0', color: '#7E7E7E' }}>
                     <p style={{ fontSize: '16px', fontWeight: 500 }}>Nenhuma loja encontrada na sua região no momento.</p>
@@ -121,8 +128,8 @@ export default function LoggedInHomeContent({ defaultPartners }: LoggedInHomeCon
             <h2 style={{ fontFamily: "'Baloo 2', sans-serif", fontWeight: 600, fontSize: '24px', color: '#272727', margin: '48px 0 0 0' }}>
                 Clínicas próximas a você
             </h2>
-            {!hasLocation ? <NoLocationMessage /> : clinicsOnly.length > 0 ? (
-                <LoggedInClinicsCarousel clinics={clinicsOnly} />
+            {!hasLocation ? <NoLocationMessage /> : clinicsForCarousel.length > 0 ? (
+                <LoggedInClinicsCarousel clinics={clinicsForCarousel} />
             ) : (
                 <div style={{ textAlign: 'center', padding: '40px 20px', backgroundColor: '#fff', borderRadius: '12px', margin: '20px 0', color: '#7E7E7E' }}>
                     <p style={{ fontSize: '16px', fontWeight: 500 }}>Nenhuma clínica veterinária encontrada na sua região no momento.</p>

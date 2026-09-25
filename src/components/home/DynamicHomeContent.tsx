@@ -79,28 +79,35 @@ export default function DynamicHomeContent({ defaultPartners, defaultClinics }: 
     const petshopsOnly = nearbyPartners.filter(p => !isClinicOrVet(p));
     const clinicsOnly = nearbyPartners.filter(p => isClinicOrVet(p));
 
+    // Carrosséis (diferente do StoreGrid abaixo, que continua mostrando todos):
+    // só faz sentido exibir quem tem endereço cadastrado — sem isso a distância
+    // nunca é calculada e o card fica com "Distância indisponível" pra sempre.
+    const hasAddress = (p: any) => !!p.address?.street;
+    const petshopsForCarousel = petshopsOnly.filter(hasAddress);
+    const clinicsForCarousel = clinicsOnly.filter(hasAddress);
+
     return (
         <div className={styles.fullWidthCarousel}>
-            
-            {petshopsOnly.length > 0 && (
+
+            {petshopsForCarousel.length > 0 && (
                 <>
                     <h2 style={{ fontFamily: "'Baloo 2', sans-serif", fontWeight: 600, fontSize: '24px', color: '#272727', margin: '0' }}>
                         Lojas em alta na sua região
                     </h2>
-                    <TrendingPartnersCarousel partners={petshopsOnly} />
+                    <TrendingPartnersCarousel partners={petshopsForCarousel} />
                 </>
             )}
 
-            <div style={{ marginTop: petshopsOnly.length > 0 ? '48px' : '0' }}>
+            <div style={{ marginTop: petshopsForCarousel.length > 0 ? '48px' : '0' }}>
                 <LoggedInPromotionsCarousel />
             </div>
 
-            {clinicsOnly.length > 0 && (
+            {clinicsForCarousel.length > 0 && (
                 <div style={{ marginTop: '48px' }}>
                     <h2 style={{ fontFamily: "'Baloo 2', sans-serif", fontWeight: 600, fontSize: '24px', color: '#272727', margin: '0' }}>
                         Clínicas próximas a você
                     </h2>
-                    <LoggedInClinicsCarousel clinics={clinicsOnly} />
+                    <LoggedInClinicsCarousel clinics={clinicsForCarousel} />
                 </div>
             )}
 

@@ -16,7 +16,14 @@ import {
 import Image from 'next/image';
 import { useToast } from '@/context/ToastContext';
 import { maskPhone, maskLicensePlate } from '@/utils/masks';
+import { IMAGE_SIZE_LIMITS, getMaxRawFileBytes } from '@/lib/validation';
 import styles from './Delivery.module.css';
+
+// Delivery person photos aren't size-checked server-side, but they're the
+// same kind of item image as a product/pet photo, so we hold the client to
+// the same effective limit as ITEM_IMAGE_MAX_BYTES for consistency.
+const MAX_RAW_IMAGE_BYTES = getMaxRawFileBytes(IMAGE_SIZE_LIMITS.ITEM_IMAGE_MAX_BYTES);
+const MAX_RAW_IMAGE_MB = (MAX_RAW_IMAGE_BYTES / (1024 * 1024)).toFixed(1);
 
 export default function DeliveryPersonsPage() {
     const { showToast } = useToast();
@@ -67,8 +74,8 @@ export default function DeliveryPersonsPage() {
                 showToast('Apenas arquivos de imagem são aceitos', 'error');
                 return;
             }
-            if (file.size > 1024 * 1024) {
-                showToast('A imagem deve ter no máximo 1MB', 'error');
+            if (file.size > MAX_RAW_IMAGE_BYTES) {
+                showToast(`A imagem deve ter no máximo ${MAX_RAW_IMAGE_MB}MB`, 'error');
                 return;
             }
             const reader = new FileReader();

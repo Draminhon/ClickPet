@@ -17,7 +17,9 @@ import {
     ChevronLeft,
     ChevronRight,
     ChevronDown,
-    Receipt
+    Receipt,
+    Package,
+    CreditCard
 } from 'lucide-react';
 import { signOut, useSession } from 'next-auth/react';
 import styles from './Sidebar.module.css';
@@ -99,11 +101,13 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
     const navItems = [
         { href: '/partner/dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { href: '/partner/orders', label: 'Pedidos', icon: ShoppingBag },
+        { href: '/partner/catalog', label: 'Catálogo', icon: Package },
         { href: '/partner/receipts', label: 'Comprovantes', icon: Receipt },
         { href: '/partner/services', label: 'Serviços', icon: Scissors },
         { href: '/partner/appointments', label: 'Agendamentos', icon: Calendar },
         { href: '/partner/coupons', label: 'Cupons', icon: Ticket },
         { href: '/partner/delivery', label: 'Entregadores', icon: Truck },
+        { href: '/partner/subscription', label: 'Assinatura', icon: CreditCard },
     ];
 
     return (

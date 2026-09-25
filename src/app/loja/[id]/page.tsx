@@ -11,6 +11,7 @@ import styles from './profile.module.css';
 import { isShopOpen } from '@/utils/shopUtils';
 import StoreSearchHeader from '@/components/store/StoreSearchHeader';
 import StoreCatalog from '@/components/store/StoreCatalog';
+import FavoriteButton from '@/components/ui/FavoriteButton';
 
 interface StoreProfilePageProps {
     params: Promise<{
@@ -55,7 +56,7 @@ export default async function StoreProfilePage({ params }: StoreProfilePageProps
     }));
 
     const mappedServices = services.map((s: any) => ({
-        id: s._id.toString(), // Note: Service page might not exist, but let's keep link structure for now or adjust
+        id: s._id.toString(), // Links to /services/[id] (StoreCatalog), not /product/[id]
         name: s.name,
         tags: [s.category, s.species, s.duration ? `${s.duration} min` : null].filter(Boolean),
         desc: s.description,
@@ -113,6 +114,7 @@ export default async function StoreProfilePage({ params }: StoreProfilePageProps
                     <h1 className={styles.shopName}>
                         {shopName}
                         <BadgeCheck size={28} fill="#EC802B" color="#FFFFFF" className={styles.badgeIcon} />
+                        <FavoriteButton partnerId={id} size={20} />
                     </h1>
 
                     <div className={styles.metaRow}>

@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useState, useMemo } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import styles from './Services.module.css';
 import {
     Plus,
     Search,
-    MoreHorizontal,
     Scissors,
     Edit,
     Trash2,
@@ -36,6 +35,7 @@ import {
 function ServicesContent() {
     const { data: session } = useSession();
     const { showToast } = useToast();
+    const router = useRouter();
     const [services, setServices] = useState<any[]>([]);
     const [appointments, setAppointments] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -48,6 +48,12 @@ function ServicesContent() {
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [editingService, setEditingService] = useState<any | null>(null);
     const searchParams = useSearchParams();
+
+    // Delete modal state
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deletingServiceId, setDeletingServiceId] = useState<string | null>(null);
+    const [deletingServiceName, setDeletingServiceName] = useState('');
+    const [isDeleting, setIsDeleting] = useState(false);
 
     useEffect(() => {
         if (searchParams.get('create') === 'true') {
@@ -81,6 +87,32 @@ function ServicesContent() {
         }
     };
 
+    const openDeleteModal = (id: string, name: string) => {
+        setDeletingServiceId(id);
+        setDeletingServiceName(name);
+        setShowDeleteModal(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!deletingServiceId) return;
+        setIsDeleting(true);
+        try {
+            const res = await fetch(`/api/services/${deletingServiceId}`, { method: 'DELETE' });
+            if (res.ok) {
+                showToast('Serviço excluído com sucesso');
+                fetchData();
+            } else {
+                showToast('Erro ao excluir serviço', 'error');
+            }
+        } catch (error) {
+            showToast('Erro ao excluir serviço', 'error');
+        } finally {
+            setIsDeleting(false);
+            setShowDeleteModal(false);
+            setDeletingServiceId(null);
+            setDeletingServiceName('');
+        }
+    };
 
     const sortedServices = useMemo(() => {
         const filtered = services.filter(s =>
@@ -204,9 +236,6 @@ function ServicesContent() {
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
                 </div>
-                <button className={styles.optionsBtn}>
-                    <MoreHorizontal size={15} color="rgba(124,139,157,1)" />
-                </button>
             </div>
 
             {/* Main Services Table */}
@@ -214,6 +243,7 @@ function ServicesContent() {
                 <table className={styles.table}>
                     <thead>
                         <tr className={styles.tableHeaderRow}>
+                            <th className={styles.tableHeaderCell}>AÇÕES</th>
                             <th className={styles.tableHeaderCell}>SERVIÇO</th>
                             <th className={styles.tableHeaderCell}>CATEGORIA</th>
                             <th className={styles.tableHeaderCell}>PORTE</th>
@@ -234,16 +264,30 @@ function ServicesContent() {
                             return (
                                 <tr key={s._id} className={styles.tableRow} style={{ borderBottom: showDivider ? '1px solid rgba(209, 217, 226, 1)' : 'none' }}>
                                     <td className={styles.tableCell}>
-                                        <div className={styles.serviceCell}>
-                                            <div 
-                                                className={styles.editBtn}
+                                        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                                            <button
+                                                type="button"
                                                 onClick={() => {
                                                     setEditingService(s);
                                                     setShowCreateModal(true);
                                                 }}
+                                                title="Editar serviço"
+                                                style={{ color: '#3BB77E', border: 'none', background: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
                                             >
-                                                <Pencil size={18} className={styles.pencilIcon} />
-                                            </div>
+                                                <Pencil size={18} />
+                                            </button>
+                                            <button
+                                                onClick={() => openDeleteModal(s._id, s.name)}
+                                                className={styles.deleteIconBtn}
+                                                title="Excluir serviço"
+                                                style={{ border: 'none', background: 'none' }}
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+                                        </div>
+                                    </td>
+                                    <td className={styles.tableCell}>
+                                        <div className={styles.serviceCell}>
                                             <div className={styles.imageWrapper}>
                                                 <Image
                                                     src={s.image || '/assets/animals/chihuaha.png'}
@@ -331,16 +375,13 @@ function ServicesContent() {
                         ))}
                     </div>
                     <div className={styles.graphDivider} />
-                    <button className={styles.verTodosBtn}>VER TODOS</button>
+                    <button className={styles.verTodosBtn} onClick={() => router.push('/partner/appointments')}>VER TODOS</button>
                 </div>
 
                 {/* Right: Total Vendas Area Chart */}
                 <div className={styles.chartContainer}>
                     <div className={styles.chartHeader}>
                         <h3 className={styles.chartTitle}>TOTAL DE VENDAS</h3>
-                        <div className={styles.optionsBtn} style={{ background: 'transparent', width: 40, height: 40 }}>
-                            <MoreHorizontal size={15} color="rgba(95,109,126,1)" />
-                        </div>
                     </div>
                     <div className={styles.graphDivider} />
 
@@ -390,9 +431,6 @@ function ServicesContent() {
                     <div className={styles.graphDivider} />
                     <div className={styles.chartFooter}>
                         <span className={styles.totalSemana}>TOTAL DA SEMANA ({weekLabel}): R$ {totalSalesRevenue.toFixed(2)}</span>
-                        <div className={styles.optionsBtn} style={{ background: 'transparent', width: 40, height: 40 }}>
-                            <MoreHorizontal size={15} color="rgba(95,109,126,1)" />
-                        </div>
                     </div>
                 </div>
             </div>
@@ -407,6 +445,52 @@ function ServicesContent() {
                 onSuccess={fetchData}
                 service={editingService}
             />
+
+            {/* DELETE CONFIRMATION MODAL */}
+            {showDeleteModal && (
+                <div className={styles.modalOverlay} onClick={() => setShowDeleteModal(false)}>
+                    <div className={styles.modalContent} style={{ maxWidth: 420 }} onClick={(e) => e.stopPropagation()}>
+                        <div className={styles.modalHeader}>
+                            <h2 className={styles.modalTitle}>EXCLUIR SERVIÇO</h2>
+                            <button className={styles.modalCloseBtn} onClick={() => setShowDeleteModal(false)}>
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className={styles.graphDivider} />
+                        <div className={styles.modalBody} style={{ textAlign: 'center' }}>
+                            <div style={{ width: 64, height: 64, borderRadius: '50%', backgroundColor: 'rgba(220, 53, 69, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+                                <Trash2 size={28} color="#dc3545" />
+                            </div>
+                            <p style={{ fontSize: 14, color: '#253D4E', marginBottom: '0.5rem' }}>
+                                Tem certeza que deseja excluir o serviço
+                            </p>
+                            <p style={{ fontSize: 18, fontWeight: 700, color: '#3BB77E', marginBottom: '1.5rem' }}>
+                                {deletingServiceName}
+                            </p>
+                            <p style={{ fontSize: 12, color: '#999', marginBottom: '2rem' }}>
+                                Esta ação removerá o serviço permanentemente.
+                            </p>
+                            <div style={{ display: 'flex', gap: '12px' }}>
+                                <button
+                                    onClick={() => setShowDeleteModal(false)}
+                                    className={styles.formSubmitBtn}
+                                    style={{ backgroundColor: '#e6e9ec', color: '#253D4E', flex: 1, marginTop: 0 }}
+                                >
+                                    CANCELAR
+                                </button>
+                                <button
+                                    onClick={handleConfirmDelete}
+                                    className={styles.formSubmitBtn}
+                                    style={{ backgroundColor: '#dc3545', flex: 1, marginTop: 0 }}
+                                    disabled={isDeleting}
+                                >
+                                    {isDeleting ? 'EXCLUINDO...' : 'EXCLUIR'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

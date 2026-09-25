@@ -40,7 +40,7 @@ export default function Footer() {
                     
                     <div className={styles.linkGroup}>
                         <span className={styles.linkTitle}>Parcerias</span>
-                        <Link href="/login" className={styles.linkText}>Quero ser parceiro</Link>
+                        <Link href="/register?role=partner" className={styles.linkText}>Quero ser parceiro</Link>
                     </div>
                 </div>
             </div>

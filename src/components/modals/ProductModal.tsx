@@ -4,6 +4,19 @@ import { useState, useEffect } from 'react';
 import { X, Upload } from 'lucide-react';
 import styles from './ProductModal.module.css';
 import { useToast } from '@/context/ToastContext';
+import { IMAGE_SIZE_LIMITS } from '@/lib/validation';
+import ImageCropModal from './ImageCropModal';
+
+// Sanity cap on the RAW source file before it's even loaded into the
+// browser/canvas for cropping — this is about not choking on a huge file,
+// not the real business limit (that's enforced below, after crop, against
+// the actual encoded output).
+const MAX_SOURCE_FILE_BYTES = 15 * 1024 * 1024; // 15MB
+const MAX_EXTRA_IMAGES = 4;
+// Matches the product image aspect ratio used on the product detail page
+// (mainImageContainer: 659x449) so what a partner crops here is what
+// customers actually see, not a different ratio that gets re-cropped by CSS.
+const PRODUCT_IMAGE_ASPECT = 659 / 449;
 
 interface ProductModalProps {
     isOpen: boolean;
@@ -22,6 +35,7 @@ export default function ProductModal({ isOpen, onClose, partnerId, onSuccess, pr
         price: '',
         category: 'food',
         image: '',
+        images: [] as string[],
         productType: 'Produto',
         subCategory: 'Geral',
         discount: '0',
@@ -32,7 +46,11 @@ export default function ProductModal({ isOpen, onClose, partnerId, onSuccess, pr
         unit: 'un',
         isActive: true,
     });
- 
+    // Raw (uncropped) image awaiting the crop step, and which field it's
+    // headed for once confirmed.
+    const [cropSource, setCropSource] = useState<string | null>(null);
+    const [cropTarget, setCropTarget] = useState<'main' | 'extra' | null>(null);
+
     useEffect(() => {
         if (isOpen && product) {
             setFormData({
@@ -41,6 +59,7 @@ export default function ProductModal({ isOpen, onClose, partnerId, onSuccess, pr
                 price: product.price?.toString() || '',
                 category: product.category || 'food',
                 image: product.image || '',
+                images: Array.isArray(product.images) ? product.images : [],
                 productType: product.productType || 'Produto',
                 subCategory: product.subCategory || 'Geral',
                 discount: product.discount?.toString() || '0',
@@ -58,6 +77,7 @@ export default function ProductModal({ isOpen, onClose, partnerId, onSuccess, pr
                 price: '',
                 category: 'food',
                 image: '',
+                images: [],
                 productType: 'Produto',
                 subCategory: 'Geral',
                 discount: '0',
@@ -84,23 +104,74 @@ export default function ProductModal({ isOpen, onClose, partnerId, onSuccess, pr
 
     if (!isOpen) return null;
 
+    // Selecting a file never writes straight to formData — it goes through
+    // the crop modal first. This closes a real race condition the old code
+    // had: FileReader.readAsDataURL is async, so a fast click on "Criar
+    // Produto" right after picking a file could submit before the reader's
+    // onloadend fired, silently saving the product with no image at all.
+    // Routing through an explicit crop-and-confirm step means nothing reaches
+    // formData until the user deliberately confirms it.
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (file) {
-            if (!file.type.startsWith('image/')) {
-                showToast('Apenas arquivos de imagem são aceitos', 'error');
-                return;
-            }
-            if (file.size > 1024 * 1024) {
-                showToast('A imagem deve ter no máximo 1MB', 'error');
-                return;
-            }
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setFormData({ ...formData, image: reader.result as string });
-            };
-            reader.readAsDataURL(file);
+        e.target.value = '';
+        if (!file) return;
+        if (!file.type.startsWith('image/')) {
+            showToast('Apenas arquivos de imagem são aceitos', 'error');
+            return;
         }
+        if (file.size > MAX_SOURCE_FILE_BYTES) {
+            showToast('Arquivo muito grande. Escolha uma imagem de até 15MB.', 'error');
+            return;
+        }
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setCropSource(reader.result as string);
+            setCropTarget('main');
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const handleExtraImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        e.target.value = '';
+        if (!file) return;
+
+        if (formData.images.length >= MAX_EXTRA_IMAGES) {
+            showToast(`Você pode adicionar no máximo ${MAX_EXTRA_IMAGES} fotos adicionais`, 'error');
+            return;
+        }
+        if (!file.type.startsWith('image/')) {
+            showToast('Apenas arquivos de imagem são aceitos', 'error');
+            return;
+        }
+        if (file.size > MAX_SOURCE_FILE_BYTES) {
+            showToast('Arquivo muito grande. Escolha uma imagem de até 15MB.', 'error');
+            return;
+        }
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setCropSource(reader.result as string);
+            setCropTarget('extra');
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const removeExtraImage = (index: number) => {
+        setFormData(prev => ({ ...prev, images: prev.images.filter((_, i) => i !== index) }));
+    };
+
+    // ImageCropModal already enforces IMAGE_SIZE_LIMITS.ITEM_IMAGE_MAX_BYTES
+    // itself (retrying at lower quality, then surfacing its own error) via
+    // the `maxBytes` prop passed below — by the time this fires, the result
+    // is guaranteed to pass the server's check too.
+    const handleCropConfirm = (croppedImage: string) => {
+        if (cropTarget === 'main') {
+            setFormData(prev => ({ ...prev, image: croppedImage }));
+        } else if (cropTarget === 'extra') {
+            setFormData(prev => ({ ...prev, images: [...prev.images, croppedImage] }));
+        }
+        setCropSource(null);
+        setCropTarget(null);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -114,6 +185,7 @@ export default function ProductModal({ isOpen, onClose, partnerId, onSuccess, pr
         const submitData = {
             ...formData,
             partnerId,
+            images: formData.images,
             weights: formData.category === 'food' ? weightsArray : []
         };
 
@@ -129,7 +201,11 @@ export default function ProductModal({ isOpen, onClose, partnerId, onSuccess, pr
                 onSuccess();
                 onClose();
             } else {
-                showToast(product?._id ? 'Erro ao atualizar produto' : 'Erro ao criar produto', 'error');
+                // Surface the server's actual reason (e.g. an image still over
+                // the size limit) instead of a generic message that hides why
+                // it failed.
+                const data = await res.json().catch(() => null);
+                showToast(data?.message || (product?._id ? 'Erro ao atualizar produto' : 'Erro ao criar produto'), 'error');
             }
         } catch (error) {
             showToast(product?._id ? 'Erro ao atualizar produto' : 'Erro ao criar produto', 'error');
@@ -139,6 +215,7 @@ export default function ProductModal({ isOpen, onClose, partnerId, onSuccess, pr
     };
 
     return (
+        <>
         <div className={styles.modalOverlay} onClick={onClose}>
             <div className={styles.modalContent} style={{ maxWidth: 640 }} onClick={(e) => e.stopPropagation()}>
                 <div className={styles.modalHeader}>
@@ -163,6 +240,29 @@ export default function ProductModal({ isOpen, onClose, partnerId, onSuccess, pr
                                 )}
                                 <input type="file" accept="image/*" onChange={handleImageChange} style={{ display: 'none' }} />
                             </label>
+
+                            <div className={styles.extraImagesLabel}>Fotos adicionais</div>
+                            <div className={styles.extraImagesRow}>
+                                {formData.images.map((img, index) => (
+                                    <div key={index} className={styles.extraImageThumb}>
+                                        <img src={img} alt={`Foto ${index + 2}`} className={styles.extraImageThumbImg} />
+                                        <button
+                                            type="button"
+                                            className={styles.extraImageRemoveBtn}
+                                            onClick={() => removeExtraImage(index)}
+                                            aria-label="Remover foto"
+                                        >
+                                            <X size={12} />
+                                        </button>
+                                    </div>
+                                ))}
+                                {formData.images.length < MAX_EXTRA_IMAGES && (
+                                    <label className={styles.extraImageAddTile}>
+                                        <Upload size={16} color="#ccc" />
+                                        <input type="file" accept="image/*" onChange={handleExtraImageChange} style={{ display: 'none' }} />
+                                    </label>
+                                )}
+                            </div>
 
                             <div className={styles.checkboxGroup}>
                                 <input
@@ -314,5 +414,17 @@ export default function ProductModal({ isOpen, onClose, partnerId, onSuccess, pr
                 </form>
             </div>
         </div>
+
+        {cropSource && (
+            <ImageCropModal
+                image={cropSource}
+                aspect={PRODUCT_IMAGE_ASPECT}
+                title={cropTarget === 'main' ? 'Ajustar foto principal' : 'Ajustar foto adicional'}
+                maxBytes={IMAGE_SIZE_LIMITS.ITEM_IMAGE_MAX_BYTES}
+                onClose={() => { setCropSource(null); setCropTarget(null); }}
+                onConfirm={handleCropConfirm}
+            />
+        )}
+        </>
     );
 }

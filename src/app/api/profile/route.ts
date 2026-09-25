@@ -120,6 +120,20 @@ export async function PUT(req: Request) {
             user.cpf = body.cpf;
             updateData.cpf = body.cpf;
         }
+        // SECURITY: sem isso, um parceiro podia mandar deliveryFeePerKm (ou os
+        // outros valores abaixo) negativo, zerando/invertendo o frete calculado
+        // em /api/orders (que só protege o TOTAL contra negativo, não a taxa).
+        for (const [field, value] of [
+            ['minimumOrderValue', body.minimumOrderValue],
+            ['deliveryRadius', body.deliveryRadius],
+            ['deliveryFeePerKm', body.deliveryFeePerKm],
+            ['freeDeliveryMinimum', body.freeDeliveryMinimum],
+        ] as const) {
+            if (value !== undefined && (typeof value !== 'number' || isNaN(value) || value < 0)) {
+                return NextResponse.json({ message: `O valor de ${field} deve ser um número maior ou igual a zero.` }, { status: 400 });
+            }
+        }
+
         if (body.minimumOrderValue !== undefined) {
             user.minimumOrderValue = body.minimumOrderValue;
             updateData.minimumOrderValue = body.minimumOrderValue;

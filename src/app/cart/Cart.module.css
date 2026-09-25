@@ -231,14 +231,14 @@
 
 .couponSection {
     width: 371px;
-    height: 136px;
+    min-height: 136px;
     border: 1px solid #D4D7E3;
     border-radius: 8px;
     padding: 20px;
     margin-bottom: 20px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    gap: 10px;
     box-sizing: border-box;
     background-color: #fff;
 }
@@ -312,6 +312,41 @@
 
 .error {
     color: #FF4D4D;
+}
+
+.appliedCouponsList {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.appliedCouponItem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    background-color: #DEF9EC;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 13px;
+    color: #253D4E;
+}
+
+.appliedCouponInfo {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.appliedCouponRemoveBtn {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    color: #FF4D4D;
+    font-size: 12px;
+    cursor: pointer;
+    padding: 0;
+    text-decoration: underline;
 }
 
 @media (max-width: 1200px) {

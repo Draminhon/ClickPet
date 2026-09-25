@@ -9,7 +9,16 @@ import { maskPhone, maskZip, maskCPF } from '@/utils/masks';
 import Image from 'next/image';
 import MapPicker from '@/components/ui/MapPicker';
 import CardForm, { CardFormData } from '@/components/payments/CardForm';
+import { IMAGE_SIZE_LIMITS, getMaxRawFileBytes } from '@/lib/validation';
 import styles from './Profile.module.css';
+
+// api/profile PUT validates `image` against PROFILE_IMAGE_MAX_BYTES; api/pets
+// validates `photo` against ITEM_IMAGE_MAX_BYTES — both on the base64 string
+// length. These are the matching raw-file thresholds for the client checks.
+const MAX_RAW_PROFILE_IMAGE_BYTES = getMaxRawFileBytes(IMAGE_SIZE_LIMITS.PROFILE_IMAGE_MAX_BYTES);
+const MAX_RAW_PROFILE_IMAGE_MB = (MAX_RAW_PROFILE_IMAGE_BYTES / (1024 * 1024)).toFixed(1);
+const MAX_RAW_PET_IMAGE_BYTES = getMaxRawFileBytes(IMAGE_SIZE_LIMITS.ITEM_IMAGE_MAX_BYTES);
+const MAX_RAW_PET_IMAGE_MB = (MAX_RAW_PET_IMAGE_BYTES / (1024 * 1024)).toFixed(1);
 
 export default function ProfilePage() {
     const { data: session } = useSession();
@@ -113,8 +122,8 @@ export default function ProfilePage() {
                 showToast('Apenas arquivos de imagem são aceitos', 'error');
                 return;
             }
-            if (file.size > 2 * 1024 * 1024) {
-                showToast('A imagem deve ter no máximo 2MB', 'error');
+            if (file.size > MAX_RAW_PROFILE_IMAGE_BYTES) {
+                showToast(`A imagem deve ter no máximo ${MAX_RAW_PROFILE_IMAGE_MB}MB`, 'error');
                 return;
             }
             const reader = new FileReader();
@@ -413,8 +422,8 @@ export default function ProfilePage() {
                 showToast('Apenas arquivos de imagem são aceitos', 'error');
                 return;
             }
-            if (file.size > 1024 * 1024) {
-                showToast('A imagem deve ter no máximo 1MB', 'error');
+            if (file.size > MAX_RAW_PET_IMAGE_BYTES) {
+                showToast(`A imagem deve ter no máximo ${MAX_RAW_PET_IMAGE_MB}MB`, 'error');
                 return;
             }
             const reader = new FileReader();

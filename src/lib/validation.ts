@@ -31,3 +31,19 @@ export const IMAGE_SIZE_LIMITS = {
     /** Foto de pet e imagem de produto — mesmo limite já aplicado no client web/mobile. */
     ITEM_IMAGE_MAX_BYTES: 1024 * 1024,
 };
+
+/**
+ * The server compares `maxBytes` against the length of the base64 STRING
+ * (see `checkImageSize` above), but the client only has the raw file size
+ * before it's encoded. Base64 inflates size by ~4/3, so checking the raw
+ * file against the same `maxBytes` lets files through that fail server-side
+ * after the whole form has been filled out.
+ *
+ * This returns the raw-file threshold the client should use so that any
+ * file passing this check is guaranteed to pass `checkImageSize(..., maxBytes)`
+ * on the server — 0.75 (instead of the exact 3/4 inflation ratio) leaves a
+ * safety margin for encoding overhead/padding.
+ */
+export function getMaxRawFileBytes(maxBytes: number): number {
+    return Math.floor(maxBytes * 0.75);
+}

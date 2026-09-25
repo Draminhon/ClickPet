@@ -29,11 +29,24 @@ import crypto from 'crypto';
 // para produção (https://api.asaas.com/v3) quando estiver pronto.
 const ASAAS_BASE_URL = process.env.ASAAS_API_URL || 'https://sandbox.asaas.com/api/v3';
 
+const ASAAS_PRODUCTION_URL = 'https://api.asaas.com/v3';
+
 function getAccessToken(): string {
     const token = process.env.ASAAS_API_KEY;
     if (!token) {
         throw new Error('[Asaas] ASAAS_API_KEY not found in environment variables');
     }
+
+    // Chave de produção (prefixo $aact_prod_) batendo em qualquer URL que não
+    // seja a de produção quase sempre é um ASAAS_API_URL esquecido — sem essa
+    // checagem, a chamada falha do lado da ASAAS com um erro de autenticação
+    // genérico, difícil de ligar de volta à causa real.
+    if (token.startsWith('$aact_prod_') && ASAAS_BASE_URL !== ASAAS_PRODUCTION_URL) {
+        throw new Error(
+            `[Asaas] ASAAS_API_KEY é uma chave de PRODUÇÃO, mas ASAAS_API_URL está "${ASAAS_BASE_URL}" em vez de "${ASAAS_PRODUCTION_URL}". Defina ASAAS_API_URL=${ASAAS_PRODUCTION_URL}.`
+        );
+    }
+
     return token;
 }
 

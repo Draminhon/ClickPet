@@ -36,6 +36,7 @@ describe('Profile API PIX Key Validation', () => {
             name: 'Partner Shop',
             email: 'partner@example.com',
             role: 'partner',
+            bio: 'Petshop de teste',
             pixConfig: {
                 key: '12345678900',
                 keyType: 'CPF',

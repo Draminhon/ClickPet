@@ -15,12 +15,20 @@ const carouselImages = [
     '/assets/login-carosel/login_carosel3.jpg'
 ];
 
+// Only ever redirect to a same-origin relative path. A bare `/` prefix is
+// safe; `//host` is protocol-relative and would leave the site, so it's
+// rejected too.
+const isSafeCallbackUrl = (url: string | null): url is string =>
+    !!url && url.startsWith('/') && !url.startsWith('//');
+
 function RegisterContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { showToast } = useToast();
+    const rawCallbackUrl = searchParams.get('callbackUrl');
+    const callbackUrl = isSafeCallbackUrl(rawCallbackUrl) ? rawCallbackUrl : null;
     const [role, setRole] = useState<'customer' | 'partner' | 'veterinarian'>('customer');
-    
+
     useEffect(() => {
         const roleParam = searchParams.get('role');
         if (roleParam === 'partner') {
@@ -75,7 +83,7 @@ function RegisterContent() {
 
             if (res.ok) {
                 showToast('Conta criada com sucesso! Faça login para continuar.');
-                router.push('/login');
+                router.push(callbackUrl ? `/login?callbackUrl=${encodeURIComponent(callbackUrl)}` : '/login');
             } else {
                 const data = await res.json();
                 showToast(data.message || 'Erro ao realizar cadastro', 'error');
@@ -94,7 +102,7 @@ function RegisterContent() {
             // Clear any potential leftover cookie
             document.cookie = `clickpet_register_intent=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
         }
-        signIn(provider, { callbackUrl: '/' });
+        signIn(provider, { callbackUrl: callbackUrl || '/' });
     };
 
     return (

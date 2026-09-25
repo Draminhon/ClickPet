@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/context/ToastContext';
 import { Calendar, Clock, MapPin, Scissors, Check, Star } from 'lucide-react';
+import FavoriteButton from '@/components/ui/FavoriteButton';
 
 export default function ServiceDetailsPage({ params: paramsPromise }: { params: Promise<{ id: string }> }) {
     const params = use(paramsPromise);
@@ -21,6 +22,12 @@ export default function ServiceDetailsPage({ params: paramsPromise }: { params: 
     const [selectedPet, setSelectedPet] = useState('');
     const [notes, setNotes] = useState('');
     const [bookingLoading, setBookingLoading] = useState(false);
+
+    // Availability State
+    const DEFAULT_SLOTS = ['08:00', '09:00', '10:00', '11:00', '14:00', '15:00', '16:00', '17:00'];
+    const [timeSlots, setTimeSlots] = useState<string[]>([]);
+    const [bookedTimes, setBookedTimes] = useState<string[]>([]);
+    const [availabilityLoading, setAvailabilityLoading] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -49,6 +56,37 @@ export default function ServiceDetailsPage({ params: paramsPromise }: { params: 
 
         if (params.id) fetchData();
     }, [params.id, session]);
+
+    useEffect(() => {
+        setSelectedTime('');
+
+        if (!session || !service || !selectedDate) {
+            setTimeSlots([]);
+            setBookedTimes([]);
+            return;
+        }
+
+        const fetchAvailability = async () => {
+            setAvailabilityLoading(true);
+            try {
+                const res = await fetch(`/api/appointments/availability?partnerId=${service.partnerId._id}&serviceId=${service._id}&date=${selectedDate}`);
+                const data = await res.json();
+
+                if (!res.ok) throw new Error(data.message || 'Erro ao buscar horários');
+
+                setTimeSlots(Array.isArray(data.slots) ? data.slots : DEFAULT_SLOTS);
+                setBookedTimes(Array.isArray(data.bookedTimes) ? data.bookedTimes : []);
+            } catch (error) {
+                console.error(error);
+                setTimeSlots(DEFAULT_SLOTS);
+                setBookedTimes([]);
+            } finally {
+                setAvailabilityLoading(false);
+            }
+        };
+
+        fetchAvailability();
+    }, [selectedDate, session, service]);
 
     const handleBook = async () => {
         if (!session) {
@@ -94,11 +132,6 @@ export default function ServiceDetailsPage({ params: paramsPromise }: { params: 
     if (loading) return <div className="container" style={{ padding: '3rem', textAlign: 'center' }}>Carregando...</div>;
     if (!service) return <div className="container">Serviço não encontrado</div>;
 
-    // Generate time slots (simplified)
-    const timeSlots = [
-        '09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00'
-    ];
-
     return (
         <div className="container" style={{ padding: '2rem 0' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 2fr) 1fr', gap: '2rem' }}>
@@ -115,7 +148,10 @@ export default function ServiceDetailsPage({ params: paramsPromise }: { params: 
                         )}
                     </div>
 
-                    <h1 style={{ marginBottom: '0.5rem' }}>{service.name}</h1>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '15px' }}>
+                        <h1 style={{ marginBottom: '0.5rem' }}>{service.name}</h1>
+                        <FavoriteButton serviceId={service._id} size={20} />
+                    </div>
                     <p style={{ color: '#666', fontSize: '1.1rem', marginBottom: '1.5rem' }}>
                         Oferecido por: <strong>{service.partnerId?.name}</strong>
                     </p>
@@ -179,25 +215,39 @@ export default function ServiceDetailsPage({ params: paramsPromise }: { params: 
 
                                 <div>
                                     <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Horário</label>
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
-                                        {timeSlots.map(time => (
-                                            <button
-                                                key={time}
-                                                onClick={() => setSelectedTime(time)}
-                                                style={{
-                                                    padding: '0.5rem',
-                                                    borderRadius: '6px',
-                                                    border: selectedTime === time ? '2px solid #6CC551' : '1px solid #ddd',
-                                                    background: selectedTime === time ? '#e8f5e9' : 'white',
-                                                    cursor: 'pointer',
-                                                    fontWeight: 600,
-                                                    color: selectedTime === time ? '#6CC551' : '#333'
-                                                }}
-                                            >
-                                                {time}
-                                            </button>
-                                        ))}
-                                    </div>
+                                    {availabilityLoading ? (
+                                        <p style={{ fontSize: '0.9rem', color: '#666', padding: '0.5rem 0' }}>Carregando horários...</p>
+                                    ) : !selectedDate ? (
+                                        <p style={{ fontSize: '0.9rem', color: '#666', padding: '0.5rem 0' }}>Selecione uma data para ver os horários</p>
+                                    ) : timeSlots.length === 0 ? (
+                                        <p style={{ fontSize: '0.9rem', color: '#666', padding: '0.5rem 0' }}>Nenhum horário disponível para esta data</p>
+                                    ) : (
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
+                                            {timeSlots.map(time => {
+                                                const isBooked = bookedTimes.includes(time);
+                                                return (
+                                                    <button
+                                                        key={time}
+                                                        onClick={() => !isBooked && setSelectedTime(time)}
+                                                        disabled={isBooked}
+                                                        title={isBooked ? 'Horário indisponível' : undefined}
+                                                        style={{
+                                                            padding: '0.5rem',
+                                                            borderRadius: '6px',
+                                                            border: selectedTime === time ? '2px solid #6CC551' : '1px solid #ddd',
+                                                            background: isBooked ? '#f0f0f0' : (selectedTime === time ? '#e8f5e9' : 'white'),
+                                                            cursor: isBooked ? 'not-allowed' : 'pointer',
+                                                            fontWeight: 600,
+                                                            color: isBooked ? '#aaa' : (selectedTime === time ? '#6CC551' : '#333'),
+                                                            textDecoration: isBooked ? 'line-through' : 'none'
+                                                        }}
+                                                    >
+                                                        {time}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div>

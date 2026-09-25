@@ -4,6 +4,7 @@ import Message from '@/models/Message';
 import Order from '@/models/Order';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]/route";
+import { writeRateLimiter } from '@/lib/rateLimit';
 
 export async function POST(req: Request) {
     try {
@@ -12,13 +13,35 @@ export async function POST(req: Request) {
             return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
         }
 
+        if (!writeRateLimiter.check(session.user.id).success) {
+            return NextResponse.json({ message: 'Muitas mensagens em pouco tempo. Aguarde um instante.' }, { status: 429 });
+        }
+
         await dbConnect();
         const body = await req.json();
-        const { orderId, receiverId, content } = body;
-        
-        if (!content || !receiverId) {
+        const { orderId, content } = body;
+
+        if (!content || !orderId) {
             return NextResponse.json({ message: 'Missing fields' }, { status: 400 });
         }
+
+        // SECURITY: o único cliente real (chat/[orderId] na web) sempre manda
+        // orderId; sem essa validação, qualquer usuário logado podia injetar
+        // mensagem em pedido alheio ou mandar spam pra qualquer receiverId só
+        // informando-o direto no corpo. O destinatário passa a ser derivado do
+        // pedido, nunca aceito do cliente.
+        const order = await Order.findById(orderId);
+        if (!order) {
+            return NextResponse.json({ message: 'Order not found' }, { status: 404 });
+        }
+
+        const isCustomer = order.userId.toString() === session.user.id;
+        const isPartner = order.partnerId.toString() === session.user.id;
+        if (!isCustomer && !isPartner) {
+            return NextResponse.json({ message: 'Forbidden: You are not a participant in this order' }, { status: 403 });
+        }
+
+        const receiverId = isCustomer ? order.partnerId : order.userId;
 
         const message = await Message.create({
             content,

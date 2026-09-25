@@ -39,7 +39,7 @@ export default function StoreCatalog({ racoes, utensilios, servicos }: StoreCata
 
     const tagDividerStyle = { width: '2px', height: '14px', backgroundColor: '#DDE1E6', display: 'inline-block' };
 
-    const renderSection = (title: string, items: Product[], categoryId: string) => {
+    const renderSection = (title: string, items: Product[], categoryId: string, basePath: string, buyLabel: string) => {
         if (items.length === 0) return null;
         
         const currentPage = currentPages[categoryId];
@@ -82,7 +82,7 @@ export default function StoreCatalog({ racoes, utensilios, servicos }: StoreCata
                 <div className={styles.productGrid}>
                     {visibleItems.map((item, index) => (
                         <div key={`${categoryId}-${item.id}`}>
-                            <Link href={`/product/${item.id}`} className={styles.catalogItemRow} style={{ textDecoration: 'none' }}>
+                            <Link href={`${basePath}/${item.id}`} className={styles.catalogItemRow} style={{ textDecoration: 'none' }}>
                                 <div className={styles.productImageFrame}>
                                     <Image src={item.img} alt={item.name} fill sizes="110px" className={styles.productImage} />
                                 </div>
@@ -113,7 +113,7 @@ export default function StoreCatalog({ racoes, utensilios, servicos }: StoreCata
                                         <span className={styles.pricePrefix}>A partir de</span>
                                         <span className={styles.currentPrice}>R$ {item.price}</span>
                                     </div>
-                                    <button className={styles.buyBtn}>Comprar</button>
+                                    <button className={styles.buyBtn}>{buyLabel}</button>
                                 </div>
                             </Link>
                             {index !== visibleItems.length - 1 && <hr className={styles.rowDivider} />}
@@ -126,9 +126,9 @@ export default function StoreCatalog({ racoes, utensilios, servicos }: StoreCata
 
     return (
         <div style={{ marginTop: '24px', paddingBottom: '100px' }}>
-            {renderSection('Rações', racoes, 'racoes')}
-            {renderSection('Acessórios e Utensílios', utensilios, 'utensilios')}
-            {renderSection('Serviços', servicos, 'servicos')}
+            {renderSection('Rações', racoes, 'racoes', '/product', 'Comprar')}
+            {renderSection('Acessórios e Utensílios', utensilios, 'utensilios', '/product', 'Comprar')}
+            {renderSection('Serviços', servicos, 'servicos', '/services', 'Agendar')}
         </div>
     );
 }

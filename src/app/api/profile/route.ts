@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]/route";
 import { sanitizeObject } from '@/lib/sanitize';
 import { logAction } from '@/lib/audit';
+import { checkImageSize, IMAGE_SIZE_LIMITS } from '@/lib/validation';
 
 export async function GET(req: Request) {
     try {
@@ -55,6 +56,19 @@ export async function PUT(req: Request) {
 
         console.log('[PROFILE PUT] incoming body keys:', Object.keys(body), 'address:', JSON.stringify(body.address), 'deliveryAddresses:', JSON.stringify(body.deliveryAddresses));
 
+        // O client já recusa arquivos grandes antes do upload, mas isso nunca
+        // era validado aqui — sem isso, dava pra inflar o banco sem limite.
+        for (const [field, value] of [
+            ['image', body.image],
+            ['shopLogo', body.shopLogo],
+            ['bannerImage', body.bannerImage],
+        ] as const) {
+            const check = checkImageSize(value, IMAGE_SIZE_LIMITS.PROFILE_IMAGE_MAX_BYTES, field);
+            if (!check.valid) {
+                return NextResponse.json({ message: check.message }, { status: 400 });
+            }
+        }
+
         const user = await User.findById(session.user.id);
         if (!user) {
             return NextResponse.json({ message: 'User not found' }, { status: 404 });
@@ -91,6 +105,13 @@ export async function PUT(req: Request) {
             user.phone = body.phone;
             updateData.phone = body.phone;
         }
+        if (body.preferredPaymentMethod !== undefined) {
+            if (!['pix', 'cartao', 'pix_cartao'].includes(body.preferredPaymentMethod)) {
+                return NextResponse.json({ message: 'Forma de pagamento inválida.' }, { status: 400 });
+            }
+            user.preferredPaymentMethod = body.preferredPaymentMethod;
+            updateData.preferredPaymentMethod = body.preferredPaymentMethod;
+        }
         if (body.cnpj !== undefined) {
             user.cnpj = body.cnpj;
             updateData.cnpj = body.cnpj;
@@ -99,6 +120,20 @@ export async function PUT(req: Request) {
             user.cpf = body.cpf;
             updateData.cpf = body.cpf;
         }
+        // SECURITY: sem isso, um parceiro podia mandar deliveryFeePerKm (ou os
+        // outros valores abaixo) negativo, zerando/invertendo o frete calculado
+        // em /api/orders (que só protege o TOTAL contra negativo, não a taxa).
+        for (const [field, value] of [
+            ['minimumOrderValue', body.minimumOrderValue],
+            ['deliveryRadius', body.deliveryRadius],
+            ['deliveryFeePerKm', body.deliveryFeePerKm],
+            ['freeDeliveryMinimum', body.freeDeliveryMinimum],
+        ] as const) {
+            if (value !== undefined && (typeof value !== 'number' || isNaN(value) || value < 0)) {
+                return NextResponse.json({ message: `O valor de ${field} deve ser um número maior ou igual a zero.` }, { status: 400 });
+            }
+        }
+
         if (body.minimumOrderValue !== undefined) {
             user.minimumOrderValue = body.minimumOrderValue;
             updateData.minimumOrderValue = body.minimumOrderValue;
@@ -155,6 +190,9 @@ export async function PUT(req: Request) {
             updateData.specialization = body.specialization;
         }
         if (body.bio !== undefined) {
+            if (user.role === 'partner' && !body.bio.trim()) {
+                return NextResponse.json({ message: 'A biografia é obrigatória para parceiros.' }, { status: 400 });
+            }
             user.bio = body.bio;
             updateData.bio = body.bio;
         }

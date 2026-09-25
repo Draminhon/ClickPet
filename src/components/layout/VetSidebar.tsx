@@ -3,15 +3,17 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { 
-    LayoutDashboard, 
-    User, 
-    Settings, 
-    MapPin, 
+import {
+    LayoutDashboard,
+    User,
+    Settings,
+    MapPin,
     LogOut,
     ChevronRight,
     Bell,
-    X
+    X,
+    Stethoscope,
+    Calendar
 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import Image from 'next/image';
@@ -34,6 +36,8 @@ export default function VetSidebar({ user, activeTab, setActiveTab, isOpen = fal
         { id: 'overview', label: 'Painel Geral', icon: LayoutDashboard },
         { id: 'profile', label: 'Meu Perfil', icon: User },
         { id: 'location', label: 'Localização', icon: MapPin },
+        { id: 'services', label: 'Meus Serviços', icon: Stethoscope },
+        { id: 'appointments', label: 'Agendamentos', icon: Calendar },
     ];
 
     return (

@@ -1,21 +1,22 @@
 /**
  * Split Payment Service
- * 
- * Handles the automatic 10/90 split between ClickPet and partner petshops.
- * When a customer pays for an order, 90% is sent to the partner via PIX
- * and 10% is retained by ClickPet as a platform fee.
- * 
+ *
+ * Handles the automatic split between ClickPet and partner petshops.
+ * When a customer pays for an order, the partner's share is sent via PIX
+ * and the rest is retained by ClickPet as a platform fee.
+ *
  * Flow:
  *   1. Payment confirmed (webhook or polling)
  *   2. processPartnerPayout() is called
  *   3. System looks up partner's PIX config
- *   4. Calculates 90% of order total
- *   5. Sends PIX via AbacatePay POST /v2/pix/send
+ *   4. Calculates the partner's share of the order total
+ *   5. Sends PIX via ASAAS POST /v3/transfers
  *   6. Records split status on the Order
  */
 
+import Order from '@/models/Order';
 import User from '@/models/User';
-import { sendPix, mapPixKeyType } from '@/lib/abacatepay';
+import { createPixTransfer, mapPixKeyTypeAsaas } from '@/lib/asaas';
 
 // Default split: ClickPet keeps 15% (commission), Partner gets 85% (pure)
 const PLATFORM_FEE_PERCENTAGE = parseInt(process.env.CLICKPET_SPLIT_PERCENTAGE || '15', 10);
@@ -25,7 +26,7 @@ export interface SplitResult {
     success: boolean;
     splitAmount: number;     // R$ sent to partner
     platformFee: number;     // R$ retained by ClickPet
-    pixId?: string;          // AbacatePay PIX transfer ID
+    pixId?: string;          // ASAAS PIX transfer ID
     error?: string;          // Error message if failed
 }
 
@@ -41,7 +42,9 @@ export async function processPartnerPayout(order: any): Promise<SplitResult> {
     const logPrefix = `[Split] Order ${orderId}`;
 
     try {
-        // Guard: Don't process if already completed or processing
+        // Fast-path skip using the caller's (possibly stale) in-memory copy —
+        // just avoids a wasted round-trip; the real guard against double
+        // processing is the atomic claim below.
         if (order.splitStatus === 'completed') {
             console.log(`${logPrefix} Split already completed, skipping.`);
             return {
@@ -52,8 +55,31 @@ export async function processPartnerPayout(order: any): Promise<SplitResult> {
             };
         }
 
-        if (order.splitStatus === 'processing') {
-            console.log(`${logPrefix} Split already processing, skipping.`);
+        // Atomically claim the payout: the filter only matches if
+        // splitStatus is still neither 'processing' nor 'completed' at write
+        // time. Two concurrent triggers (ASAAS webhook + the app's
+        // check-status polling both fire right when a PIX settles) can each
+        // read a stale 'pending' order before either writes — a plain
+        // "read splitStatus, then save 'processing'" is not atomic and let
+        // both proceed to send the PIX transfer, paying the partner twice.
+        // This conditional update lets only one caller win the claim.
+        const claimed = await Order.findOneAndUpdate(
+            { _id: order._id, splitStatus: { $nin: ['processing', 'completed'] } },
+            { $set: { splitStatus: 'processing' } },
+            { new: true },
+        );
+
+        if (!claimed) {
+            console.log(`${logPrefix} Split already claimed by another process, skipping.`);
+            const current = await Order.findById(order._id);
+            if (current?.splitStatus === 'completed') {
+                return {
+                    success: true,
+                    splitAmount: current.splitAmount || 0,
+                    platformFee: current.platformFee || 0,
+                    pixId: current.splitPixId,
+                };
+            }
             return {
                 success: false,
                 splitAmount: 0,
@@ -62,9 +88,8 @@ export async function processPartnerPayout(order: any): Promise<SplitResult> {
             };
         }
 
-        // Mark as processing to prevent double-processing
-        order.splitStatus = 'processing';
-        await order.save();
+        // Keep working with the freshly claimed document from here on.
+        order = claimed;
 
         // Fetch partner's PIX configuration
         const partner = await User.findById(order.partnerId);
@@ -95,37 +120,14 @@ export async function processPartnerPayout(order: any): Promise<SplitResult> {
         // Calculate split amounts
         const partnerShare = calculatePartnerShare(order.total);
         const clickpetShare = Math.round((order.total - partnerShare) * 100) / 100;
-        // Use raw centavos
-        const partnerShareCentavos = Math.round(partnerShare * 100);
-
-        // ABACATEPAY FEES & SHIELDING:
-        // We charge 15% platform commission (R$ 3.00 on R$ 20.00).
-        // The partner must receive exactly 85% pure (R$ 17.00 on R$ 20.00).
-        // Since AbacatePay automatically deducts the R$ 0.80 (80 centavos) payout fee 
-        // from the Pix transfer amount itself, we must add the R$ 0.80 payout fee
-        // to the payout amount we send. This way, the partner receives exactly partnerShare,
-        // and both the incoming fee (R$ 0.80) and outgoing fee (R$ 0.80) are absorbed 
-        // by ClickPet's 15% commission.
-        // E.g. For R$ 20.00: 
-        // - ClickPet gross fee = R$ 3.00 (15%)
-        // - Partner pure share = R$ 17.00 (85%)
-        // - We send = R$ 17.00 + R$ 0.80 = R$ 17.80.
-        // - Partner receives = R$ 17.80 - R$ 0.80 = R$ 17.00 (Pure 85%).
-        // - ClickPet net = R$ 20.00 - R$ 0.80 (incoming fee) - R$ 17.80 (sent) = R$ 1.40.
-        const ABACATEPAY_PAYOUT_FEE_CENTAVOS = 80;
-        const amountToSendCentavos = partnerShareCentavos + ABACATEPAY_PAYOUT_FEE_CENTAVOS;
 
         console.log(`${logPrefix} Total: R$ ${order.total.toFixed(2)}`);
-        console.log(`${logPrefix} Partner share (${PARTNER_PERCENTAGE}%): R$ ${partnerShare.toFixed(2)} (${partnerShareCentavos} centavos)`);
-        console.log(`${logPrefix} ClickPet gross fee (${PLATFORM_FEE_PERCENTAGE}%): R$ ${clickpetShare.toFixed(2)}`);
-        console.log(`${logPrefix} Payout fee absorbed by ClickPet: R$ ${(ABACATEPAY_PAYOUT_FEE_CENTAVOS/100).toFixed(2)}`);
-        console.log(`${logPrefix} Total PIX sent: R$ ${(amountToSendCentavos/100).toFixed(2)}`);
-        console.log(`${logPrefix} Partner will receive pure: R$ ${((amountToSendCentavos - ABACATEPAY_PAYOUT_FEE_CENTAVOS)/100).toFixed(2)}`);
+        console.log(`${logPrefix} Partner share (${PARTNER_PERCENTAGE}%): R$ ${partnerShare.toFixed(2)}`);
+        console.log(`${logPrefix} ClickPet fee (${PLATFORM_FEE_PERCENTAGE}%): R$ ${clickpetShare.toFixed(2)}`);
 
-        // Minimum PIX amount is R$ 1.00 (100 centavos)
-        // With the 85% model, the partner's share must be at least R$ 1.00.
-        if (partnerShareCentavos < 100) {
-            const error = `Valor do repasse (R$ ${partnerShare.toFixed(2)}) é menor que o mínimo de R$ 1,00. Teste com valor acima de R$ 1,18.`;
+        // Minimum PIX transfer amount is R$ 1.00.
+        if (partnerShare < 1) {
+            const error = `Valor do repasse (R$ ${partnerShare.toFixed(2)}) é menor que o mínimo de R$ 1,00.`;
             console.warn(`${logPrefix} ${error}`);
             order.splitStatus = 'skipped';
             order.splitError = error;
@@ -137,12 +139,12 @@ export async function processPartnerPayout(order: any): Promise<SplitResult> {
 
         // Send PIX to partner
         const rawKeyType = partner.pixConfig.keyType || 'CPF';
-        const pixKeyType = mapPixKeyType(rawKeyType);
+        const pixKeyType = mapPixKeyTypeAsaas(rawKeyType);
         // CRITICAL: Strip formatting masks from PIX key before sending
         // UI stores: (11) 98765-4321, 123.456.789-01, 00.000.000/0000-00
         // API expects: 11987654321, 12345678901, 00000000000000
         const rawPixKey = partner.pixConfig.key;
-        const pixKey = (pixKeyType === 'EMAIL' || pixKeyType === 'RANDOM')
+        const pixKey = (pixKeyType === 'EMAIL' || pixKeyType === 'EVP')
             ? rawPixKey  // Don't strip email addresses or random keys
             : rawPixKey.replace(/\D/g, ''); // Strip all non-digits for CPF/CNPJ/PHONE
 
@@ -150,30 +152,33 @@ export async function processPartnerPayout(order: any): Promise<SplitResult> {
         console.log(`${logPrefix} PIX Config: keyType="${rawKeyType}" → mapped="${pixKeyType}"`);
         console.log(`${logPrefix} PIX Key: raw="${rawPixKey}" → cleaned="${pixKey}"`);
 
-        const pixResult = await sendPix({
-            amount: amountToSendCentavos,
+        const transfer = await createPixTransfer({
+            value: partnerShare,
             pixKey: pixKey,
             pixKeyType: pixKeyType,
-            externalId: `split-${orderId}`,
             description: `Repasse pedido #${orderId.slice(-6).toUpperCase()} - ClickPet`,
         });
+
+        if (transfer.transferFee) {
+            console.log(`${logPrefix} ASAAS transfer fee: R$ ${transfer.transferFee.toFixed(2)}`);
+        }
 
         // Update order with split info
         order.splitStatus = 'completed';
         order.splitAmount = partnerShare;
         order.platformFee = clickpetShare;
-        order.splitPixId = pixResult.id;
+        order.splitPixId = transfer.id;
         order.splitProcessedAt = new Date();
         order.splitError = undefined;
         await order.save();
 
-        console.log(`${logPrefix} ✅ Split completed! PIX ID: ${pixResult.id}`);
+        console.log(`${logPrefix} ✅ Split completed! Transfer ID: ${transfer.id}`);
 
         return {
             success: true,
             splitAmount: partnerShare,
             platformFee: clickpetShare,
-            pixId: pixResult.id,
+            pixId: transfer.id,
         };
 
     } catch (error: any) {

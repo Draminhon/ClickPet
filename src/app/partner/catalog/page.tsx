@@ -16,7 +16,6 @@ import {
     X,
     Upload
 } from 'lucide-react';
-import Link from 'next/link';
 import Image from 'next/image';
 import ProductModal from '@/components/modals/ProductModal';
 import { useSession } from 'next-auth/react';
@@ -32,8 +31,9 @@ function CatalogContent() {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 7;
 
-    // Create Modal state
+    // Create/Edit Modal state
     const [showCreateModal, setShowCreateModal] = useState(false);
+    const [editingProduct, setEditingProduct] = useState<any>(null);
 
     // Delete modal states
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -201,9 +201,17 @@ function CatalogContent() {
                                 <tr key={p._id} className={styles.tableRow} style={{ borderBottom: showDivider ? '1px solid rgba(209, 217, 226, 1)' : 'none' }}>
                                     <td className={styles.tableCell}>
                                         <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-                                            <Link href={`/partner/catalog/edit/${p._id}`} title="Editar produto" style={{ color: '#3BB77E' }}>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setEditingProduct(p);
+                                                    setShowCreateModal(true);
+                                                }}
+                                                title="Editar produto"
+                                                style={{ color: '#3BB77E', border: 'none', background: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
+                                            >
                                                 <Pencil size={18} />
-                                            </Link>
+                                            </button>
                                             <button
                                                 onClick={() => openDeleteModal(p._id, p.title)}
                                                 className={styles.deleteIconBtn}
@@ -289,11 +297,15 @@ function CatalogContent() {
                 )}
             </div>
 
-            <ProductModal 
+            <ProductModal
                 isOpen={showCreateModal}
-                onClose={() => setShowCreateModal(false)}
+                onClose={() => {
+                    setShowCreateModal(false);
+                    setEditingProduct(null);
+                }}
                 partnerId={session?.user?.id || ''}
                 onSuccess={fetchProducts}
+                product={editingProduct}
             />
 
             {/* DELETE CONFIRMATION MODAL */}

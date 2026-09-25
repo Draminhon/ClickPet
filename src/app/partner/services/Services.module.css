@@ -417,6 +417,26 @@
     font-weight: 700;
 }
 
+/* Delete icon button */
+.deleteIconBtn {
+    background: none;
+    border: none;
+    color: #757575;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.deleteIconBtn:hover {
+    color: #dc3545;
+    background-color: rgba(220, 53, 69, 0.08);
+}
+
 /* Modal overlay */
 .modalOverlay {
     position: fixed;

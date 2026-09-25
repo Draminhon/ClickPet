@@ -4,6 +4,7 @@ import Product from '@/models/Product';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]/route";
 import { sanitizeObject } from '@/lib/sanitize';
+import { checkImageSize, IMAGE_SIZE_LIMITS } from '@/lib/validation';
 
 // Escape special regex characters to prevent ReDoS / injection
 function escapeRegex(str: string): string {
@@ -40,6 +41,17 @@ export async function POST(req: Request) {
         }
         if (body.price === undefined || body.price <= 0) {
             return NextResponse.json({ message: 'Preço deve ser maior que zero' }, { status: 400 });
+        }
+
+        const imageCheck = checkImageSize(body.image, IMAGE_SIZE_LIMITS.ITEM_IMAGE_MAX_BYTES, 'image');
+        if (!imageCheck.valid) {
+            return NextResponse.json({ message: imageCheck.message }, { status: 400 });
+        }
+        for (const extra of body.images || []) {
+            const check = checkImageSize(extra, IMAGE_SIZE_LIMITS.ITEM_IMAGE_MAX_BYTES, 'images');
+            if (!check.valid) {
+                return NextResponse.json({ message: check.message }, { status: 400 });
+            }
         }
 
         const product = await Product.create({

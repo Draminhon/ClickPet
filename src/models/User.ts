@@ -35,6 +35,37 @@ AddressSchema.plugin(fieldEncryption, {
     secret: ENC_KEY || ''
 });
 
+// Cartão salvo do cliente: só o que a ASAAS devolve depois de tokenizar
+// (`cardToken`) — nunca o número do cartão nem o CVV. O PAN passa em
+// trânsito pelo nosso backend (a ASAAS exige a chave privada da conta, então
+// não dá pra tokenizar direto do app) mas nunca é logado nem persistido; para
+// cobrar de novo, usamos o `cardToken` como referência do lado da ASAAS.
+// `expirationMonth`/`expirationYear` são o que o próprio usuário informou no
+// cadastro — a ASAAS não devolve a validade na resposta da tokenização, só
+// bandeira e os 4 últimos dígitos, então são só para exibição.
+//
+// IMPORTANTE: `cardToken` NÃO é garantidamente único por cartão — no sandbox
+// da ASAAS ele é fixo por customer, igual para qualquer número tokenizado
+// (confirmado empiricamente: dois cartões de bandeira/número diferentes para
+// o mesmo customer voltaram com o mesmo token). Por isso o subdocumento tem
+// seu próprio `_id` (identidade real do registro, usada como key de lista e
+// para excluir), enquanto `cardToken` continua sendo só a referência para
+// cobrar na ASAAS.
+const SavedCardSchema = new mongoose.Schema({
+    cardToken: { type: String, required: true },
+    lastFourDigits: { type: String, required: true },
+    brand: { type: String, default: '' }, // ex: 'VISA', 'MASTERCARD'
+    expirationMonth: { type: Number, required: true },
+    expirationYear: { type: Number, required: true },
+    cardholderName: { type: String, default: '' },
+    addedAt: { type: Date, default: Date.now },
+});
+
+SavedCardSchema.plugin(fieldEncryption, {
+    fields: ['cardholderName'],
+    secret: ENC_KEY || ''
+});
+
 const PixConfigSchema = new mongoose.Schema({
     keyType: { type: String, default: 'CPF' },
     key: { type: String, default: '' },
@@ -96,6 +127,20 @@ const UserSchema = new mongoose.Schema({
     phone: {
         type: String,
     },
+    // Cliente: forma de pagamento padrão, usada para pré-selecionar a opção
+    // no checkout. Mesmos valores aceitos por Order.paymentMethod — não é uma
+    // conta de cartão salva, só qual conjunto de métodos o checkout oferece.
+    preferredPaymentMethod: {
+        type: String,
+        enum: ['pix', 'cartao', 'pix_cartao'],
+        default: 'pix_cartao',
+    },
+    // Id do customer do cliente na ASAAS — criado na primeira vez que ele
+    // salva um cartão, reaproveitado depois para tokenizar os próximos.
+    asaasCustomerId: {
+        type: String,
+    },
+    savedCards: [SavedCardSchema],
     minimumOrderValue: {
         type: Number,
         default: 0,
@@ -156,6 +201,11 @@ const UserSchema = new mongoose.Schema({
     bio: {
         type: String,
         default: '',
+        required: [
+            function (this: any) { return this.role === 'partner'; },
+            'A biografia é obrigatória para parceiros',
+        ],
+        maxlength: [500, 'A biografia não pode ter mais de 500 caracteres'],
     },
     whatsapp: {
         type: String,

@@ -36,12 +36,21 @@ export function rotateSize(width: number, height: number, rotation: number) {
  * @param {Object} pixelCrop - pixelCrop Object provided by react-easy-crop
  * @param {number} rotation - optional rotation parameter
  * @param {Object} flip - optional flip parameter
+ * @param {number} maxDimension - the crop is downscaled to fit within this
+ *   many pixels on its longest side before encoding. Without this, cropping
+ *   a large source photo (most phone cameras shoot well above 3000px) still
+ *   produces a multi-megabyte data URI even though the crop "looks" smaller
+ *   on screen — this is what actually keeps the final upload within the
+ *   app's size limits, not the crop selection itself.
+ * @param {number} quality - JPEG quality (0-1) for the final encode.
  */
 export async function getCroppedImg(
   imageSrc: string,
   pixelCrop: { x: number; y: number; width: number; height: number },
   rotation = 0,
-  flip = { horizontal: false, vertical: false }
+  flip = { horizontal: false, vertical: false },
+  maxDimension = 1280,
+  quality = 0.85
 ): Promise<string> {
   const image = await createImage(imageSrc);
   const canvas = document.createElement('canvas');
@@ -89,15 +98,23 @@ export async function getCroppedImg(
   // paste generated rotate image with correct offsets for x,y crop values.
   ctx.putImageData(data, 0, 0);
 
-  // As Base64 string
-  return canvas.toDataURL('image/jpeg');
+  // Downscale to maxDimension on the longest side before encoding.
+  // putImageData can't scale directly, so draw the cropped canvas onto a
+  // second, smaller canvas via drawImage (which does scale) when the crop
+  // is bigger than needed — most phone photos are 3000px+ even after a
+  // "small-looking" crop selection.
+  const scale = Math.min(1, maxDimension / Math.max(pixelCrop.width, pixelCrop.height));
+  if (scale < 1) {
+    const scaledCanvas = document.createElement('canvas');
+    scaledCanvas.width = Math.round(pixelCrop.width * scale);
+    scaledCanvas.height = Math.round(pixelCrop.height * scale);
+    const scaledCtx = scaledCanvas.getContext('2d');
+    if (scaledCtx) {
+      scaledCtx.drawImage(canvas, 0, 0, scaledCanvas.width, scaledCanvas.height);
+      return scaledCanvas.toDataURL('image/jpeg', quality);
+    }
+  }
 
-  // As a blob
-  /*
-  return new Promise((resolve) => {
-    canvas.toBlob((file) => {
-      resolve(URL.createObjectURL(file));
-    }, 'image/jpeg');
-  });
-  */
+  // As Base64 string
+  return canvas.toDataURL('image/jpeg', quality);
 }

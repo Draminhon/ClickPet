@@ -170,9 +170,12 @@ export default function TrendingPartnersCarousel({ partners }: TrendingPartnersC
             >
                 {partners.map((partner, index) => {
                     const shopType = partner.specialization || 'Petshop';
-                    const distanceStr = partner.distance != null 
-                        ? `${partner.distance.toFixed(1)} km` 
-                        : 'Calculando...';
+                    // `distance` is null when the partner never set a location
+                    // pin on their address — that's permanent, not a pending
+                    // calculation, so the label shouldn't imply it'll resolve.
+                    const distanceStr = partner.distance != null
+                        ? `${partner.distance.toFixed(1)} km`
+                        : 'Distância indisponível';
                     
                     const responseTime = partner.averageResponseTime || '30-60 min';
                     const isOpen = partner.workingHours ? isShopOpen(partner.workingHours) : false;

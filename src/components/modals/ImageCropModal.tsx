@@ -11,19 +11,29 @@ interface ImageCropModalProps {
     title: string;
     onClose: () => void;
     onConfirm: (croppedImage: string) => void;
+    /**
+     * When set, the confirmed crop is guaranteed to encode under this many
+     * bytes (compared against the base64 string length, same as the
+     * server's `checkImageSize`) — if the first pass comes out larger, it's
+     * retried once at a smaller/lower-quality encode before asking the user
+     * to adjust. Without this prop, the crop is just returned as-is.
+     */
+    maxBytes?: number;
 }
 
-const ImageCropModal: React.FC<ImageCropModalProps> = ({ 
-    image, 
-    aspect, 
-    title, 
-    onClose, 
-    onConfirm 
+const ImageCropModal: React.FC<ImageCropModalProps> = ({
+    image,
+    aspect,
+    title,
+    onClose,
+    onConfirm,
+    maxBytes,
 }) => {
     const [crop, setCrop] = useState({ x: 0, y: 0 });
     const [zoom, setZoom] = useState(1);
     const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
     const [loading, setLoading] = useState(false);
+    const [sizeError, setSizeError] = useState('');
 
     const onCropChange = (crop: { x: number; y: number }) => {
         setCrop(crop);
@@ -40,8 +50,19 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     const handleConfirm = async () => {
         if (!croppedAreaPixels) return;
         setLoading(true);
+        setSizeError('');
         try {
-            const croppedImage = await getCroppedImg(image, croppedAreaPixels);
+            let croppedImage = await getCroppedImg(image, croppedAreaPixels);
+            if (maxBytes && croppedImage.length > maxBytes) {
+                // First pass (default 1280px/0.85 quality) still came out too
+                // big — usually a very detailed/busy photo. Retry once at a
+                // smaller size and lower quality before giving up.
+                croppedImage = await getCroppedImg(image, croppedAreaPixels, 0, { horizontal: false, vertical: false }, 1000, 0.6);
+            }
+            if (maxBytes && croppedImage.length > maxBytes) {
+                setSizeError('Essa imagem ficou grande demais mesmo após o ajuste. Tente selecionar uma área menor ou use outra foto.');
+                return;
+            }
             onConfirm(croppedImage);
         } catch (e) {
             console.error(e);
@@ -118,8 +139,18 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
                     borderTop: '1px solid #f0f0f0',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '24px'
+                    gap: '16px',
                 }}>
+                    {sizeError && (
+                        <p style={{ margin: 0, fontSize: '13px', color: '#B91C1C', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: '8px', padding: '10px 14px' }}>
+                            {sizeError}
+                        </p>
+                    )}
+                    <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '24px'
+                    }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                         <ZoomOut size={18} color="#757575" />
                         <input
@@ -184,6 +215,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
                                 </>
                             )}
                         </button>
+                    </div>
                     </div>
                 </div>
             </div>

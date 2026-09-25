@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, User, MapPin, Phone, Award, Calendar, FileText, MessageCircle } from 'lucide-react';
+import { ArrowLeft, User, MapPin, Phone, Award, Calendar, FileText, MessageCircle, Stethoscope, Clock } from 'lucide-react';
 import { maskPhone } from '@/utils/masks';
+import FavoriteButton from '@/components/ui/FavoriteButton';
 import styles from './ClinicProfile.module.css';
 
 interface VetProfile {
@@ -35,6 +36,8 @@ export default function ClinicProfilePage() {
     const id = params.id as string;
     const [vet, setVet] = useState<VetProfile | null>(null);
     const [loading, setLoading] = useState(true);
+    const [services, setServices] = useState<any[]>([]);
+    const [servicesLoading, setServicesLoading] = useState(true);
 
     useEffect(() => {
         if (id) {
@@ -46,8 +49,23 @@ export default function ClinicProfilePage() {
                 .then(data => setVet(data))
                 .catch(() => setVet(null))
                 .finally(() => setLoading(false));
+
+            fetch(`/api/services?partnerId=${id}`)
+                .then(res => res.ok ? res.json() : [])
+                .then(data => setServices(Array.isArray(data) ? data.filter((s: any) => s.isActive !== false) : []))
+                .catch(() => setServices([]))
+                .finally(() => setServicesLoading(false));
         }
     }, [id]);
+
+    const servicePriceRange = (prices: any[]) => {
+        if (!prices || prices.length === 0) return 'Consulte valores';
+        const values = prices.map((p: any) => p.price).filter((v: any) => typeof v === 'number');
+        if (values.length === 0) return 'Consulte valores';
+        const min = Math.min(...values);
+        const max = Math.max(...values);
+        return min === max ? `R$ ${min.toFixed(2)}` : `R$ ${min.toFixed(2)} - R$ ${max.toFixed(2)}`;
+    };
 
     const whatsappLink = vet?.whatsapp
         ? `https://wa.me/${vet.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent('Olá! Vi seu perfil no ClickPet e gostaria de agendar uma consulta.')}`
@@ -122,7 +140,10 @@ export default function ClinicProfilePage() {
                             )}
                         </div>
                         <div className={styles.headerInfo}>
-                            <h1 className={styles.vetName}>{vet.name}</h1>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <h1 className={styles.vetName}>{vet.name}</h1>
+                                <FavoriteButton partnerId={id} size={20} />
+                            </div>
                             <div className={styles.specialization}>
                                 {vet.specialization || 'Médico(a) Veterinário(a)'}
                             </div>
@@ -214,6 +235,43 @@ export default function ClinicProfilePage() {
                                     <p className={styles.addressText}>{fullAddress}</p>
                                 </div>
                             </>
+                        )}
+
+                        {/* Services / Booking */}
+                        <hr className={styles.divider} />
+                        <h3 className={styles.sectionTitle}>
+                            <Stethoscope size={20} />
+                            Serviços e Agendamento
+                        </h3>
+                        {servicesLoading ? (
+                            <p className={styles.emptyServices}>Carregando serviços...</p>
+                        ) : services.length === 0 ? (
+                            <p className={styles.emptyServices}>
+                                Este profissional ainda não cadastrou serviços de agendamento — use o WhatsApp para agendar diretamente.
+                            </p>
+                        ) : (
+                            <div className={styles.servicesList}>
+                                {services.map((service) => (
+                                    <div key={service._id} className={styles.serviceItem}>
+                                        <div className={styles.serviceInfo}>
+                                            <p className={styles.serviceName}>{service.name}</p>
+                                            <p className={styles.serviceMeta}>
+                                                {service.duration ? (
+                                                    <>
+                                                        <Clock size={12} style={{ verticalAlign: 'middle', marginRight: '4px' }} />
+                                                        {service.duration} min
+                                                    </>
+                                                ) : null}
+                                            </p>
+                                        </div>
+                                        <span className={styles.servicePrice}>{servicePriceRange(service.prices)}</span>
+                                        <Link href={`/services/${service._id}`} className={styles.serviceBookButton}>
+                                            <Calendar size={16} />
+                                            Agendar
+                                        </Link>
+                                    </div>
+                                ))}
+                            </div>
                         )}
                     </div>
 

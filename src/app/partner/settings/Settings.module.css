@@ -354,3 +354,9 @@
     background-color: #FFEBEE;
     border: 1px solid #FFCDD2;
 }
+
+.statusIncomplete {
+    color: #8A5A00;
+    background-color: #FFF8EC;
+    border: 1px solid #F5C77E;
+}

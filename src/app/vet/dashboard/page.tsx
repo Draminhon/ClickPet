@@ -9,10 +9,19 @@ import Footer from '@/components/layout/Footer';
 import MapPicker from '@/components/ui/MapPicker';
 import VetSidebar from '@/components/layout/VetSidebar';
 import ImageCropModal from '@/components/modals/ImageCropModal';
+import VetServicesTab from './VetServicesTab';
+import VetAppointmentsTab from './VetAppointmentsTab';
 import { Camera, MapPin, MessageCircle, FileText, User, Tag, Image as ImageIcon, CheckCircle, Settings, Menu } from 'lucide-react';
 import Image from 'next/image';
 import { maskPhone } from '@/utils/masks';
+import { IMAGE_SIZE_LIMITS, getMaxRawFileBytes } from '@/lib/validation';
 import styles from './VetDashboard.module.css';
+
+// api/profile PUT validates both `image` and `bannerImage` against
+// PROFILE_IMAGE_MAX_BYTES on the base64 string length. The old 5MB raw-file
+// check here let files through that the server would reject after cropping.
+const MAX_RAW_IMAGE_BYTES = getMaxRawFileBytes(IMAGE_SIZE_LIMITS.PROFILE_IMAGE_MAX_BYTES);
+const MAX_RAW_IMAGE_MB = (MAX_RAW_IMAGE_BYTES / (1024 * 1024)).toFixed(1);
 
 export default function VetDashboard() {
     const { data: session, update: updateSession } = useSession();
@@ -194,8 +203,8 @@ export default function VetDashboard() {
                 showToast('Apenas arquivos de imagem são aceitos', 'error');
                 return;
             }
-            if (file.size > 5 * 1024 * 1024) {
-                showToast('A imagem deve ter no máximo 5MB', 'error');
+            if (file.size > MAX_RAW_IMAGE_BYTES) {
+                showToast(`A imagem deve ter no máximo ${MAX_RAW_IMAGE_MB}MB`, 'error');
                 return;
             }
             const reader = new FileReader();
@@ -346,6 +355,8 @@ export default function VetDashboard() {
                                 {activeTab === 'overview' && 'Painel Geral'}
                                 {activeTab === 'profile' && 'Meu Perfil Profissional'}
                                 {activeTab === 'location' && 'Localização do Consultório'}
+                                {activeTab === 'services' && 'Meus Serviços'}
+                                {activeTab === 'appointments' && 'Agendamentos'}
                             </h1>
                             <p style={{ color: '#7E7E7E', fontSize: '14px', marginTop: '5px' }}>
                                 Gerencie suas informações e visibilidade na plataforma.
@@ -653,6 +664,14 @@ export default function VetDashboard() {
                                 </div>
                             </div>
                         </div>
+                    </div>
+
+                    <div style={{ display: activeTab === 'services' ? 'block' : 'none' }}>
+                        <VetServicesTab />
+                    </div>
+
+                    <div style={{ display: activeTab === 'appointments' ? 'block' : 'none' }}>
+                        <VetAppointmentsTab />
                     </div>
                 </div>
             </main>

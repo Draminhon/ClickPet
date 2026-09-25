@@ -4,6 +4,15 @@ import { useState, useEffect } from 'react';
 import { X, Upload, Plus, Trash2 } from 'lucide-react';
 import styles from './ServiceModal.module.css';
 import { useToast } from '@/context/ToastContext';
+import { IMAGE_SIZE_LIMITS } from '@/lib/validation';
+import ImageCropModal from './ImageCropModal';
+
+// Sanity cap on the RAW source file before it's loaded into the browser for
+// cropping — the real business limit is enforced after crop (see
+// ImageCropModal's maxBytes prop below), against the actual encoded output.
+const MAX_SOURCE_FILE_BYTES = 15 * 1024 * 1024; // 15MB
+// Matches the ~300px-tall, wide preview used on the service detail page.
+const SERVICE_IMAGE_ASPECT = 4 / 3;
 
 interface PriceRow {
     size: string;
@@ -16,15 +25,18 @@ interface ServiceModalProps {
     partnerId: string;
     onSuccess: () => void;
     service?: any;
+    // Categoria pré-selecionada para novos serviços (ex: 'veterinary' no
+    // dashboard do veterinário). Não afeta edição de um serviço existente.
+    defaultCategory?: string;
 }
 
-export default function ServiceModal({ isOpen, onClose, partnerId, onSuccess, service }: ServiceModalProps) {
+export default function ServiceModal({ isOpen, onClose, partnerId, onSuccess, service, defaultCategory = 'bath' }: ServiceModalProps) {
     const { showToast } = useToast();
     const [isSaving, setIsSaving] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
         description: '',
-        category: 'bath',
+        category: defaultCategory,
         species: 'all',
         duration: '',
         image: '',
@@ -34,13 +46,14 @@ export default function ServiceModal({ isOpen, onClose, partnerId, onSuccess, se
             { size: 'large', price: '' },
         ] as PriceRow[]
     });
- 
+    const [cropSource, setCropSource] = useState<string | null>(null);
+
     useEffect(() => {
         if (isOpen && service) {
             setFormData({
                 name: service.name || '',
                 description: service.description || '',
-                category: service.category || 'bath',
+                category: service.category || defaultCategory,
                 species: service.species || 'all',
                 duration: service.duration?.toString() || '',
                 image: service.image || '',
@@ -56,7 +69,7 @@ export default function ServiceModal({ isOpen, onClose, partnerId, onSuccess, se
             setFormData({
                 name: '',
                 description: '',
-                category: 'bath',
+                category: defaultCategory,
                 species: 'all',
                 duration: '',
                 image: '',
@@ -67,7 +80,7 @@ export default function ServiceModal({ isOpen, onClose, partnerId, onSuccess, se
                 ] as PriceRow[]
             });
         }
-    }, [isOpen, service]);
+    }, [isOpen, service, defaultCategory]);
 
     useEffect(() => {
         if (isOpen) {
@@ -82,23 +95,29 @@ export default function ServiceModal({ isOpen, onClose, partnerId, onSuccess, se
 
     if (!isOpen) return null;
 
+    // Selecting a file goes through the crop modal, not straight to formData —
+    // closes a race where a fast submit right after picking a file could beat
+    // FileReader's async onloadend, silently saving with no image at all.
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (file) {
-            if (!file.type.startsWith('image/')) {
-                showToast('Apenas arquivos de imagem são aceitos', 'error');
-                return;
-            }
-            if (file.size > 1024 * 1024) {
-                showToast('A imagem deve ter no máximo 1MB', 'error');
-                return;
-            }
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setFormData({ ...formData, image: reader.result as string });
-            };
-            reader.readAsDataURL(file);
+        e.target.value = '';
+        if (!file) return;
+        if (!file.type.startsWith('image/')) {
+            showToast('Apenas arquivos de imagem são aceitos', 'error');
+            return;
         }
+        if (file.size > MAX_SOURCE_FILE_BYTES) {
+            showToast('Arquivo muito grande. Escolha uma imagem de até 15MB.', 'error');
+            return;
+        }
+        const reader = new FileReader();
+        reader.onloadend = () => setCropSource(reader.result as string);
+        reader.readAsDataURL(file);
+    };
+
+    const handleCropConfirm = (croppedImage: string) => {
+        setFormData(prev => ({ ...prev, image: croppedImage }));
+        setCropSource(null);
     };
 
     const handlePriceChange = (index: number, field: keyof PriceRow, value: string) => {
@@ -153,7 +172,8 @@ export default function ServiceModal({ isOpen, onClose, partnerId, onSuccess, se
                 onSuccess();
                 onClose();
             } else {
-                showToast(service?._id ? 'Erro ao atualizar serviço' : 'Erro ao criar serviço', 'error');
+                const data = await res.json().catch(() => null);
+                showToast(data?.message || (service?._id ? 'Erro ao atualizar serviço' : 'Erro ao criar serviço'), 'error');
             }
         } catch (error) {
             showToast(service?._id ? 'Erro ao atualizar serviço' : 'Erro ao criar serviço', 'error');
@@ -163,6 +183,7 @@ export default function ServiceModal({ isOpen, onClose, partnerId, onSuccess, se
     };
 
     return (
+        <>
         <div className={styles.modalOverlay} onClick={onClose}>
             <div className={styles.modalContent} style={{ maxWidth: 640 }} onClick={(e) => e.stopPropagation()}>
                 <div className={styles.modalHeader}>
@@ -312,5 +333,17 @@ export default function ServiceModal({ isOpen, onClose, partnerId, onSuccess, se
                 </form>
             </div>
         </div>
+
+        {cropSource && (
+            <ImageCropModal
+                image={cropSource}
+                aspect={SERVICE_IMAGE_ASPECT}
+                title="Ajustar foto do serviço"
+                maxBytes={IMAGE_SIZE_LIMITS.ITEM_IMAGE_MAX_BYTES}
+                onClose={() => setCropSource(null)}
+                onConfirm={handleCropConfirm}
+            />
+        )}
+        </>
     );
 }

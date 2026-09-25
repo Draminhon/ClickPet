@@ -8,6 +8,7 @@ import {
     MoreHorizontal,
     Ticket,
     Trash2,
+    Pencil,
     ArrowUpDown,
     ChevronLeft,
     ChevronRight,
@@ -39,13 +40,14 @@ export default function CouponsPage() {
 
     // Modal states
     const [showCreateModal, setShowCreateModal] = useState(false);
+    const [editingCoupon, setEditingCoupon] = useState<any | null>(null);
+    const [isSaving, setIsSaving] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [deletingCouponId, setDeletingCouponId] = useState<string | null>(null);
     const [deletingCouponCode, setDeletingCouponCode] = useState('');
     const [isDeleting, setIsDeleting] = useState(false);
 
-    // Form state
-    const [formData, setFormData] = useState({
+    const emptyFormData = {
         code: '',
         discount: '',
         minPurchase: '',
@@ -53,7 +55,10 @@ export default function CouponsPage() {
         expiresAt: '',
         type: 'percentage',
         maxDiscount: '',
-    });
+    };
+
+    // Form state
+    const [formData, setFormData] = useState(emptyFormData);
 
     useEffect(() => {
         if (session?.user?.id) {
@@ -73,26 +78,55 @@ export default function CouponsPage() {
         }
     };
 
+    const openCreateModal = () => {
+        setEditingCoupon(null);
+        setFormData(emptyFormData);
+        setShowCreateModal(true);
+    };
+
+    const openEditModal = (coupon: any) => {
+        setEditingCoupon(coupon);
+        setFormData({
+            code: coupon.code || '',
+            discount: coupon.discount?.toString() ?? '',
+            minPurchase: coupon.minPurchase?.toString() ?? '',
+            maxUses: coupon.maxUses?.toString() ?? '',
+            expiresAt: coupon.expiresAt ? new Date(coupon.expiresAt).toISOString().slice(0, 10) : '',
+            type: coupon.type || 'percentage',
+            maxDiscount: coupon.maxDiscount?.toString() ?? '',
+        });
+        setShowCreateModal(true);
+    };
+
+    const closeFormModal = () => {
+        setShowCreateModal(false);
+        setEditingCoupon(null);
+        setFormData(emptyFormData);
+    };
+
     const handleCreateSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setIsSaving(true);
+        const isEditing = !!editingCoupon;
         try {
-            const res = await fetch('/api/coupons', {
-                method: 'POST',
+            const res = await fetch(isEditing ? `/api/coupons?id=${editingCoupon._id}` : '/api/coupons', {
+                method: isEditing ? 'PUT' : 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData),
             });
 
             if (res.ok) {
-                showToast('Cupom criado com sucesso!');
-                setFormData({ code: '', discount: '', minPurchase: '', maxUses: '', expiresAt: '', type: 'percentage', maxDiscount: '' });
-                setShowCreateModal(false);
+                showToast(isEditing ? 'Cupom atualizado com sucesso!' : 'Cupom criado com sucesso!');
+                closeFormModal();
                 fetchData();
             } else {
                 const error = await res.json();
-                showToast(error.message || 'Erro ao criar cupom', 'error');
+                showToast(error.message || (isEditing ? 'Erro ao atualizar cupom' : 'Erro ao criar cupom'), 'error');
             }
         } catch (error) {
-            showToast('Erro ao criar cupom', 'error');
+            showToast(isEditing ? 'Erro ao atualizar cupom' : 'Erro ao criar cupom', 'error');
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -158,11 +192,13 @@ export default function CouponsPage() {
 
     const totalPages = Math.ceil(sortedCoupons.length / itemsPerPage);
 
-    // Pie chart data: most used coupons this month
+    // Pie chart data: most used coupons overall.
+    // Note: `usedCount` on the Coupon model is a single all-time counter —
+    // there is no per-use/redemption log with timestamps anywhere in the
+    // data model, so a genuine "usage this month" breakdown isn't
+    // computable. Rather than fake a month filter, the chart is labeled
+    // honestly as all-time usage below.
     const pieChartData = useMemo(() => {
-        const now = new Date();
-        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-
         return coupons
             .filter(c => c.usedCount > 0)
             .sort((a, b) => b.usedCount - a.usedCount)
@@ -192,7 +228,7 @@ export default function CouponsPage() {
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
                 </div>
-                <button className={styles.actionBtn} onClick={() => setShowCreateModal(true)}>
+                <button className={styles.actionBtn} onClick={openCreateModal}>
                     ADICIONAR CUPOM
                 </button>
                 <button className={styles.optionsBtn}>
@@ -228,14 +264,22 @@ export default function CouponsPage() {
                             return (
                                 <tr key={c._id} className={styles.tableRow} style={{ borderBottom: showDivider ? '1px solid rgba(209, 217, 226, 1)' : 'none' }}>
                                     <td className={styles.tableCell} data-label="Ações">
-                                        <button
-                                            onClick={() => openDeleteModal(c._id, c.code)}
-                                            className={styles.deleteIconBtn}
-                                            title="Excluir cupom"
-                                            style={{ margin: '0 auto' }}
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                                            <button
+                                                onClick={() => openEditModal(c)}
+                                                className={styles.deleteIconBtn}
+                                                title="Editar cupom"
+                                            >
+                                                <Pencil size={18} />
+                                            </button>
+                                            <button
+                                                onClick={() => openDeleteModal(c._id, c.code)}
+                                                className={styles.deleteIconBtn}
+                                                title="Excluir cupom"
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+                                        </div>
                                     </td>
                                     <td className={styles.tableCell} data-label="ID">
                                         <span className={styles.couponIdText}>
@@ -313,7 +357,7 @@ export default function CouponsPage() {
             <div className={styles.bottomRow}>
                 <div className={styles.chartContainer}>
                     <div className={styles.chartHeader}>
-                        <h3 className={styles.chartTitle}>CUPONS MAIS USADOS NO MÊS</h3>
+                        <h3 className={styles.chartTitle}>CUPONS MAIS USADOS</h3>
                         <div className={styles.optionsBtn} style={{ background: 'transparent', width: 40, height: 40 }}>
                             <MoreHorizontal size={15} color="rgba(95,109,126,1)" />
                         </div>
@@ -366,13 +410,13 @@ export default function CouponsPage() {
                 </div>
             </div>
 
-            {/* ======== CREATE COUPON MODAL ======== */}
+            {/* ======== CREATE / EDIT COUPON MODAL ======== */}
             {showCreateModal && (
-                <div className={styles.modalOverlay} onClick={() => setShowCreateModal(false)}>
+                <div className={styles.modalOverlay} onClick={closeFormModal}>
                     <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
                         <div className={styles.modalHeader}>
-                            <h2 className={styles.modalTitle}>NOVO CUPOM</h2>
-                            <button className={styles.modalCloseBtn} onClick={() => setShowCreateModal(false)}>
+                            <h2 className={styles.modalTitle}>{editingCoupon ? 'EDITAR CUPOM' : 'NOVO CUPOM'}</h2>
+                            <button className={styles.modalCloseBtn} onClick={closeFormModal}>
                                 <X size={20} />
                             </button>
                         </div>
@@ -384,9 +428,11 @@ export default function CouponsPage() {
                                     <input
                                         type="text"
                                         required
+                                        readOnly={!!editingCoupon}
+                                        disabled={!!editingCoupon}
                                         placeholder="PRIMEIRACOMPRA"
                                         className={styles.formInput}
-                                        style={{ textTransform: 'uppercase' }}
+                                        style={{ textTransform: 'uppercase', opacity: editingCoupon ? 0.6 : 1, cursor: editingCoupon ? 'not-allowed' : 'text' }}
                                         value={formData.code}
                                         onChange={e => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
                                     />
@@ -469,8 +515,8 @@ export default function CouponsPage() {
                                 </div>
                             </div>
 
-                            <button type="submit" className={styles.formSubmitBtn}>
-                                CRIAR CUPOM
+                            <button type="submit" className={styles.formSubmitBtn} disabled={isSaving}>
+                                {isSaving ? 'SALVANDO...' : (editingCoupon ? 'SALVAR ALTERAÇÕES' : 'CRIAR CUPOM')}
                             </button>
                         </form>
                     </div>

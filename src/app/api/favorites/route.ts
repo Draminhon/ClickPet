@@ -18,6 +18,7 @@ export async function POST(req: Request) {
         const existing = await Favorite.findOne({
             userId: session.user.id,
             ...(body.productId && { productId: body.productId }),
+            ...(body.serviceId && { serviceId: body.serviceId }),
             ...(body.partnerId && { partnerId: body.partnerId }),
         });
 
@@ -28,6 +29,7 @@ export async function POST(req: Request) {
         const favorite = await Favorite.create({
             userId: session.user.id,
             productId: body.productId,
+            serviceId: body.serviceId,
             partnerId: body.partnerId,
         });
 
@@ -54,6 +56,13 @@ export async function GET(req: Request) {
                     select: '-password'
                 }
             })
+            .populate({
+                path: 'serviceId',
+                populate: {
+                    path: 'partnerId',
+                    select: '-password'
+                }
+            })
             .populate('partnerId', '-password')
             .sort({ createdAt: -1 });
 
@@ -63,6 +72,9 @@ export async function GET(req: Request) {
             }
             if (fav.productId && fav.productId.partnerId && typeof fav.productId.partnerId.decryptFieldsSync === 'function') {
                 fav.productId.partnerId.decryptFieldsSync();
+            }
+            if (fav.serviceId && fav.serviceId.partnerId && typeof fav.serviceId.partnerId.decryptFieldsSync === 'function') {
+                fav.serviceId.partnerId.decryptFieldsSync();
             }
         });
 
@@ -82,10 +94,12 @@ export async function DELETE(req: Request) {
         await dbConnect();
         const { searchParams } = new URL(req.url);
         const productId = searchParams.get('productId');
+        const serviceId = searchParams.get('serviceId');
         const partnerId = searchParams.get('partnerId');
 
         const query: any = { userId: session.user.id };
         if (productId) query.productId = productId;
+        if (serviceId) query.serviceId = serviceId;
         if (partnerId) query.partnerId = partnerId;
 
         await Favorite.findOneAndDelete(query);

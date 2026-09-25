@@ -7,7 +7,9 @@ import {
     ChevronLeft,
     ChevronRight,
     Search,
-    MoreHorizontal
+    MoreHorizontal,
+    AlertTriangle,
+    X
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -31,6 +33,10 @@ export default function PartnerAppointmentsPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const [activeTab, setActiveTab] = useState('TODOS');
     const itemsPerPage = 7;
+
+    // Cancel confirmation modal state
+    const [cancelTarget, setCancelTarget] = useState<any | null>(null);
+    const [isCancelling, setIsCancelling] = useState(false);
 
     useEffect(() => {
         if (session?.user?.id) {
@@ -66,6 +72,17 @@ export default function PartnerAppointmentsPage() {
         } catch (err) {
             console.error(err);
             showToast('Erro ao atualizar', 'error');
+        }
+    };
+
+    const handleCancelConfirm = async () => {
+        if (!cancelTarget) return;
+        setIsCancelling(true);
+        try {
+            await handleStatusUpdate(cancelTarget._id, 'cancelled');
+        } finally {
+            setIsCancelling(false);
+            setCancelTarget(null);
         }
     };
 
@@ -207,7 +224,7 @@ export default function PartnerAppointmentsPage() {
                                             {a.status === 'pending' && (
                                                 <>
                                                     <button onClick={() => handleStatusUpdate(a._id, 'confirmed')} style={{ padding: '4px 8px', fontSize: '12px', background: '#3BB77E', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Confirmar</button>
-                                                    <button onClick={() => handleStatusUpdate(a._id, 'cancelled')} style={{ padding: '4px 8px', fontSize: '12px', background: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Cancelar</button>
+                                                    <button onClick={() => setCancelTarget(a)} style={{ padding: '4px 8px', fontSize: '12px', background: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Cancelar</button>
                                                 </>
                                             )}
                                             {a.status === 'confirmed' && (
@@ -337,6 +354,52 @@ export default function PartnerAppointmentsPage() {
                     )}
                 </div>
             </div>
+
+            {/* CANCEL CONFIRMATION MODAL */}
+            {cancelTarget && (
+                <div className={styles.modalOverlay} onClick={() => setCancelTarget(null)}>
+                    <div className={styles.modalContent} style={{ maxWidth: 420 }} onClick={(e) => e.stopPropagation()}>
+                        <div className={styles.modalHeader}>
+                            <h2 className={styles.modalTitle}>CANCELAR AGENDAMENTO</h2>
+                            <button className={styles.modalCloseBtn} onClick={() => setCancelTarget(null)}>
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className={styles.graphDivider} />
+                        <div className={styles.modalBody} style={{ textAlign: 'center' }}>
+                            <div style={{ width: 64, height: 64, borderRadius: '50%', backgroundColor: 'rgba(220, 53, 69, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+                                <AlertTriangle size={28} color="#dc3545" />
+                            </div>
+                            <p style={{ fontSize: 14, color: '#253D4E', marginBottom: '0.5rem' }}>
+                                Tem certeza que deseja cancelar o agendamento de
+                            </p>
+                            <p style={{ fontSize: 18, fontWeight: 700, color: '#3BB77E', marginBottom: '1.5rem' }}>
+                                {cancelTarget.serviceId?.name || 'serviço'} {cancelTarget.userId?.name ? `— ${cancelTarget.userId.name}` : ''}
+                            </p>
+                            <p style={{ fontSize: 12, color: '#999', marginBottom: '2rem' }}>
+                                Essa ação não pode ser desfeita.
+                            </p>
+                            <div style={{ display: 'flex', gap: '12px' }}>
+                                <button
+                                    onClick={() => setCancelTarget(null)}
+                                    className={styles.formSubmitBtn}
+                                    style={{ backgroundColor: '#e6e9ec', color: '#253D4E', flex: 1, marginTop: 0 }}
+                                >
+                                    VOLTAR
+                                </button>
+                                <button
+                                    onClick={handleCancelConfirm}
+                                    className={styles.formSubmitBtn}
+                                    style={{ backgroundColor: '#dc3545', flex: 1, marginTop: 0 }}
+                                    disabled={isCancelling}
+                                >
+                                    {isCancelling ? 'CANCELANDO...' : 'SIM, CANCELAR'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

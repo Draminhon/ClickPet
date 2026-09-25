@@ -8,7 +8,7 @@ import { useCart } from '@/context/CartContext';
 import { useToast } from '@/context/ToastContext';
 import { useSession } from 'next-auth/react';
 import OffersCarousel from '@/components/home/OffersCarousel';
-import Footer from '@/components/layout/Footer';
+import FavoriteButton from '@/components/ui/FavoriteButton';
 import Link from 'next/link';
 import styles from './ProductDetail.module.css';
 interface Product {
@@ -215,7 +215,10 @@ export default function ProductDetailPage() {
 
                 {/* Right Column - Info */}
                 <div className={styles.rightColumn}>
-                    <h1 className={styles.title}>{product.title}</h1>
+                    <div className={styles.titleRow}>
+                        <h1 className={styles.title}>{product.title}</h1>
+                        <FavoriteButton productId={String(id)} size={20} />
+                    </div>
 
                     <div className={styles.ratingRow}>
                         <div className={styles.stars}>
@@ -490,7 +493,6 @@ export default function ProductDetailPage() {
             <div className={relatedSectionClass}>
                 <OffersCarousel products={relatedProducts} title="Produtos Relacionados" hideViewAll />
             </div>
-            <Footer />
         </div>
     );
 }

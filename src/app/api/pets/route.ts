@@ -3,6 +3,7 @@ import dbConnect from '@/lib/db';
 import Pet from '@/models/Pet';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]/route";
+import { checkImageSize, IMAGE_SIZE_LIMITS } from '@/lib/validation';
 
 export async function GET(req: Request) {
     try {
@@ -30,8 +31,13 @@ export async function POST(req: Request) {
         await dbConnect();
         const body = await req.json();
 
+        const photoCheck = checkImageSize(body.photo, IMAGE_SIZE_LIMITS.ITEM_IMAGE_MAX_BYTES, 'photo');
+        if (!photoCheck.valid) {
+            return NextResponse.json({ message: photoCheck.message }, { status: 400 });
+        }
+
         // Explicitly allowed fields to prevent mass assignment
-        const allowedFields = ['name', 'species', 'breed', 'age', 'weight', 'photo', 'gender', 'size', 'temperament', 'medicalNotes', 'isVaccinated', 'notes'];
+        const allowedFields = ['name', 'species', 'breed', 'age', 'birthDate', 'weight', 'photo', 'gender', 'size', 'temperament', 'medicalNotes', 'isVaccinated', 'isNeutered', 'notes'];
         const petData: any = { ownerId: session.user.id };
 
         allowedFields.forEach(field => {
@@ -65,8 +71,13 @@ export async function PUT(req: Request) {
         await dbConnect();
         const body = await req.json();
 
+        const photoCheck = checkImageSize(body.photo, IMAGE_SIZE_LIMITS.ITEM_IMAGE_MAX_BYTES, 'photo');
+        if (!photoCheck.valid) {
+            return NextResponse.json({ message: photoCheck.message }, { status: 400 });
+        }
+
         // Explicitly allowed fields for update
-        const allowedFields = ['name', 'species', 'breed', 'age', 'weight', 'photo', 'gender', 'size', 'temperament', 'medicalNotes', 'isVaccinated', 'notes'];
+        const allowedFields = ['name', 'species', 'breed', 'age', 'birthDate', 'weight', 'photo', 'gender', 'size', 'temperament', 'medicalNotes', 'isVaccinated', 'isNeutered', 'notes'];
         const updateData: any = {};
 
         allowedFields.forEach(field => {

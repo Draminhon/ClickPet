@@ -24,6 +24,8 @@ import {
     DollarSign
 } from 'lucide-react';
 import OrderStatusBadge from '@/components/ui/OrderStatusBadge';
+import PrintAndAnimationStyles from '@/components/partner/PrintAndAnimationStyles';
+import { maskPixKey } from '@/utils/masks';
 
 export default function PartnerOrders() {
     const { showToast } = useToast();
@@ -92,29 +94,12 @@ export default function PartnerOrders() {
 
     const getMonthlyData = () => {
         const months = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
-        const data = months.map(m => ({ name: m, PedidosReal: 0, Pedidos: 0 }));
+        const data = months.map(m => ({ name: m, Pedidos: 0 }));
 
         orders.forEach(order => {
             const date = new Date(order.createdAt);
             const monthIndex = date.getMonth();
-            data[monthIndex].PedidosReal += 1;
-        });
-
-        data.forEach(d => {
-            const val = d.PedidosReal;
-            if (val === 0) {
-                d.Pedidos = 0;
-            } else if (val <= 10) {
-                d.Pedidos = val / 10;
-            } else if (val <= 50) {
-                d.Pedidos = 1 + ((val - 10) / 40);
-            } else if (val <= 100) {
-                d.Pedidos = 2 + ((val - 50) / 50);
-            } else if (val <= 1000) {
-                d.Pedidos = 3 + ((val - 100) / 900);
-            } else {
-                d.Pedidos = 4;
-            }
+            data[monthIndex].Pedidos += 1;
         });
 
         return data;
@@ -138,46 +123,6 @@ export default function PartnerOrders() {
         return filtered;
     };
 
-    // Função de mascarar chaves PIX para o comprovante
-    const maskPixKey = (key: string, type: string) => {
-        if (!key) return '-';
-        const cleaned = key.trim();
-        const upperType = String(type || '').toUpperCase();
-        
-        if (upperType === 'EMAIL') {
-            const parts = cleaned.split('@');
-            if (parts.length === 2) {
-                const name = parts[0];
-                const domain = parts[1];
-                return name.charAt(0) + '****' + name.slice(-1) + '@' + domain;
-            }
-        }
-        if (upperType === 'PHONE' || upperType === 'CELULAR' || upperType === 'TELEFONE') {
-            const digits = cleaned.replace(/\D/g, '');
-            if (digits.length >= 10) {
-                return `(${digits.slice(0, 2)}) 9****-${digits.slice(-4)}`;
-            }
-        }
-        if (upperType === 'CPF') {
-            const digits = cleaned.replace(/\D/g, '');
-            if (digits.length === 11) {
-                return `***.***.${digits.slice(6, 9)}-${digits.slice(-2)}`;
-            }
-        }
-        if (upperType === 'CNPJ') {
-            const digits = cleaned.replace(/\D/g, '');
-            if (digits.length === 14) {
-                return `**.***.***.0001-**`;
-            }
-        }
-        if (upperType === 'RANDOM' || upperType === 'ALEATORIA') {
-            if (cleaned.length > 8) {
-                return cleaned.slice(0, 8) + '-****-****-****-' + cleaned.slice(-4);
-            }
-        }
-        return cleaned.slice(0, 4) + '****' + cleaned.slice(-4);
-    };
-
     const chartData = getMonthlyData();
     const filteredOrders = filterOrders();
 
@@ -188,149 +133,12 @@ export default function PartnerOrders() {
     return (
         <div>
             {/* Estilos CSS Injetados para Animações e Print Customizado */}
-            <style dangerouslySetInnerHTML={{ __html: `
-                @keyframes fadeIn {
-                    from { opacity: 0; }
-                    to { opacity: 1; }
-                }
-                @keyframes scaleIn {
-                    from { transform: scale(0.95); opacity: 0; }
-                    to { transform: scale(1); opacity: 1; }
-                }
-                
-                .spin-animation {
-                    animation: spin 1.5s linear infinite;
-                }
-                @keyframes spin {
-                    from { transform: rotate(0deg); }
-                    to { transform: rotate(360deg); }
-                }
-
-                @media print {
-                    /* Oculta sidebar, banner, dashboard, drawer, backdrop e botões de ação */
-                    aside,
-                    .no-print,
-                    .recharts-responsive-container {
-                        display: none !important;
-                    }
-                    /* Remove margem da sidebar do layout principal */
-                    body, html {
-                        margin: 0 !important;
-                        padding: 0 !important;
-                        overflow: visible !important;
-                        background: white !important;
-                    }
-                    main {
-                        margin-left: 0 !important;
-                        padding: 0 !important;
-                        background: white !important;
-                        overflow: visible !important;
-                    }
-                    /* Torna o container do comprovante estático para fluxo normal de impressão */
-                    .clickpet-modal-overlay-print {
-                        position: static !important;
-                        width: 100% !important;
-                        height: auto !important;
-                        background: white !important;
-                        backdrop-filter: none !important;
-                        padding: 0 !important;
-                        margin: 0 !important;
-                        display: block !important;
-                        overflow: visible !important;
-                    }
-                    .clickpet-modal-content-print {
-                        max-width: 100% !important;
-                        max-height: none !important;
-                        box-shadow: none !important;
-                        border: none !important;
-                        border-radius: 0 !important;
-                        padding: 0 !important;
-                        margin: 0 !important;
-                        transform: none !important;
-                        animation: none !important;
-                        background: white !important;
-                        overflow: visible !important;
-                    }
-                    /* Força o navegador a imprimir cores de fundo */
-                    * {
-                        -webkit-print-color-adjust: exact !important;
-                        print-color-adjust: exact !important;
-                    }
-                }
-
-                @media (max-width: 768px) {
-                    .orders-toolbar {
-                        flex-direction: column !important;
-                        align-items: stretch !important;
-                        gap: 0.75rem !important;
-                    }
-                    .orders-tabs-container {
-                        width: 100% !important;
-                    }
-                    .orders-search-container {
-                        width: 100% !important;
-                    }
-                    .orders-search-input-wrapper {
-                        flex: 1 !important;
-                        width: auto !important;
-                    }
-                    .orders-table-container {
-                        border: none !important;
-                        background: transparent !important;
-                        padding: 0 !important;
-                    }
-                    .orders-table, 
-                    .orders-table tbody, 
-                    .orders-table-row, 
-                    .orders-table-cell {
-                        display: block !important;
-                        width: 100% !important;
-                    }
-                    .orders-table-header {
-                        display: none !important;
-                    }
-                    .orders-table-row {
-                        background: #F9FBFD !important;
-                        border: 1px solid rgba(209, 217, 226, 1) !important;
-                        border-radius: 12px !important;
-                        padding: 1rem !important;
-                        margin-bottom: 1rem !important;
-                        box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important;
-                        text-align: left !important;
-                    }
-                    .orders-table-cell {
-                        display: flex !important;
-                        justify-content: space-between !important;
-                        align-items: center !important;
-                        padding: 10px 0 !important;
-                        border-bottom: 1px dashed rgba(209, 217, 226, 0.4) !important;
-                        text-align: right !important;
-                        font-size: 14px !important;
-                    }
-                    .orders-table-cell:last-child {
-                        border-bottom: none !important;
-                    }
-                    .orders-table-cell::before {
-                        content: attr(data-label) !important;
-                        font-weight: 700 !important;
-                        color: #757575 !important;
-                        text-transform: uppercase !important;
-                        font-size: 11px !important;
-                        text-align: left !important;
-                        margin-right: 16px !important;
-                    }
-                    .orders-table-cell:first-child {
-                        border-bottom: 1px solid rgba(209, 217, 226, 1) !important;
-                        padding-bottom: 12px !important;
-                        margin-bottom: 8px !important;
-                        justify-content: flex-start !important;
-                        padding-top: 0 !important;
-                    }
-                    .orders-table-cell:first-child::before {
-                        display: none !important;
-                    }
-                }
-            ` }} />
+            <PrintAndAnimationStyles
+                tablePrefix="orders"
+                printHideSelectors={['.recharts-responsive-container']}
+                includeSpinAnimation
+                includeSearchInputWrapper
+            />
 
             {/* Painel do Dashboard Geral (Oculto na impressão) */}
             <div className="no-print">
@@ -385,16 +193,7 @@ export default function PartnerOrders() {
                                     dy={10}
                                 />
                                 <YAxis
-                                    domain={[0, 4]}
-                                    ticks={[0, 1, 2, 3, 4]}
-                                    tickFormatter={(val) => {
-                                        if (val === 0) return '0';
-                                        if (val === 1) return '10';
-                                        if (val === 2) return '50';
-                                        if (val === 3) return '100';
-                                        if (val === 4) return '1000';
-                                        return '';
-                                    }}
+                                    allowDecimals={false}
                                     tick={{ fontSize: 14, fill: '#757575', fontWeight: 400 }}
                                     axisLine={false}
                                     tickLine={false}
@@ -403,9 +202,6 @@ export default function PartnerOrders() {
                                 <Tooltip
                                     cursor={{ fill: '#f5f5f5' }}
                                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                                    formatter={(value: any, name: any, props: any) => {
-                                        return [props.payload.PedidosReal, "Pedidos"];
-                                    }}
                                 />
                                 <Bar
                                     dataKey="Pedidos"
@@ -1131,7 +927,7 @@ export default function PartnerOrders() {
                                         </div>
                                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                             <span style={{ color: '#757575' }}>Instituição Financeira:</span>
-                                            <span style={{ fontWeight: 600, color: '#253D4E' }}>AbacatePay IP S.A.</span>
+                                            <span style={{ fontWeight: 600, color: '#253D4E' }}>ASAAS Gestão Financeira S.A.</span>
                                         </div>
                                     </div>
                                 </div>
@@ -1198,10 +994,6 @@ export default function PartnerOrders() {
                                             <span>Comissão Bruta ClickPet (15%):</span>
                                             <span>R$ {selectedOrder.platformFee?.toFixed(2).replace('.', ',')}</span>
                                         </div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', color: '#3BB77E', fontWeight: 600 }}>
-                                            <span>Taxas da Operação (Absorvidas pela ClickPet):</span>
-                                            <span>R$ 1,60</span>
-                                        </div>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: 700, color: '#253D4E', borderTop: '1.5px solid #3BB77E', paddingTop: '8px', marginTop: '6px' }}>
                                             <span>Valor Líquido Recebido pelo Petshop (85%):</span>
                                             <span style={{ color: '#3BB77E', fontSize: '15px' }}>R$ {selectedOrder.splitAmount?.toFixed(2).replace('.', ',')}</span>
@@ -1220,7 +1012,7 @@ export default function PartnerOrders() {
                                 paddingTop: '1rem',
                                 marginTop: '0.5rem'
                             }}>
-                                Este comprovante é emitido automaticamente pela ClickPet em conformidade com as diretrizes do Banco Central do Brasil para transferências PIX. A transação correspondente foi liquidada de forma irreversível na conta do recebedor através do gateway de pagamento AbacatePay IP S.A.
+                                Este comprovante é emitido automaticamente pela ClickPet em conformidade com as diretrizes do Banco Central do Brasil para transferências PIX. A transação correspondente foi liquidada de forma irreversível na conta do recebedor através do gateway de pagamento ASAAS Gestão Financeira S.A.
                             </div>
                         </div>
 

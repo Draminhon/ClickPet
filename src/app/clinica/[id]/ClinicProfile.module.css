@@ -258,6 +258,95 @@
     box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4);
 }
 
+.servicesList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.serviceItem {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    background: #F8F9FA;
+    border-radius: 14px;
+    border: 1px solid #ECECEC;
+    transition: all 0.2s ease;
+}
+
+.serviceItem:hover {
+    border-color: #3BB77E;
+    box-shadow: 0 4px 15px rgba(59, 183, 126, 0.08);
+}
+
+.serviceInfo {
+    flex: 1;
+    min-width: 0;
+}
+
+.serviceName {
+    font-size: 15px;
+    font-weight: 700;
+    color: #253D4E;
+    margin: 0;
+}
+
+.serviceMeta {
+    font-size: 13px;
+    color: #7E7E7E;
+    margin: 4px 0 0 0;
+}
+
+.servicePrice {
+    font-size: 15px;
+    font-weight: 700;
+    color: #3BB77E;
+    white-space: nowrap;
+}
+
+.serviceBookButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 18px;
+    background: #253D4E;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.serviceBookButton:hover {
+    background: #3BB77E;
+}
+
+.emptyServices {
+    padding: 20px;
+    background: #F8F9FA;
+    border-radius: 12px;
+    color: #7E7E7E;
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .serviceItem {
+        flex-wrap: wrap;
+    }
+
+    .serviceBookButton {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
 .addressSection {
     margin-top: 10px;
     padding: 20px;

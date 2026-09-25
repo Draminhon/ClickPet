@@ -166,9 +166,12 @@ export default function LoggedInClinicsCarousel({ clinics }: LoggedInClinicsCaro
             >
                 {clinics.map((clinic, index) => {
                     const shopType = clinic.specialization || 'Clínica Veterinária';
-                    const distanceStr = clinic.distance != null 
-                        ? `${clinic.distance.toFixed(1)} km` 
-                        : 'Calculando...';
+                    // `distance` is null when the clinic never set a location
+                    // pin on their address — that's permanent, not a pending
+                    // calculation, so the label shouldn't imply it'll resolve.
+                    const distanceStr = clinic.distance != null
+                        ? `${clinic.distance.toFixed(1)} km`
+                        : 'Distância indisponível';
                     
                     const isOpen = clinic.workingHours ? isShopOpen(clinic.workingHours) : false;
 

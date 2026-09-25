@@ -51,14 +51,19 @@ const OrderSchema = new mongoose.Schema({
         enum: ['approved', 'rejected', 'pending', 'cancelled'],
         default: 'pending',
     },
-    abacatepayBillingId: {
+    asaasPaymentId: {
         type: String,
     },
-    abacatepayBillingUrl: {
+    // Copia-e-cola e QR (base64) da cobrança PIX, guardados na criação para
+    // a tela de pagamento não precisar rebuscar na ASAAS a cada abertura.
+    pixPayload: {
         type: String,
     },
-    abacatepayCustomerId: {
+    pixQrCodeImage: {
         type: String,
+    },
+    pixExpiresAt: {
+        type: Date,
     },
     paymentStartedAt: {
         type: Date,
@@ -129,7 +134,7 @@ const OrderSchema = new mongoose.Schema({
     },
     // ── Split Payment Tracking ──
     // When a customer pays, 85% goes to the partner and 15% stays with ClickPet.
-    // The repasse is done via PIX transfer (POST /v2/pix/send).
+    // The repasse is done via PIX transfer (POST /v3/transfers, ASAAS).
     splitStatus: {
         type: String,
         enum: ['pending', 'processing', 'completed', 'failed', 'skipped'],
@@ -139,7 +144,7 @@ const OrderSchema = new mongoose.Schema({
         type: Number,  // Amount sent to partner (in R$, e.g. 85.00)
     },
     splitPixId: {
-        type: String,  // AbacatePay PIX transfer ID (txn_xxx)
+        type: String,  // ASAAS PIX transfer ID
     },
     splitError: {
         type: String,  // Error message if split failed

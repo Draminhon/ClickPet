@@ -28,12 +28,33 @@ export async function GET(req: Request) {
     }
 }
 
+/**
+ * Nenhum cliente (mobile ou web) chama esta rota — notificações do app são
+ * criadas internamente via `src/lib/notification-service.ts`, importado
+ * direto pelo código do servidor. Esta rota HTTP pública não tinha
+ * verificação de sessão nenhuma e aceitava o corpo inteiro sem whitelist:
+ * qualquer requisição anônima podia criar uma notificação em nome de
+ * qualquer `userId` (phishing in-app). Restrita a admin como defesa em
+ * profundidade, já que não há caso de uso legítimo de cliente para isto.
+ */
 export async function POST(req: Request) {
     try {
+        const session = await getServerSession(authOptions);
+        if (!session || session.user.role !== 'admin') {
+            return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+        }
+
         await dbConnect();
         const body = await req.json();
 
-        const notification = await Notification.create(body);
+        const notification = await Notification.create({
+            userId: body.userId,
+            type: body.type,
+            title: body.title,
+            message: body.message,
+            link: body.link,
+            actionData: body.actionData,
+        });
 
         return NextResponse.json(notification, { status: 201 });
     } catch (error: any) {
@@ -54,8 +75,12 @@ export async function PUT(req: Request) {
         await dbConnect();
 
         if (notificationId) {
-            // Mark specific notification as read
-            await Notification.findByIdAndUpdate(notificationId, { read: true });
+            // Escopado ao dono: sem o filtro por userId, qualquer usuário logado
+            // podia marcar como lida a notificação de outro só adivinhando o ID.
+            await Notification.findOneAndUpdate(
+                { _id: notificationId, userId: session.user.id },
+                { read: true }
+            );
         } else {
             // Mark all as read
             await Notification.updateMany(

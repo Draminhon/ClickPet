@@ -1,21 +1,91 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useToast } from '@/context/ToastContext';
 import { useLocation } from '@/context/LocationContext';
-import { Minus, Plus, ChevronUp, ChevronDown, QrCode, Upload } from 'lucide-react';
+import { Minus, Plus, ChevronUp, ChevronDown, QrCode, Upload, AlertTriangle, Info } from 'lucide-react';
 import { maskPhone, maskPrice, maskCPF, maskCNPJ, maskZip } from '@/utils/masks';
 import MapPicker from '@/components/ui/MapPicker';
 import ImageCropModal from '@/components/modals/ImageCropModal';
+import { IMAGE_SIZE_LIMITS, getMaxRawFileBytes } from '@/lib/validation';
 import styles from './Settings.module.css';
+
+// shopLogo/bannerImage are validated server-side (api/profile PUT) against
+// PROFILE_IMAGE_MAX_BYTES on the base64 string length. This is the raw-file
+// threshold for the pre-crop upload that guarantees agreement with the server.
+const MAX_RAW_PROFILE_IMAGE_BYTES = getMaxRawFileBytes(IMAGE_SIZE_LIMITS.PROFILE_IMAGE_MAX_BYTES);
+const MAX_RAW_PROFILE_IMAGE_MB = (MAX_RAW_PROFILE_IMAGE_BYTES / (1024 * 1024)).toFixed(1);
 
 // ... (InputContainer, WorkingHoursToggle, TimeSelector omitted)
 // I'll re-add the imports correctly
 
-const InputContainer = ({ label, value, onChange, type = "text", selector = false, onIncrement, onDecrement, placeholder = "", width = '100%', error = false }: any) => (
-    <div style={{ marginBottom: '24px', width: '100%' }}>
+// Single source of truth for what the partner profile requires. Autosave persists
+// partial data, so these drive the pending-fields alert instead of a submit handler.
+const REQUIRED_FIELDS: { id: string; label: string; isFilled: (d: any) => boolean }[] = [
+    { id: 'phone', label: 'Telefone', isFilled: (d) => !!d.phone && d.phone.length >= 14 },
+    { id: 'specialization', label: 'Especificação da loja', isFilled: (d) => !!d.specialization?.trim() },
+    { id: 'bio', label: 'Biografia', isFilled: (d) => !!d.bio?.trim() },
+    { id: 'cnpj', label: 'CNPJ da loja', isFilled: (d) => d.cnpj.replace(/\D/g, '').length >= 14 },
+    { id: 'pixKey', label: 'Chave PIX', isFilled: (d) => !!d.pixConfig?.key?.trim() },
+    { id: 'street', label: 'Rua', isFilled: (d) => !!d.address?.street?.trim() },
+    { id: 'number', label: 'Número', isFilled: (d) => !!d.address?.number?.trim() },
+    { id: 'neighborhood', label: 'Bairro', isFilled: (d) => !!d.address?.neighborhood?.trim() },
+    { id: 'city', label: 'Cidade', isFilled: (d) => !!d.address?.city?.trim() },
+    { id: 'zip', label: 'CEP', isFilled: (d) => !!d.address?.zip && d.address.zip.length >= 9 },
+];
+
+const RequiredFieldsAlert = ({ fields, onFieldClick }: any) => (
+    <div style={{
+        display: 'flex',
+        gap: '16px',
+        padding: '20px 24px',
+        borderRadius: '12px',
+        background: '#FFF8EC',
+        border: '1px solid #F5C77E',
+        marginBottom: '32px',
+        alignItems: 'flex-start'
+    }}>
+        <AlertTriangle size={22} color="#C87F0A" style={{ flexShrink: 0, marginTop: '2px' }} />
+        <div style={{ flex: 1 }}>
+            <p style={{ fontSize: '14px', fontWeight: 700, color: '#8A5A00', margin: '0 0 6px' }}>
+                {fields.length} {fields.length === 1 ? 'CAMPO OBRIGATÓRIO PENDENTE' : 'CAMPOS OBRIGATÓRIOS PENDENTES'}
+            </p>
+            <p style={{ fontSize: '13px', color: '#8A5A00', margin: '0 0 14px', lineHeight: '1.5' }}>
+                Suas alterações são salvas automaticamente, mas sua loja só fica visível para os
+                clientes depois que todos os campos obrigatórios estiverem preenchidos.
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {fields.map((field: any) => (
+                    <button
+                        key={field.id}
+                        type="button"
+                        onClick={() => onFieldClick(field.id)}
+                        style={{
+                            border: '1px solid #E5B76B',
+                            background: 'white',
+                            color: '#8A5A00',
+                            borderRadius: '999px',
+                            padding: '6px 14px',
+                            fontSize: '12px',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            transition: 'background 0.2s'
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = '#FDF0DA')}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = 'white')}
+                    >
+                        {field.label}
+                    </button>
+                ))}
+            </div>
+        </div>
+    </div>
+);
+
+const InputContainer = ({ id, label, value, onChange, type = "text", selector = false, onIncrement, onDecrement, placeholder = "", width = '100%', error = false }: any) => (
+    <div id={id} style={{ marginBottom: '24px', width: '100%' }}>
         <label style={{ display: 'block', fontSize: '14px', color: '#757575', marginBottom: '10px', textTransform: 'uppercase', fontWeight: 500 }}>{label}</label>
         <div style={{ 
             width: '100%', 
@@ -67,17 +137,59 @@ const InputContainer = ({ label, value, onChange, type = "text", selector = fals
     </div>
 );
 
-const WorkingHoursToggle = ({ active, onToggle }: any) => (
-    <button 
-        onClick={onToggle}
+const TextAreaContainer = ({ id, label, value, onChange, placeholder = "", maxLength = 500, error = false }: any) => (
+    <div id={id} style={{ marginBottom: '24px', width: '100%' }}>
+        <label style={{ display: 'block', fontSize: '14px', color: '#757575', marginBottom: '10px', textTransform: 'uppercase', fontWeight: 500 }}>{label}</label>
+        <div style={{
+            width: '100%',
+            borderRadius: '8px',
+            border: error ? '1.5px solid #FF4D4D' : '1px solid #D1D9E2',
+            padding: '14px 16px',
+            background: 'white',
+            transition: 'all 0.2s',
+            boxShadow: error ? '0 0 0 1px rgba(255, 77, 77, 0.1)' : 'none'
+        }}>
+            <textarea
+                value={value}
+                onChange={onChange}
+                placeholder={placeholder}
+                maxLength={maxLength}
+                rows={4}
+                style={{
+                    border: 'none',
+                    outline: 'none',
+                    width: '100%',
+                    fontSize: '14px',
+                    color: '#253D4E',
+                    background: 'transparent',
+                    resize: 'vertical',
+                    fontFamily: 'inherit',
+                    lineHeight: '1.5'
+                }}
+            />
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
+            {error
+                ? <span style={{ color: '#FF4D4D', fontSize: '11px', display: 'block', fontWeight: 500, letterSpacing: '0.02em' }}>CAMPO OBRIGATÓRIO</span>
+                : <span />}
+            <span style={{ fontSize: '11px', color: '#909090', fontWeight: 500 }}>{(value || '').length}/{maxLength}</span>
+        </div>
+    </div>
+);
+
+const WorkingHoursToggle = ({ active, onToggle, disabled = false }: any) => (
+    <button
+        onClick={disabled ? undefined : onToggle}
         type="button"
-        style={{ 
-            width: '44px', 
-            height: '24px', 
-            borderRadius: '12px', 
-            background: active ? '#3BB77E' : '#D1D9E2', 
-            border: 'none', 
-            cursor: 'pointer', 
+        disabled={disabled}
+        style={{
+            width: '44px',
+            height: '24px',
+            borderRadius: '12px',
+            background: disabled ? '#E4E8ED' : (active ? '#3BB77E' : '#D1D9E2'),
+            border: 'none',
+            cursor: disabled ? 'not-allowed' : 'pointer',
+            opacity: disabled ? 0.7 : 1,
             position: 'relative',
             transition: 'background 0.3s',
             display: 'flex',
@@ -175,6 +287,63 @@ const TimeSelector = ({ value, onChange }: any) => {
     );
 };
 
+const DraftRecoveryBanner = ({ onRestore, onDiscard }: { onRestore: () => void; onDiscard: () => void }) => (
+    <div style={{
+        display: 'flex',
+        gap: '16px',
+        padding: '20px 24px',
+        borderRadius: '12px',
+        background: '#EDF6FF',
+        border: '1px solid #A8CDF0',
+        marginBottom: '32px',
+        alignItems: 'flex-start'
+    }}>
+        <Info size={22} color="#2C6FB0" style={{ flexShrink: 0, marginTop: '2px' }} />
+        <div style={{ flex: 1 }}>
+            <p style={{ fontSize: '14px', fontWeight: 700, color: '#1E4E7F', margin: '0 0 6px' }}>
+                ALTERAÇÕES NÃO SALVAS ENCONTRADAS
+            </p>
+            <p style={{ fontSize: '13px', color: '#1E4E7F', margin: '0 0 14px', lineHeight: '1.5' }}>
+                Encontramos alterações não salvas de uma sessão anterior. Deseja restaurá-las?
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                <button
+                    type="button"
+                    onClick={onRestore}
+                    style={{
+                        border: 'none',
+                        background: '#2C6FB0',
+                        color: 'white',
+                        borderRadius: '8px',
+                        padding: '8px 18px',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        cursor: 'pointer'
+                    }}
+                >
+                    RESTAURAR
+                </button>
+                <button
+                    type="button"
+                    onClick={onDiscard}
+                    style={{
+                        border: '1px solid #A8CDF0',
+                        background: 'white',
+                        color: '#1E4E7F',
+                        borderRadius: '8px',
+                        padding: '8px 18px',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        cursor: 'pointer'
+                    }}
+                >
+                    DESCARTAR
+                </button>
+            </div>
+        </div>
+    </div>
+);
+
 const WelcomeModal = ({ onClose }: { onClose: () => void }) => (
     <div style={{
         position: 'fixed',
@@ -254,18 +423,21 @@ export default function PartnerSettings() {
     const { data: session, update } = useSession();
     const { showToast } = useToast();
     const { setLocationManual } = useLocation();
-    const [loading, setLoading] = useState(false);
     const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
     const [initialData, setInitialData] = useState<any>(null);
     const [showKeyTypeDropdown, setShowKeyTypeDropdown] = useState(false);
     const [showWelcomeModal, setShowWelcomeModal] = useState(false);
-    const [validationErrors, setValidationErrors] = useState<string[]>([]);
     const [hasLoaded, setHasLoaded] = useState(false);
+    const [pendingDraft, setPendingDraft] = useState<any>(null);
+    // Mirrors pendingDraft synchronously so the draft-write effect (below) never
+    // clobbers a not-yet-reviewed draft in the same render pass that discovers it.
+    const pendingDraftRef = useRef<any>(null);
     const [formData, setFormData] = useState({
         // ... (state preserved)
         cnpj: '',
         phone: '',
         specialization: '',
+        bio: '',
         shopLogo: '',
         bannerImage: '',
         minimumOrderValue: '0',
@@ -343,6 +515,7 @@ export default function PartnerSettings() {
                     cnpj: data.cnpj ? maskCNPJ(data.cnpj) : '',
                     phone: data.phone ? maskPhone(data.phone) : '',
                     specialization: data.specialization || '',
+                    bio: data.bio || '',
                     shopLogo: data.shopLogo || '',
                     bannerImage: data.bannerImage || '',
                     minimumOrderValue: data.minimumOrderValue?.toFixed(2).replace('.', ',') || '0,00',
@@ -387,24 +560,85 @@ export default function PartnerSettings() {
             });
     }, [session, hasLoaded]);
 
-    // Draft persistence
+    // Draft recovery: once the server profile has loaded, check whether a
+    // previous session left an unsaved draft behind. If it differs from what's
+    // now on the server, surface it via the banner instead of silently
+    // discarding it (or silently keeping it forever).
     useEffect(() => {
         if (!hasLoaded) return;
         const draft = localStorage.getItem('partner_settings_draft');
         if (draft) {
             try {
                 const parsed = JSON.parse(draft);
-                // Only load draft if it's more recent than the database load or if we want to restore incomplete work
-                // For simplicity, we'll ask later or just merge. Let's just save for now.
-            } catch (e) {}
+                if (JSON.stringify(parsed) !== JSON.stringify(initialData)) {
+                    pendingDraftRef.current = parsed;
+                    setPendingDraft(parsed);
+                } else {
+                    // Draft matches what's already saved server-side; nothing to recover.
+                    localStorage.removeItem('partner_settings_draft');
+                }
+            } catch (e) {
+                localStorage.removeItem('partner_settings_draft');
+            }
         }
+        // Runs once right after the initial load resolves.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [hasLoaded]);
 
+    // Draft persistence: skip writing while a draft is pending review so we
+    // don't overwrite it with the freshly-loaded server data before the user
+    // gets to decide. If the user starts typing while the banner is still up,
+    // treat that as an implicit discard and resume normal autosave-draft writes.
     useEffect(() => {
-        if (hasLoaded) {
-            localStorage.setItem('partner_settings_draft', JSON.stringify(formData));
+        if (!hasLoaded) return;
+        if (pendingDraftRef.current) {
+            if (JSON.stringify(formData) !== JSON.stringify(initialData)) {
+                pendingDraftRef.current = null;
+                setPendingDraft(null);
+            } else {
+                return;
+            }
         }
-    }, [formData, hasLoaded]);
+        localStorage.setItem('partner_settings_draft', JSON.stringify(formData));
+    }, [formData, hasLoaded, initialData]);
+
+    const handleRestoreDraft = () => {
+        if (pendingDraft) {
+            setFormData(pendingDraft);
+        }
+        pendingDraftRef.current = null;
+        setPendingDraft(null);
+        showToast('Rascunho restaurado');
+    };
+
+    const handleDiscardDraft = () => {
+        localStorage.removeItem('partner_settings_draft');
+        pendingDraftRef.current = null;
+        setPendingDraft(null);
+    };
+
+    // Recomputed on every keystroke, so the alert clears itself as fields get filled.
+    const missingFields = useMemo(
+        () => REQUIRED_FIELDS.filter(field => !field.isFilled(formData)),
+        [formData]
+    );
+
+    // Days where closing time isn't after opening time — HH:MM strings compare
+    // correctly as plain strings since they're always zero-padded 24h values.
+    const invalidWorkingHours = useMemo(
+        () => formData.workingHours.filter(row => row.active && row.open && row.close && row.close <= row.open),
+        [formData.workingHours]
+    );
+    // Only flag fields once the saved profile has loaded, so nothing flashes red mid-fetch.
+    const isMissing = (id: string) => hasLoaded && missingFields.some(field => field.id === id);
+
+    const focusField = (id: string) => {
+        const wrapper = document.getElementById(`field-${id}`);
+        if (!wrapper) return;
+        wrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const input = wrapper.querySelector('input, textarea') as HTMLElement | null;
+        setTimeout(() => input?.focus({ preventScroll: true }), 400);
+    };
 
     const handleDiscard = () => {
         if (initialData) {
@@ -421,8 +655,8 @@ export default function PartnerSettings() {
                 showToast('Apenas arquivos de imagem são aceitos', 'error');
                 return;
             }
-            if (file.size > 2 * 1024 * 1024) { // Increased to 2MB to allow original high-res before crop
-                showToast('A imagem original deve ter no máximo 2MB', 'error');
+            if (file.size > MAX_RAW_PROFILE_IMAGE_BYTES) {
+                showToast(`A imagem original deve ter no máximo ${MAX_RAW_PROFILE_IMAGE_MB}MB`, 'error');
                 return;
             }
 
@@ -445,88 +679,6 @@ export default function PartnerSettings() {
         setFormData({ ...formData, [cropConfig.type]: croppedImage });
         setCropConfig({ ...cropConfig, isOpen: false });
         showToast('Imagem ajustada com sucesso!');
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        
-        const errors: string[] = [];
-        const cleanCNPJ = formData.cnpj.replace(/\D/g, '');
-        
-        if (!cleanCNPJ) {
-            errors.push('cnpj');
-        } else if (cleanCNPJ.length < 14) {
-            errors.push('cnpj');
-        }
-
-        if (!formData.phone || formData.phone.length < 14) errors.push('phone');
-        if (!formData.specialization) errors.push('specialization');
-        if (!formData.address.street) errors.push('street');
-        if (!formData.address.number) errors.push('number');
-        if (!formData.address.city) errors.push('city');
-        if (!formData.address.neighborhood) errors.push('neighborhood');
-        if (!formData.address.zip || formData.address.zip.length < 9) errors.push('zip');
-        if (!formData.pixConfig.key?.trim()) errors.push('pixKey');
-
-        if (errors.length > 0) {
-            setValidationErrors(errors);
-            showToast('Por favor, preencha todos os campos obrigatórios', 'error');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            return;
-        }
-
-        setValidationErrors([]);
-        setLoading(true);
-
-        try {
-            const res = await fetch('/api/profile', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    cnpj: formData.cnpj.replace(/\D/g, ''),
-                    phone: formData.phone,
-                    specialization: formData.specialization,
-                    shopLogo: formData.shopLogo,
-                    bannerImage: formData.bannerImage,
-                    minimumOrderValue: parseFloat(formData.minimumOrderValue.replace(',', '.')),
-                    deliveryRadius: parseFloat(formData.deliveryRadius),
-                    deliveryFeePerKm: parseFloat(formData.deliveryFeePerKm.replace(',', '.')),
-                    freeDeliveryMinimum: parseFloat(formData.freeDeliveryMinimum.replace(',', '.')),
-                    workingHours: formData.workingHours,
-                    paymentConfig: formData.paymentConfig,
-                    paymentMethodsTable: formData.paymentMethodsTable,
-                    pixConfig: formData.pixConfig,
-                    address: {
-                        ...formData.address,
-                        coordinates: {
-                            type: 'Point',
-                            coordinates: [formData.address.coordinates.lng, formData.address.coordinates.lat]
-                        }
-                    },
-                }),
-            });
-
-            if (res.ok) {
-                showToast('Informações atualizadas com sucesso!');
-                localStorage.removeItem('partner_settings_draft');
-                setInitialData(formData);
-                if (formData.address?.street) {
-                    setLocationManual(
-                        formData.address.coordinates.lat,
-                        formData.address.coordinates.lng,
-                        `${formData.address.street}${formData.address.number ? `, ${formData.address.number}` : ''}`,
-                        formData.address.city || ''
-                    );
-                }
-                await update();
-            } else {
-                showToast('Erro ao atualizar informações', 'error');
-            }
-        } catch (error) {
-            showToast('Erro ao atualizar informações', 'error');
-        } finally {
-            setLoading(false);
-        }
     };
 
     const saveProfileData = async (data: any) => {
@@ -558,6 +710,12 @@ export default function PartnerSettings() {
                 updatePayload.cnpj = cleanCNPJ;
             }
 
+            // Bio is required for partners server-side; omit while empty so autosave
+            // doesn't 400 before the field has been filled in.
+            if (data.bio && data.bio.trim()) {
+                updatePayload.bio = data.bio;
+            }
+
             if (data.pixConfig && data.pixConfig.key && data.pixConfig.key.trim()) {
                 updatePayload.pixConfig = data.pixConfig;
             }
@@ -571,46 +729,6 @@ export default function PartnerSettings() {
             if (res.ok) {
                 setSaveStatus('saved');
                 setInitialData(data);
-                setValidationErrors(prev => {
-                    const nextErrors = [...prev];
-                    if (cleanCNPJ && cleanCNPJ.length === 14) {
-                        const idx = nextErrors.indexOf('cnpj');
-                        if (idx !== -1) nextErrors.splice(idx, 1);
-                    }
-                    if (data.phone && data.phone.length >= 14) {
-                        const idx = nextErrors.indexOf('phone');
-                        if (idx !== -1) nextErrors.splice(idx, 1);
-                    }
-                    if (data.specialization) {
-                        const idx = nextErrors.indexOf('specialization');
-                        if (idx !== -1) nextErrors.splice(idx, 1);
-                    }
-                    if (data.address.street) {
-                        const idx = nextErrors.indexOf('street');
-                        if (idx !== -1) nextErrors.splice(idx, 1);
-                    }
-                    if (data.address.number) {
-                        const idx = nextErrors.indexOf('number');
-                        if (idx !== -1) nextErrors.splice(idx, 1);
-                    }
-                    if (data.address.city) {
-                        const idx = nextErrors.indexOf('city');
-                        if (idx !== -1) nextErrors.splice(idx, 1);
-                    }
-                    if (data.address.neighborhood) {
-                        const idx = nextErrors.indexOf('neighborhood');
-                        if (idx !== -1) nextErrors.splice(idx, 1);
-                    }
-                    if (data.address.zip && data.address.zip.length >= 9) {
-                        const idx = nextErrors.indexOf('zip');
-                        if (idx !== -1) nextErrors.splice(idx, 1);
-                    }
-                    if (data.pixConfig.key?.trim()) {
-                        const idx = nextErrors.indexOf('pixKey');
-                        if (idx !== -1) nextErrors.splice(idx, 1);
-                    }
-                    return nextErrors;
-                });
                 localStorage.removeItem('partner_settings_draft');
                 if (data.address?.street) {
                     setLocationManual(
@@ -705,7 +823,7 @@ export default function PartnerSettings() {
                             transition: 'all 0.2s'
                         }}
                     >
-                        RECOMPOR
+                        DESCARTAR
                     </button>
                     {saveStatus === 'saving' && (
                         <div className={`${styles.autoSaveStatus} ${styles.statusSaving}`}>
@@ -727,8 +845,21 @@ export default function PartnerSettings() {
                             ✓ Tudo Salvo
                         </div>
                     )}
+                    {hasLoaded && missingFields.length > 0 && saveStatus !== 'error' && (
+                        <div className={`${styles.autoSaveStatus} ${styles.statusIncomplete}`}>
+                            ⚠ {missingFields.length} {missingFields.length === 1 ? 'pendência' : 'pendências'}
+                        </div>
+                    )}
                 </div>
             </div>
+
+            {hasLoaded && pendingDraft && (
+                <DraftRecoveryBanner onRestore={handleRestoreDraft} onDiscard={handleDiscardDraft} />
+            )}
+
+            {hasLoaded && missingFields.length > 0 && (
+                <RequiredFieldsAlert fields={missingFields} onFieldClick={focusField} />
+            )}
 
             <div style={{ marginBottom: '64px' }}>
                 <h2 className={styles.sectionTitle}>IDENTIDADE VISUAL</h2>
@@ -774,27 +905,39 @@ export default function PartnerSettings() {
                     <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#253D4E', marginBottom: '32px' }}>INFORMAÇÕES DO NEGÓCIO</h2>
                     
                     <InputContainer 
+                        id="field-phone"
                         label={<>TELEFONE <span style={{ color: '#FF4D4D' }}>*</span></>}
                         value={formData.phone}
                         onChange={(e: any) => setFormData({ ...formData, phone: maskPhone(e.target.value) })}
                         placeholder="(00) 00000-0000"
-                        error={validationErrors.includes('phone')}
+                        error={isMissing('phone')}
                     />
 
                     <InputContainer 
+                        id="field-specialization"
                         label={<>ESPECIFICAÇÃO DA LOJA <span style={{ color: '#FF4D4D' }}>*</span></>}
                         value={formData.specialization}
                         onChange={(e: any) => setFormData({ ...formData, specialization: e.target.value })}
                         placeholder="Ex: Casa da Ração, Petshop, Aquarismo, etc."
-                        error={validationErrors.includes('specialization')}
+                        error={isMissing('specialization')}
                     />
 
-                    <InputContainer 
+                    <TextAreaContainer
+                        id="field-bio"
+                        label={<>BIOGRAFIA <span style={{ color: '#FF4D4D' }}>*</span></>}
+                        value={formData.bio}
+                        onChange={(e: any) => setFormData({ ...formData, bio: e.target.value })}
+                        placeholder="Conte um pouco sobre sua loja: história, diferenciais e o que você oferece aos tutores."
+                        error={isMissing('bio')}
+                    />
+
+                    <InputContainer
+                        id="field-cnpj"
                         label={<>CNPJ DA LOJA <span style={{ color: '#FF4D4D' }}>*</span></>}
                         value={formData.cnpj}
                         onChange={(e: any) => setFormData({ ...formData, cnpj: maskCNPJ(e.target.value) })}
                         placeholder="00.000.000/0000-00"
-                        error={validationErrors.includes('cnpj')}
+                        error={isMissing('cnpj')}
                     />
 
                     <InputContainer 
@@ -854,7 +997,7 @@ export default function PartnerSettings() {
 
             {/* Working Hours Section */}
             <div>
-                <h3 style={{ fontSize: '12px', fontWeight: 400, color: '#253D4E', marginBottom: '24px' }}>HORÁRIO DE FUNCIONAMENTO</h3>
+                <h2 style={{ fontSize: '12px', fontWeight: 400, color: '#253D4E', marginBottom: '24px' }}>HORÁRIO DE FUNCIONAMENTO</h2>
                 
                 <div className={styles.tableWrapper}>
                     <table className={styles.workingHoursTable}>
@@ -900,11 +1043,20 @@ export default function PartnerSettings() {
                         </tbody>
                     </table>
                 </div>
+
+                {invalidWorkingHours.length > 0 && (
+                    <p style={{ fontSize: '12px', color: '#C87F0A', marginTop: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <AlertTriangle size={14} color="#C87F0A" style={{ flexShrink: 0 }} />
+                        {invalidWorkingHours.length === 1
+                            ? `${invalidWorkingHours[0].day.toUpperCase()}: o horário de fechamento deve ser depois do de abertura.`
+                            : `${invalidWorkingHours.map(r => r.day.toUpperCase()).join(', ')}: o horário de fechamento deve ser depois do de abertura.`}
+                    </p>
+                )}
             </div>
 
             {/* Payment Options Section */}
             <div style={{ marginTop: '64px' }}>
-                <h3 style={{ fontSize: '12px', fontWeight: 400, color: '#253D4E', marginBottom: '32px' }}>OPÇÕES DE PAGAMENTO</h3>
+                <h2 style={{ fontSize: '12px', fontWeight: 400, color: '#253D4E', marginBottom: '32px' }}>OPÇÕES DE PAGAMENTO</h2>
                 
                 <div className={styles.paymentRow}>
                     {/* Column 1: Accepted Methods */}
@@ -933,21 +1085,27 @@ export default function PartnerSettings() {
                             ))}
                         </div>
 
-                        <div className={styles.methodsFeeTableWrapper}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+                            <Info size={13} color="#909090" />
+                            <span style={{ fontSize: '11px', color: '#909090', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.02em' }}>
+                                Taxas padrão da ASAAS — informativo, não editável
+                            </span>
+                        </div>
+                        <div className={styles.methodsFeeTableWrapper} style={{ background: '#F7F9FB' }}>
                             <table style={{ width: '100%', height: '100%', borderCollapse: 'collapse' }}>
                                 <thead>
                                     <tr style={{ textAlign: 'left', borderBottom: '1px solid #D1D9E2' }}>
-                                        <th style={{ padding: '24px', fontSize: '13px', fontWeight: 700, color: '#253D4E' }}>MÉTODO</th>
-                                        <th style={{ padding: '24px', fontSize: '13px', fontWeight: 700, color: '#253D4E' }}>TAXA</th>
-                                        <th style={{ padding: '24px', fontSize: '13px', fontWeight: 700, color: '#253D4E' }}>PRAZO</th>
+                                        <th style={{ padding: '24px', fontSize: '13px', fontWeight: 700, color: '#8A94A0' }}>MÉTODO</th>
+                                        <th style={{ padding: '24px', fontSize: '13px', fontWeight: 700, color: '#8A94A0' }}>TAXA</th>
+                                        <th style={{ padding: '24px', fontSize: '13px', fontWeight: 700, color: '#8A94A0' }}>PRAZO</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {formData.paymentMethodsTable.map((row, index) => (
                                         <tr key={row.method} style={{ borderBottom: index === formData.paymentMethodsTable.length - 1 ? 'none' : '1px solid #F0F0F0' }}>
-                                            <td style={{ padding: '16px 24px', fontSize: '13px', fontWeight: 400, color: '#253D4E' }}>{row.method}</td>
-                                            <td style={{ padding: '16px 24px', fontSize: '13px', fontWeight: 400, color: '#253D4E' }}>{row.fee}%</td>
-                                            <td style={{ padding: '16px 24px', fontSize: '13px', fontWeight: 400, color: '#253D4E' }}>{row.term}</td>
+                                            <td style={{ padding: '16px 24px', fontSize: '13px', fontWeight: 400, color: '#6B7580' }}>{row.method}</td>
+                                            <td style={{ padding: '16px 24px', fontSize: '13px', fontWeight: 400, color: '#6B7580' }}>{row.fee}%</td>
+                                            <td style={{ padding: '16px 24px', fontSize: '13px', fontWeight: 400, color: '#6B7580' }}>{row.term}</td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -1009,19 +1167,19 @@ export default function PartnerSettings() {
                                     </div>
                                 )}
                             </div>
-                            <div style={{ flex: 2 }}>
+                            <div id="field-pixKey" style={{ flex: 2 }}>
                                 <label style={{ display: 'block', fontSize: '13px', fontWeight: 400, color: '#757575', marginBottom: '8px' }}>
                                     CHAVE PIX <span style={{ color: '#FF4D4D' }}>*</span>
                                 </label>
                                 <div style={{ 
                                     height: '52px', 
                                     borderRadius: '8px', 
-                                    border: validationErrors.includes('pixKey') ? '1.5px solid #FF4D4D' : '1px solid #D1D9E2', 
+                                    border: isMissing('pixKey') ? '1.5px solid #FF4D4D' : '1px solid #D1D9E2', 
                                     display: 'flex', 
                                     alignItems: 'center', 
                                     padding: '0 16px',
                                     background: 'white',
-                                    boxShadow: validationErrors.includes('pixKey') ? '0 0 0 1px rgba(255, 77, 77, 0.1)' : 'none'
+                                    boxShadow: isMissing('pixKey') ? '0 0 0 1px rgba(255, 77, 77, 0.1)' : 'none'
                                 }}>
                                     <input 
                                         type="text"
@@ -1047,7 +1205,7 @@ export default function PartnerSettings() {
                                         }
                                     />
                                 </div>
-                                {validationErrors.includes('pixKey') && <span style={{ color: '#FF4D4D', fontSize: '10px', marginTop: '4px', display: 'block', fontWeight: 500 }}>Campo Obrigatório</span>}
+                                {isMissing('pixKey') && <span style={{ color: '#FF4D4D', fontSize: '10px', marginTop: '4px', display: 'block', fontWeight: 500 }}>Campo Obrigatório</span>}
                             </div>
                         </div>
 
@@ -1081,13 +1239,16 @@ export default function PartnerSettings() {
                             </div>
                             <div style={{ flex: 1 }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                                    <span style={{ fontSize: '14px', fontWeight: 700, color: '#253D4E' }}>INTEGRAÇÃO PIX DINÂMICO</span>
-                                    <WorkingHoursToggle 
-                                        active={formData.pixConfig.dynamicPix} 
+                                    <span style={{ fontSize: '14px', fontWeight: 700, color: '#253D4E' }}>
+                                        INTEGRAÇÃO PIX DINÂMICO <span style={{ fontWeight: 400, color: '#909090', textTransform: 'none' }}>(em breve)</span>
+                                    </span>
+                                    <WorkingHoursToggle
+                                        active={formData.pixConfig.dynamicPix}
+                                        disabled
                                         onToggle={() => setFormData({
                                             ...formData,
                                             pixConfig: { ...formData.pixConfig, dynamicPix: !formData.pixConfig.dynamicPix }
-                                        })} 
+                                        })}
                                     />
                                 </div>
                                 <p style={{ fontSize: '12px', fontWeight: 400, color: '#757575', margin: 0, textTransform: 'uppercase', lineHeight: '1.4' }}>
@@ -1102,26 +1263,26 @@ export default function PartnerSettings() {
 
                 {/* Address Section */}
                 <div style={{ marginTop: '64px', marginBottom: '64px' }}>
-                    <h3 style={{ fontSize: '12px', fontWeight: 400, color: '#253D4E', marginBottom: '32px' }}>ENDEREÇO</h3>
+                    <h2 style={{ fontSize: '12px', fontWeight: 400, color: '#253D4E', marginBottom: '32px' }}>ENDEREÇO</h2>
                     
                     <div className={styles.addressSectionRow}>
                         {/* Column 1: Form */}
                         <div className={styles.colHalf} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                             {/* Row 1: Street and Number */}
                             <div className={styles.nestedFlexRow}>
-                                <div style={{ flex: 3 }}>
+                                <div id="field-street" style={{ flex: 3 }}>
                                     <label style={{ display: 'block', fontSize: '13px', fontWeight: 400, color: '#757575', marginBottom: '8px' }}>
                                         RUA <span style={{ color: '#FF4D4D' }}>*</span>
                                     </label>
                                     <div style={{ 
                                         height: '52px', 
                                         borderRadius: '8px', 
-                                        border: validationErrors.includes('street') ? '1.5px solid #FF4D4D' : '1px solid #D1D9E2', 
+                                        border: isMissing('street') ? '1.5px solid #FF4D4D' : '1px solid #D1D9E2', 
                                         display: 'flex', 
                                         alignItems: 'center', 
                                         padding: '0 16px',
                                         background: 'white',
-                                        boxShadow: validationErrors.includes('street') ? '0 0 0 1px rgba(255, 77, 77, 0.1)' : 'none'
+                                        boxShadow: isMissing('street') ? '0 0 0 1px rgba(255, 77, 77, 0.1)' : 'none'
                                     }}>
                                         <input 
                                             type="text"
@@ -1134,21 +1295,21 @@ export default function PartnerSettings() {
                                             placeholder="NOME DA RUA / AVENIDA"
                                         />
                                     </div>
-                                    {validationErrors.includes('street') && <span style={{ color: '#FF4D4D', fontSize: '10px', marginTop: '4px', display: 'block', fontWeight: 500 }}>Campo Obrigatório</span>}
+                                    {isMissing('street') && <span style={{ color: '#FF4D4D', fontSize: '10px', marginTop: '4px', display: 'block', fontWeight: 500 }}>Campo Obrigatório</span>}
                                 </div>
-                                <div style={{ flex: 1 }}>
+                                <div id="field-number" style={{ flex: 1 }}>
                                     <label style={{ display: 'block', fontSize: '13px', fontWeight: 400, color: '#757575', marginBottom: '8px' }}>
                                         NÚMERO <span style={{ color: '#FF4D4D' }}>*</span>
                                     </label>
                                     <div style={{ 
                                         height: '52px', 
                                         borderRadius: '8px', 
-                                        border: validationErrors.includes('number') ? '1.5px solid #FF4D4D' : '1px solid #D1D9E2', 
+                                        border: isMissing('number') ? '1.5px solid #FF4D4D' : '1px solid #D1D9E2', 
                                         display: 'flex', 
                                         alignItems: 'center', 
                                         padding: '0 16px',
                                         background: 'white',
-                                        boxShadow: validationErrors.includes('number') ? '0 0 0 1px rgba(255, 77, 77, 0.1)' : 'none'
+                                        boxShadow: isMissing('number') ? '0 0 0 1px rgba(255, 77, 77, 0.1)' : 'none'
                                     }}>
                                         <input 
                                             type="text"
@@ -1161,25 +1322,25 @@ export default function PartnerSettings() {
                                             placeholder="S/N"
                                         />
                                     </div>
-                                    {validationErrors.includes('number') && <span style={{ color: '#FF4D4D', fontSize: '10px', marginTop: '4px', display: 'block', fontWeight: 500 }}>Campo Obrigatório</span>}
+                                    {isMissing('number') && <span style={{ color: '#FF4D4D', fontSize: '10px', marginTop: '4px', display: 'block', fontWeight: 500 }}>Campo Obrigatório</span>}
                                 </div>
                             </div>
 
                             {/* Row 2: Neighborhood and City */}
                             <div className={styles.nestedFlexRow}>
-                                <div style={{ flex: 1 }}>
+                                <div id="field-neighborhood" style={{ flex: 1 }}>
                                     <label style={{ display: 'block', fontSize: '13px', fontWeight: 400, color: '#757575', marginBottom: '8px' }}>
                                         BAIRRO <span style={{ color: '#FF4D4D' }}>*</span>
                                     </label>
                                     <div style={{ 
                                         height: '52px', 
                                         borderRadius: '8px', 
-                                        border: validationErrors.includes('neighborhood') ? '1.5px solid #FF4D4D' : '1px solid #D1D9E2', 
+                                        border: isMissing('neighborhood') ? '1.5px solid #FF4D4D' : '1px solid #D1D9E2', 
                                         display: 'flex', 
                                         alignItems: 'center', 
                                         padding: '0 16px',
                                         background: 'white',
-                                        boxShadow: validationErrors.includes('neighborhood') ? '0 0 0 1px rgba(255, 77, 77, 0.1)' : 'none'
+                                        boxShadow: isMissing('neighborhood') ? '0 0 0 1px rgba(255, 77, 77, 0.1)' : 'none'
                                     }}>
                                         <input 
                                             type="text"
@@ -1192,21 +1353,21 @@ export default function PartnerSettings() {
                                             placeholder="NOME DO BAIRRO"
                                         />
                                     </div>
-                                    {validationErrors.includes('neighborhood') && <span style={{ color: '#FF4D4D', fontSize: '10px', marginTop: '4px', display: 'block', fontWeight: 500 }}>Campo Obrigatório</span>}
+                                    {isMissing('neighborhood') && <span style={{ color: '#FF4D4D', fontSize: '10px', marginTop: '4px', display: 'block', fontWeight: 500 }}>Campo Obrigatório</span>}
                                 </div>
-                                <div style={{ flex: 1 }}>
+                                <div id="field-city" style={{ flex: 1 }}>
                                     <label style={{ display: 'block', fontSize: '13px', fontWeight: 400, color: '#757575', marginBottom: '8px' }}>
                                         CIDADE <span style={{ color: '#FF4D4D' }}>*</span>
                                     </label>
                                     <div style={{ 
                                         height: '52px', 
                                         borderRadius: '8px', 
-                                        border: validationErrors.includes('city') ? '1.5px solid #FF4D4D' : '1px solid #D1D9E2', 
+                                        border: isMissing('city') ? '1.5px solid #FF4D4D' : '1px solid #D1D9E2', 
                                         display: 'flex', 
                                         alignItems: 'center', 
                                         padding: '0 16px',
                                         background: 'white',
-                                        boxShadow: validationErrors.includes('city') ? '0 0 0 1px rgba(255, 77, 77, 0.1)' : 'none'
+                                        boxShadow: isMissing('city') ? '0 0 0 1px rgba(255, 77, 77, 0.1)' : 'none'
                                     }}>
                                         <input 
                                             type="text"
@@ -1219,25 +1380,25 @@ export default function PartnerSettings() {
                                             placeholder="NOME DA CIDADE"
                                         />
                                     </div>
-                                    {validationErrors.includes('city') && <span style={{ color: '#FF4D4D', fontSize: '10px', marginTop: '4px', display: 'block', fontWeight: 500 }}>Campo Obrigatório</span>}
+                                    {isMissing('city') && <span style={{ color: '#FF4D4D', fontSize: '10px', marginTop: '4px', display: 'block', fontWeight: 500 }}>Campo Obrigatório</span>}
                                 </div>
                             </div>
 
                             {/* Row 3: CEP */}
                             <div className={styles.nestedFlexRow}>
-                                <div style={{ flex: 1 }}>
+                                <div id="field-zip" style={{ flex: 1 }}>
                                     <label style={{ display: 'block', fontSize: '13px', fontWeight: 400, color: '#757575', marginBottom: '8px' }}>
                                         CEP <span style={{ color: '#FF4D4D' }}>*</span>
                                     </label>
                                     <div style={{ 
                                         height: '52px', 
                                         borderRadius: '8px', 
-                                        border: validationErrors.includes('zip') ? '1.5px solid #FF4D4D' : '1px solid #D1D9E2', 
+                                        border: isMissing('zip') ? '1.5px solid #FF4D4D' : '1px solid #D1D9E2', 
                                         display: 'flex', 
                                         alignItems: 'center', 
                                         padding: '0 16px',
                                         background: 'white',
-                                        boxShadow: validationErrors.includes('zip') ? '0 0 0 1px rgba(255, 77, 77, 0.1)' : 'none'
+                                        boxShadow: isMissing('zip') ? '0 0 0 1px rgba(255, 77, 77, 0.1)' : 'none'
                                     }}>
                                         <input 
                                             type="text"
@@ -1301,7 +1462,7 @@ export default function PartnerSettings() {
                                             placeholder="00000-000"
                                         />
                                     </div>
-                                    {validationErrors.includes('zip') && <span style={{ color: '#FF4D4D', fontSize: '10px', marginTop: '4px', display: 'block', fontWeight: 500 }}>Campo Obrigatório</span>}
+                                    {isMissing('zip') && <span style={{ color: '#FF4D4D', fontSize: '10px', marginTop: '4px', display: 'block', fontWeight: 500 }}>Campo Obrigatório</span>}
                                 </div>
                             </div>
                         </div>

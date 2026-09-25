@@ -172,7 +172,7 @@ export const authOptions: NextAuthOptions = {
                             token.subscriptionStatus = 'active';
                             token.subscriptionPlan = 'enterprise';
                             const a = dbUser.address;
-                            token.isProfileComplete = !!(dbUser.cnpj && dbUser.phone && a?.street && a?.number && a?.city && a?.neighborhood && (a?.zip || a?.zipCode));
+                            token.isProfileComplete = !!(dbUser.cnpj && dbUser.phone && dbUser.bio?.trim() && a?.street && a?.number && a?.city && a?.neighborhood && (a?.zip || a?.zipCode));
                         } else if (dbUser.role === 'veterinarian') {
                             const a = dbUser.address;
                             token.isProfileComplete = !!(dbUser.crmv && dbUser.specialization && dbUser.whatsapp && a?.street && a?.number && a?.city && a?.neighborhood && a?.zip);
@@ -187,7 +187,7 @@ export const authOptions: NextAuthOptions = {
                         token.subscriptionStatus = 'active';
                         token.subscriptionPlan = 'enterprise';
                         const a = dbUser?.address;
-                        token.isProfileComplete = !!(dbUser?.cnpj && dbUser?.phone && a?.street && a?.number && a?.city && a?.neighborhood && (a?.zip || a?.zipCode));
+                        token.isProfileComplete = !!(dbUser?.cnpj && dbUser?.phone && dbUser?.bio?.trim() && a?.street && a?.number && a?.city && a?.neighborhood && (a?.zip || a?.zipCode));
                     } else if (user.role === 'veterinarian') {
                         const dbUser = await User.findById(user.id).lean() as any;
                         const a = dbUser?.address;
@@ -201,7 +201,7 @@ export const authOptions: NextAuthOptions = {
 
                 try {
                     if (shouldRefreshHeavy) {
-                        const dbUser = await User.findById(token.id).select('role tokenVersion subscriptionId address cnpj phone').lean() as any;
+                        const dbUser = await User.findById(token.id).select('role tokenVersion subscriptionId address cnpj phone bio').lean() as any;
                         
                         if (!dbUser) {
                             console.warn(`[AUTH] Session refresh failed: User ${token.id} not found in DB.`);
@@ -221,7 +221,7 @@ export const authOptions: NextAuthOptions = {
                             token.subscriptionStatus = 'active';
                             token.subscriptionPlan = 'enterprise';
                             const a = dbUser.address;
-                            token.isProfileComplete = !!(dbUser.cnpj && dbUser.phone && a?.street && a?.number && a?.city && a?.neighborhood && (a?.zip || a?.zipCode));
+                            token.isProfileComplete = !!(dbUser.cnpj && dbUser.phone && dbUser.bio?.trim() && a?.street && a?.number && a?.city && a?.neighborhood && (a?.zip || a?.zipCode));
                         } else if (dbUser.role === 'veterinarian') {
                             const a = dbUser.address;
                             token.isProfileComplete = !!(dbUser.crmv && dbUser.specialization && dbUser.whatsapp && a?.street && a?.number && a?.city && a?.neighborhood && a?.zip);

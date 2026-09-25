@@ -61,8 +61,18 @@ const mockPartners = [
     },
 ];
 
+/**
+ * Rota de seed para desenvolvimento. Sem verificação de sessão nem de
+ * ambiente, qualquer requisição pública podia sobrescrever (upsert por
+ * email) dados de parceiros reais que viessem a se cadastrar com um desses
+ * emails de mock — vandalismo/defacement sem autenticação nenhuma.
+ */
 export async function GET() {
     try {
+        if (process.env.NODE_ENV === 'production') {
+            return NextResponse.json({ message: 'Not found' }, { status: 404 });
+        }
+
         await dbConnect();
 
         for (const partnerData of mockPartners) {

@@ -126,6 +126,64 @@ export const parseMaskedPrice = (value: string) => {
     return parseFloat(value.replace(/\./g, "").replace(",", "."));
 };
 
+export const maskCardNumber = (value: string) => {
+    return value
+        .replace(/\D/g, '')
+        .slice(0, 19)
+        .replace(/(\d{4})(?=\d)/g, '$1 ')
+        .trim();
+};
+
+export const maskExpiry = (value: string) => {
+    return value
+        .replace(/\D/g, '')
+        .slice(0, 4)
+        .replace(/(\d{2})(\d)/, '$1/$2');
+};
+
+export const maskCVV = (value: string, maxLength: number = 4) => {
+    return value.replace(/\D/g, '').slice(0, maxLength);
+};
+
+export const maskPixKey = (key: string, type: string) => {
+    if (!key) return '-';
+    const cleaned = key.trim();
+    const upperType = String(type || '').toUpperCase();
+
+    if (upperType === 'EMAIL') {
+        const parts = cleaned.split('@');
+        if (parts.length === 2) {
+            const name = parts[0];
+            const domain = parts[1];
+            return name.charAt(0) + '****' + name.slice(-1) + '@' + domain;
+        }
+    }
+    if (upperType === 'PHONE' || upperType === 'CELULAR' || upperType === 'TELEFONE') {
+        const digits = cleaned.replace(/\D/g, '');
+        if (digits.length >= 10) {
+            return `(${digits.slice(0, 2)}) 9****-${digits.slice(-4)}`;
+        }
+    }
+    if (upperType === 'CPF') {
+        const digits = cleaned.replace(/\D/g, '');
+        if (digits.length === 11) {
+            return `***.***.${digits.slice(6, 9)}-${digits.slice(-2)}`;
+        }
+    }
+    if (upperType === 'CNPJ') {
+        const digits = cleaned.replace(/\D/g, '');
+        if (digits.length === 14) {
+            return `**.***.***.0001-**`;
+        }
+    }
+    if (upperType === 'RANDOM' || upperType === 'ALEATORIA') {
+        if (cleaned.length > 8) {
+            return cleaned.slice(0, 8) + '-****-****-****-' + cleaned.slice(-4);
+        }
+    }
+    return cleaned.slice(0, 4) + '****' + cleaned.slice(-4);
+};
+
 export const formatAddress = (street?: string, number?: string) => {
     const s = (street || '').trim();
     const n = (number || '').trim();

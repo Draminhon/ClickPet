@@ -108,7 +108,7 @@ export async function POST(req: Request) {
         let verifiedDistance = 0;
 
         if (!body.isPickup) {
-            const userCoords = body.address?.coordinates;
+            const userCoords = body.address?.coordinates?.coordinates;
             const shopCoords = partner.address?.coordinates?.coordinates;
 
             if (userCoords && shopCoords && Array.isArray(userCoords) && Array.isArray(shopCoords)) {
@@ -233,7 +233,10 @@ export async function GET(req: Request) {
 
         const orders = await Order.find(query)
             .populate('deliveryPersonId')
-            .populate('userId', 'name email phone')
+            .populate('userId', 'name email phone __enc_name __enc_name_d __enc_email __enc_email_d __enc_phone __enc_phone_d')
+            // `name` é criptografado no User; o plugin só descriptografa se os
+            // campos de controle `__enc_name`/`__enc_name_d` vierem na projeção.
+            .populate('partnerId', 'name role image shopLogo specialization __enc_name __enc_name_d')
             .sort({ createdAt: -1 });
 
         return NextResponse.json(orders);

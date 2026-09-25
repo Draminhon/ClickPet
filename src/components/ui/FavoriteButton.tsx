@@ -8,11 +8,12 @@ import { useRouter } from 'next/navigation';
 
 interface FavoriteButtonProps {
     productId?: string;
+    serviceId?: string;
     partnerId?: string;
     size?: number;
 }
 
-export default function FavoriteButton({ productId, partnerId, size = 24 }: FavoriteButtonProps) {
+export default function FavoriteButton({ productId, serviceId, partnerId, size = 24 }: FavoriteButtonProps) {
     const { data: session } = useSession();
     const { showToast } = useToast();
     const router = useRouter();
@@ -23,7 +24,7 @@ export default function FavoriteButton({ productId, partnerId, size = 24 }: Favo
         if (session) {
             checkFavorite();
         }
-    }, [session, productId, partnerId]);
+    }, [session, productId, serviceId, partnerId]);
 
     const checkFavorite = async () => {
         try {
@@ -32,6 +33,7 @@ export default function FavoriteButton({ productId, partnerId, size = 24 }: Favo
 
             const exists = favorites.some((fav: any) =>
                 (productId && fav.productId?._id === productId) ||
+                (serviceId && fav.serviceId?._id === serviceId) ||
                 (partnerId && fav.partnerId?._id === partnerId)
             );
 
@@ -58,6 +60,7 @@ export default function FavoriteButton({ productId, partnerId, size = 24 }: Favo
                 // Remove favorite
                 const params = new URLSearchParams();
                 if (productId) params.append('productId', productId);
+                if (serviceId) params.append('serviceId', serviceId);
                 if (partnerId) params.append('partnerId', partnerId);
 
                 const res = await fetch(`/api/favorites?${params}`, {
@@ -73,7 +76,7 @@ export default function FavoriteButton({ productId, partnerId, size = 24 }: Favo
                 const res = await fetch('/api/favorites', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ productId, partnerId }),
+                    body: JSON.stringify({ productId, serviceId, partnerId }),
                 });
 
                 if (res.ok) {
